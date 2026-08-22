@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ล่องแม่กลอง — เที่ยวสมุทรสงคราม</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Thai:wght@400;600;700&family=Noto+Sans+Thai:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div>
+      <p class="brand-eyebrow">Prototype · จังหวัดสมุทรสงคราม</p>
+      <h1>ล่องแม่กลอง<span>.</span> แนะนำเที่ยว + เส้นทาง</h1>
+      <p class="header-sub">เลือกจุดหมาย ระบบจะแนะนำเส้นทางและตัวเลือกรถโดยสารในพื้นที่ให้ — ข้อมูลราคา/จุดจอดเป็นตัวอย่าง รอใส่ข้อมูลจริงจากการลงพื้นที่</p>
+    </div>
+    <div class="header-meta" id="apiStatus">
+      MODE: DEMO<br>
+      API: <span id="apiStatusText">กำลังเชื่อมต่อ…</span><br>
+      DATA: SAMPLE
+    </div>
+  </div>
+</header>
+
+<div class="layout">
+  <aside class="sidebar">
+    <div class="panel-label">จุดเริ่มต้น</div>
+    <select id="startSelect"></select>
+
+    <div class="panel-label">เลือกสถานที่ท่องเที่ยว</div>
+    <div class="place-list" id="placeList">
+      <div class="loading-note">กำลังโหลดข้อมูลสถานที่…</div>
+    </div>
+
+    <div id="routeSummary" class="route-summary">
+      <div class="rs-title" id="rsTitle">—</div>
+      <div class="rs-detail" id="rsDetail">—</div>
+
+      <div class="panel-label" style="margin-top:14px;color:var(--lantern-soft);">
+        <span style="color:var(--lantern-soft)">ตัวเลือกรถโดยสาร</span>
+      </div>
+      <div class="transport-list" id="transportList"></div>
+      <p class="placeholder-note" id="dataSourceNote">* กำลังโหลดข้อมูลรถโดยสาร…</p>
+      <button class="clear-btn" id="clearBtn">ล้างเส้นทาง</button>
+    </div>
+  </aside>
+
+  <div class="map-col">
+    <div class="map-toolbar"><b>วิธีใช้</b><br>คลิกสถานที่ในเมนูซ้าย เพื่อดูเส้นทางจากจุดเริ่มต้น พร้อมตัวเลือกรถโดยสาร</div>
+    <div id="map"></div>
+  </div>
+</div>
+
+<footer>SAMUT SONGKHRAM TOURISM PROTOTYPE — Frontend + Backend แยกกัน · <span id="footerApi">api: localhost:4000</span></footer>
+
+<script src="js/config.js"></script>
+<script src="js/api.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
