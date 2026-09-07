@@ -1,0 +1,164 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Thai:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  --background: #f6f7f5;
+  --foreground: #10293a;
+  --card: #ffffff;
+  --card-foreground: #10293a;
+  --popover: #ffffff;
+  --popover-foreground: #10293a;
+  --primary: #123b52;
+  --primary-foreground: #f8fbfa;
+  --secondary: #e3f2ef;
+  --secondary-foreground: #1d5b5a;
+  --muted: #edf1ef;
+  --muted-foreground: #6c7c84;
+  --accent: #f4b38a;
+  --accent-foreground: #5c2f20;
+  --destructive: #c94d48;
+  --border: #dce5e1;
+  --input: #dce5e1;
+  --ring: #55aaa2;
+  --radius: 1rem;
+  --ink: #10293a;
+  --deep: #071a2b;
+  --aqua: #5bb9b0;
+  --coral: #eb8b67;
+  --sand: #f4ecdd;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) - 0.5rem);
+  --radius-md: calc(var(--radius) - 0.25rem);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 0.5rem);
+  --font-sans: 'Noto Sans Thai', sans-serif;
+}
+
+* { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body {
+  margin: 0;
+  min-width: 320px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: 'Noto Sans Thai', sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button, a { -webkit-tap-highlight-color: transparent; }
+button:active { transform: scale(0.98); }
+::selection { background: rgba(91, 185, 176, 0.25); }
+
+.font-display { font-family: 'Space Grotesk', 'Noto Sans Thai', sans-serif; }
+.text-balance { text-wrap: balance; }
+
+.app-shell { min-height: 100vh; overflow: hidden; }
+.nav-glass {
+  background: rgba(246, 247, 245, 0.82);
+  backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(220, 229, 225, 0.75);
+}
+
+.hero-noise {
+  position: relative;
+  background:
+    radial-gradient(circle at 15% 15%, rgba(91, 185, 176, 0.18), transparent 31%),
+    radial-gradient(circle at 85% 12%, rgba(235, 139, 103, 0.17), transparent 26%),
+    linear-gradient(135deg, #f7f8f5 0%, #eff5f0 100%);
+}
+.hero-noise::after {
+  content: '';
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  opacity: 0.18;
+  background-image: radial-gradient(#71908b 0.55px, transparent 0.55px);
+  background-size: 13px 13px;
+  mask-image: linear-gradient(145deg, black, transparent 72%);
+}
+
+.map-surface {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background:
+    linear-gradient(90deg, rgba(91, 185, 176, 0.11) 1px, transparent 1px),
+    linear-gradient(rgba(91, 185, 176, 0.11) 1px, transparent 1px),
+    #dcece4;
+  background-size: 52px 52px;
+}
+.map-surface::before {
+  content: '';
+  position: absolute;
+  inset: -15% -12%;
+  z-index: -1;
+  opacity: 0.76;
+  background:
+    radial-gradient(ellipse at 20% 40%, rgba(255,255,255,0.8) 0 10%, transparent 10.5%),
+    radial-gradient(ellipse at 75% 72%, rgba(255,255,255,0.73) 0 13%, transparent 13.5%),
+    linear-gradient(118deg, transparent 42%, rgba(255,255,255,0.95) 42.4% 45%, transparent 45.4%),
+    linear-gradient(24deg, transparent 52%, rgba(255,255,255,0.82) 52.5% 55%, transparent 55.5%);
+  transform: rotate(-4deg);
+}
+.map-road {
+  position: absolute;
+  height: 22px;
+  border-radius: 999px;
+  background: rgba(255,255,255,0.93);
+  box-shadow: 0 0 0 7px rgba(188, 214, 204, 0.36);
+  transform-origin: center;
+}
+.map-building {
+  position: absolute;
+  border: 1px solid rgba(16, 41, 58, 0.16);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.72);
+  box-shadow: 0 10px 18px rgba(43, 83, 72, 0.1);
+}
+.map-building::after {
+  content: '';
+  position: absolute;
+  inset: 5px;
+  border: 1px dashed rgba(16, 41, 58, 0.16);
+  border-radius: 6px;
+}
+.marker-pulse { animation: markerPulse 2.2s ease-out infinite; }
+@keyframes markerPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(235, 139, 103, 0.35); }
+  50% { box-shadow: 0 0 0 12px rgba(235, 139, 103, 0); }
+}
+
+.reveal-up { animation: revealUp 520ms var(--ease-out) both; }
+@keyframes revealUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; }
+}
+
+@media (max-width: 720px) {
+  .map-road { height: 16px; }
+}
