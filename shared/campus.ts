@@ -30,7 +30,20 @@ export type CampusBuilding = {
   height: number;
   /** Marker / accent colour (hex). */
   accent: string;
+  /** Real-world coordinates (optional — used when wiring a real map). */
+  latitude?: string;
+  longitude?: string;
   floorsDetail: FloorDetail[];
+};
+
+/** Editable site-wide settings, managed from the admin panel. */
+export type CampusSettings = {
+  collegeName: string;
+  address: string;
+  contactEmail: string;
+  /** Google My Maps "embed on my site" URL, or "" to use the illustrated map. */
+  mapEmbedUrl: string;
+  mapCenter: { lat: number; lng: number };
 };
 
 export type CampusNewsItem = {
@@ -207,3 +220,23 @@ export const CAMPUS_OVERVIEW: CampusOverview = {
     { label: "ข่าวสารล่าสุด", value: `${CAMPUS_NEWS.length} เรื่อง` },
   ],
 };
+
+/** Fallback settings used until the `site_settings` table has real values. */
+export const CAMPUS_SETTINGS_DEFAULTS: CampusSettings = {
+  collegeName: "วิทยาลัยเทคนิคสมุทรสงคราม",
+  address: CAMPUS_OVERVIEW.address,
+  contactEmail: "info@smtc.ac.th",
+  mapEmbedUrl: "",
+  mapCenter: CAMPUS_OVERVIEW.mapCenter,
+};
+
+/** Keys stored as rows in the `site_settings` table. */
+export const CAMPUS_SETTINGS_KEYS = [
+  "collegeName",
+  "address",
+  "contactEmail",
+  "mapEmbedUrl",
+  "mapCenterLat",
+  "mapCenterLng",
+] as const;
+export type CampusSettingKey = (typeof CAMPUS_SETTINGS_KEYS)[number];

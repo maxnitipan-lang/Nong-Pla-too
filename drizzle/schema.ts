@@ -22,6 +22,15 @@ export const campusBuildings = mysqlTable("campus_buildings", {
   latitude: varchar("latitude", { length: 32 }).notNull(),
   longitude: varchar("longitude", { length: 32 }).notNull(),
   floorDetails: json("floorDetails").notNull(),
+  /** Marker / accent colour (hex) shown on the illustrated fallback map. */
+  accent: varchar("accent", { length: 20 }).default("#123b52").notNull(),
+  /** Marker position + footprint on the illustrated fallback map, 0–100 (%). */
+  mapX: int("mapX").default(50).notNull(),
+  mapY: int("mapY").default(50).notNull(),
+  mapWidth: int("mapWidth").default(18).notNull(),
+  mapHeight: int("mapHeight").default(17).notNull(),
+  /** Ascending display order in the sidebar list. */
+  sortOrder: int("sortOrder").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -35,11 +44,20 @@ export const campusNews = mysqlTable("campus_news", {
   timeLabel: varchar("timeLabel", { length: 120 }).notNull(),
   accent: varchar("accent", { length: 20 }).notNull(),
   published: int("published").default(1).notNull(),
+  sortOrder: int("sortOrder").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+/** Key–value store for editable site-wide settings (map embed URL, address…). */
+export const siteSettings = mysqlTable("site_settings", {
+  key: varchar("key", { length: 64 }).primaryKey(),
+  value: text("value").notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
-export type CampusBuilding = typeof campusBuildings.$inferSelect;
-export type CampusNews = typeof campusNews.$inferSelect;
+export type CampusBuildingRow = typeof campusBuildings.$inferSelect;
+export type CampusNewsRow = typeof campusNews.$inferSelect;
+export type SiteSettingRow = typeof siteSettings.$inferSelect;

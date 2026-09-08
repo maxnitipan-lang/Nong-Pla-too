@@ -1,11 +1,13 @@
 import { COOKIE_NAME } from "@shared/const";
-import { getCampusBuildings, getCampusNews } from "./db";
+import { adminRouter } from "./adminRouter";
+import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 
 export const appRouter = router({
   system: systemRouter,
+  admin: adminRouter,
   auth: router({
     me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -18,6 +20,7 @@ export const appRouter = router({
   campus: router({
     buildings: publicProcedure.query(() => getCampusBuildings()),
     news: publicProcedure.query(() => getCampusNews()),
+    settings: publicProcedure.query(() => getCampusSettings()),
   }),
 });
 

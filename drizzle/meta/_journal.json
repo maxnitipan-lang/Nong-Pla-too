@@ -15,6 +15,13 @@
       "when": 1788677255825,
       "tag": "0001_deep_quentin_quire",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1788677355825,
+      "tag": "0002_admin_fields",
+      "breakpoints": true
     }
   ]
 }

@@ -1,4 +1,5 @@
-import { MapView } from "@/components/Map";
+import { CampusMyMap, isMyMapConfigured } from "@/components/CampusMyMap";
+import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_OVERVIEW } from "@shared/campus";
 import type { CampusBuilding } from "@shared/campus";
@@ -18,7 +19,7 @@ import {
   Sparkles,
   X,
 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const categoryFilters = ["ทั้งหมด", "วิชาการ", "ปฏิบัติการ", "บริการ", "กิจกรรม"] as const;
 
@@ -96,11 +97,14 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState("main");
   const [query, setQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const mapRef = useRef<google.maps.Map | null>(null);
   const { data: buildingsData } = trpc.campus.buildings.useQuery(undefined, { staleTime: 1000 * 60 * 10 });
   const { data: newsData } = trpc.campus.news.useQuery(undefined, { staleTime: 1000 * 60 * 10 });
+  const { data: settings } = trpc.campus.settings.useQuery(undefined, { staleTime: 1000 * 60 * 10 });
+  const { user } = useAuth();
   const buildings = buildingsData?.length ? buildingsData : CAMPUS_BUILDINGS;
   const news = newsData?.length ? newsData : CAMPUS_NEWS;
+  const mapEmbedUrl = settings?.mapEmbedUrl ?? "";
+  const campusAddress = settings?.address ?? CAMPUS_OVERVIEW.address;
   const selectedBuilding = buildings.find((item) => item.id === selectedId) ?? buildings[0];
 
   const filteredBuildings = useMemo(() => {
@@ -112,29 +116,8 @@ export default function Home() {
     });
   }, [activeCategory, buildings, query]);
 
-  const handleMapReady = useCallback((map: google.maps.Map) => {
-    mapRef.current = map;
-    map.setOptions({
-      styles: [
-        { elementType: "geometry", stylers: [{ color: "#dbe9e3" }] },
-        { elementType: "labels.text.fill", stylers: [{ color: "#45645f" }] },
-        { elementType: "labels.text.stroke", stylers: [{ color: "#edf6f1" }] },
-        { featureType: "water", elementType: "geometry", stylers: [{ color: "#a8d4d0" }] },
-        { featureType: "road", elementType: "geometry", stylers: [{ color: "#f7faf5" }] },
-        { featureType: "poi.park", elementType: "geometry", stylers: [{ color: "#b9ddc9" }] },
-      ],
-      mapTypeControl: false,
-      streetViewControl: false,
-      fullscreenControl: false,
-    });
-  }, []);
-
   const focusBuilding = (building: CampusBuilding) => {
     setSelectedId(building.id);
-    const latOffset = (building.y - 50) * 0.00035;
-    const lngOffset = (building.x - 50) * 0.00045;
-    mapRef.current?.panTo({ lat: CAMPUS_OVERVIEW.mapCenter.lat - latOffset, lng: CAMPUS_OVERVIEW.mapCenter.lng + lngOffset });
-    mapRef.current?.setZoom(17);
   };
 
   return (
@@ -213,21 +196,21 @@ export default function Home() {
                   <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#a8d6c6]"><span className="h-1.5 w-1.5 rounded-full bg-[#72d5a9]" /> พร้อมใช้งาน</span>
                 </div>
                 <div className="map-surface relative h-[390px] overflow-hidden sm:h-[470px]">
-                  <div className="absolute inset-0 opacity-75"><MapView initialCenter={CAMPUS_OVERVIEW.mapCenter} initialZoom={16} onMapReady={handleMapReady} className="h-full w-full" /></div>
-                  <div className="map-road left-[-5%] top-[48%] w-[120%] rotate-[18deg]" />
-                  <div className="map-road left-[41%] top-[-12%] h-[125%] w-[17px] rotate-[30deg]" />
-                  <div className="map-road left-[7%] top-[22%] w-[92%] rotate-[-22deg] opacity-75" />
-                  <div className="map-building left-[15%] top-[28%] h-[21%] w-[21%]" />
-                  <div className="map-building left-[45%] top-[32%] h-[17%] w-[21%]" />
-                  <div className="map-building left-[72%] top-[18%] h-[21%] w-[18%]" />
-                  <div className="map-building left-[67%] top-[57%] h-[19%] w-[24%]" />
-                  <div className="map-building left-[28%] top-[67%] h-[17%] w-[23%]" />
-                  <div className="map-building left-[8%] top-[62%] h-[19%] w-[17%]" />
-                  {buildings.map((building) => <MapPinMarker key={building.id} building={building} selected={building.id === selectedId} onClick={() => focusBuilding(building)} />)}
+                  <CampusMyMap embedUrl={mapEmbedUrl}>
+                    <div className="map-road left-[-5%] top-[48%] w-[120%] rotate-[18deg]" />
+                    <div className="map-road left-[41%] top-[-12%] h-[125%] w-[17px] rotate-[30deg]" />
+                    <div className="map-road left-[7%] top-[22%] w-[92%] rotate-[-22deg] opacity-75" />
+                    <div className="map-building left-[15%] top-[28%] h-[21%] w-[21%]" />
+                    <div className="map-building left-[45%] top-[32%] h-[17%] w-[21%]" />
+                    <div className="map-building left-[72%] top-[18%] h-[21%] w-[18%]" />
+                    <div className="map-building left-[67%] top-[57%] h-[19%] w-[24%]" />
+                    <div className="map-building left-[28%] top-[67%] h-[17%] w-[23%]" />
+                    <div className="map-building left-[8%] top-[62%] h-[19%] w-[17%]" />
+                    {buildings.map((building) => <MapPinMarker key={building.id} building={building} selected={building.id === selectedId} onClick={() => focusBuilding(building)} />)}
+                  </CampusMyMap>
                   <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><Layers3 size={13} className="text-[var(--aqua)]" /> แผนผังวิทยาลัย</div>
-                  <div className="absolute right-4 top-4 z-20 flex flex-col gap-1.5"><button type="button" onClick={() => { const map = mapRef.current; if (map) map.setZoom((map.getZoom() ?? 16) + 1); }} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 text-lg font-medium text-[var(--ink)] shadow-sm">+</button><button type="button" onClick={() => { const map = mapRef.current; if (map) map.setZoom((map.getZoom() ?? 16) - 1); }} className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 text-lg font-medium text-[var(--ink)] shadow-sm">−</button></div>
                 </div>
-                <div className="flex items-center justify-between gap-4 bg-white px-4 py-3.5 sm:px-5"><div><p className="text-xs font-extrabold text-[var(--ink)]">วิทยาลัยเทคนิคสมุทรสงคราม</p><p className="mt-1 text-[10px] text-[var(--muted-foreground)]">{CAMPUS_OVERVIEW.address}</p></div><button type="button" onClick={() => scrollToId("campus-map")} className="flex shrink-0 items-center gap-1.5 text-xs font-extrabold text-[#287c78]">เปิดแผนที่เต็ม <ArrowUpRight size={14} /></button></div>
+                <div className="flex items-center justify-between gap-4 bg-white px-4 py-3.5 sm:px-5"><div><p className="text-xs font-extrabold text-[var(--ink)]">วิทยาลัยเทคนิคสมุทรสงคราม</p><p className="mt-1 text-[10px] text-[var(--muted-foreground)]">{campusAddress}</p></div><button type="button" onClick={() => scrollToId("campus-map")} className="flex shrink-0 items-center gap-1.5 text-xs font-extrabold text-[#287c78]">เปิดแผนที่เต็ม <ArrowUpRight size={14} /></button></div>
               </div>
             </div>
           </div>
@@ -246,7 +229,7 @@ export default function Home() {
               </div>
               <div className="mt-auto border-t border-[var(--border)] bg-[var(--background)] p-4"><p className="text-[11px] leading-5 text-[var(--muted-foreground)]"><span className="font-bold text-[var(--ink)]">เคล็ดลับ:</span> ใช้หมุดสีต่าง ๆ เพื่อแยกประเภทอาคารและบริการภายในวิทยาลัย</p></div>
             </aside>
-            <div className="bg-[#deece7] p-3 sm:p-5"><div className="relative h-[620px] overflow-hidden rounded-[20px] bg-[#dcece4]"><div className="absolute inset-0 opacity-76"><MapView initialCenter={CAMPUS_OVERVIEW.mapCenter} initialZoom={16} onMapReady={handleMapReady} className="h-full w-full" /></div><div className="map-road left-[-12%] top-[47%] w-[125%] rotate-[17deg]" /><div className="map-road left-[43%] top-[-18%] h-[135%] w-[22px] rotate-[31deg]" /><div className="map-road left-[0%] top-[21%] w-[100%] rotate-[-21deg] opacity-75" /><div className="map-road left-[18%] top-[78%] w-[85%] rotate-[7deg] opacity-70" /><div className="map-building left-[15%] top-[28%] h-[21%] w-[21%]" /><div className="map-building left-[45%] top-[32%] h-[17%] w-[21%]" /><div className="map-building left-[72%] top-[18%] h-[21%] w-[18%]" /><div className="map-building left-[67%] top-[57%] h-[19%] w-[24%]" /><div className="map-building left-[28%] top-[67%] h-[17%] w-[23%]" /><div className="map-building left-[8%] top-[62%] h-[19%] w-[17%]" />{buildings.map((building) => <MapPinMarker key={building.id} building={building} selected={building.id === selectedId} onClick={() => focusBuilding(building)} />)}<div className="absolute left-4 top-4 z-20 rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg sm:left-5 sm:top-5">{filteredBuildings.length} จุดสำคัญในวิทยาลัย</div><div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><MapPin size={13} className="text-[var(--coral)]" fill="currentColor" /> แตะหมุดเพื่อดูข้อมูล</div></div></div>
+            <div className="bg-[#deece7] p-3 sm:p-5"><div className="relative h-[620px] overflow-hidden rounded-[20px] bg-[#dcece4]"><CampusMyMap embedUrl={mapEmbedUrl}><div className="map-road left-[-12%] top-[47%] w-[125%] rotate-[17deg]" /><div className="map-road left-[43%] top-[-18%] h-[135%] w-[22px] rotate-[31deg]" /><div className="map-road left-[0%] top-[21%] w-[100%] rotate-[-21deg] opacity-75" /><div className="map-road left-[18%] top-[78%] w-[85%] rotate-[7deg] opacity-70" /><div className="map-building left-[15%] top-[28%] h-[21%] w-[21%]" /><div className="map-building left-[45%] top-[32%] h-[17%] w-[21%]" /><div className="map-building left-[72%] top-[18%] h-[21%] w-[18%]" /><div className="map-building left-[67%] top-[57%] h-[19%] w-[24%]" /><div className="map-building left-[28%] top-[67%] h-[17%] w-[23%]" /><div className="map-building left-[8%] top-[62%] h-[19%] w-[17%]" />{buildings.map((building) => <MapPinMarker key={building.id} building={building} selected={building.id === selectedId} onClick={() => focusBuilding(building)} />)}</CampusMyMap><div className="absolute left-4 top-4 z-20 rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg sm:left-5 sm:top-5">{filteredBuildings.length} จุดสำคัญในวิทยาลัย</div>{!isMyMapConfigured(mapEmbedUrl) && <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><MapPin size={13} className="text-[var(--coral)]" fill="currentColor" /> แตะหมุดเพื่อดูข้อมูล</div>}</div></div>
           </div>
 
           {selectedBuilding && <div className="mt-5 grid gap-5 rounded-[24px] border border-[var(--border)] bg-white p-5 shadow-[0_12px_35px_rgba(16,41,58,0.06)] sm:p-7 md:grid-cols-[1fr_1.3fr] md:items-start"><div><div className="mb-4 flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl text-white" style={{ backgroundColor: selectedBuilding.accent }}><Building2 size={19} /></span><div><div className="flex items-center gap-2"><h3 className="font-display text-xl font-bold tracking-[-0.04em] text-[var(--ink)]">{selectedBuilding.name}</h3><span className="rounded-full bg-[var(--muted)] px-2 py-1 text-[10px] font-bold text-[var(--muted-foreground)]">{selectedBuilding.category}</span></div><p className="mt-1 text-xs font-medium text-[var(--muted-foreground)]">ข้อมูลอาคารอัปเดตล่าสุด · {selectedBuilding.floors} ชั้น</p></div></div><p className="text-sm leading-7 text-[var(--muted-foreground)]">{selectedBuilding.description}</p><button type="button" onClick={() => scrollToId("about")} className="mt-5 flex items-center gap-2 text-xs font-extrabold text-[#287c78]">ขอเส้นทางไปอาคารนี้ <ArrowUpRight size={14} /></button></div><FloorDetails building={selectedBuilding} /></div>}
@@ -256,9 +239,9 @@ export default function Home() {
           <div className="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[#398e89]">02 / CAMPUS NEWS</p><h2 className="font-display text-3xl font-bold tracking-[-0.05em] text-[var(--ink)] sm:text-4xl">ข่าวสารจากวิทยาลัยฯ</h2></div><button type="button" onClick={() => window.alert("ส่วนข่าวสารทั้งหมดจะเชื่อมต่อ API ข่าวสารในขั้นตอนถัดไป")} className="flex items-center gap-1 text-sm font-extrabold text-[#287c78]">ดูทั้งหมด <ArrowUpRight size={15} /></button></div><div className="grid gap-4 lg:grid-cols-3">{news.map((item, index) => <article key={item.id} className={`group relative overflow-hidden rounded-[22px] border border-white/80 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(16,41,58,0.1)] ${index === 0 ? "lg:p-7" : ""}`}><div className="absolute right-[-25px] top-[-30px] h-24 w-24 rounded-full opacity-25" style={{ backgroundColor: item.accent }} /><div className="relative flex h-full flex-col"><div className="flex items-center justify-between"><span className="rounded-full px-2.5 py-1 text-[10px] font-extrabold" style={{ color: item.accent, backgroundColor: `${item.accent}18` }}>{item.tag}</span><span className="text-[11px] font-medium text-[var(--muted-foreground)]">{item.date}</span></div><h3 className="mt-8 max-w-[340px] text-xl font-extrabold leading-snug tracking-[-0.03em] text-[var(--ink)]">{item.title}</h3><p className="mt-3 flex-1 text-sm leading-7 text-[var(--muted-foreground)]">{item.excerpt}</p><div className="mt-7 flex items-center justify-between border-t border-[var(--border)] pt-4"><span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--muted-foreground)]"><Clock3 size={13} /> {item.time}</span><button type="button" onClick={() => window.alert(`เปิดข่าว: ${item.title}`)} className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--muted)] text-[var(--ink)] transition-colors group-hover:bg-[var(--ink)] group-hover:text-white" aria-label={`อ่านข่าว ${item.title}`}><ArrowUpRight size={14} /></button></div></div></article>)}</div></div>
         </section>
 
-        <section id="about" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 py-16 sm:px-8 lg:px-12 lg:py-20"><div className="grid gap-8 rounded-[28px] bg-[var(--ink)] px-6 py-9 text-white sm:px-10 lg:grid-cols-[1.3fr_0.7fr] lg:items-end lg:px-14 lg:py-12"><div><p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[var(--aqua)]">ABOUT THE CAMPUS</p><h2 className="max-w-[680px] text-3xl font-extrabold leading-tight tracking-[-0.05em] sm:text-4xl">พื้นที่เล็ก ๆ ที่เต็มไปด้วย<br /><span className="text-[#9edbd1]">โอกาสการเรียนรู้</span></h2><p className="mt-4 max-w-[630px] text-sm leading-7 text-white/65">วิทยาลัยเทคนิคสมุทรสงครามมุ่งพัฒนากำลังคนสายอาชีพให้พร้อมสำหรับโลกการทำงาน ด้วยการเรียนรู้จากสถานที่จริง เทคโนโลยีจริง และความร่วมมือจากชุมชน</p></div><div className="flex flex-col gap-3 lg:items-end"><div className="flex items-center gap-2 text-sm font-bold text-white/80"><MapPin size={17} className="text-[var(--coral)]" /> {CAMPUS_OVERVIEW.address}</div><a href="mailto:info@smtc.ac.th" className="flex items-center gap-2 text-sm font-bold text-[var(--aqua)] transition-colors hover:text-white">ติดต่อวิทยาลัย <ArrowUpRight size={15} /></a></div></div></section>
+        <section id="about" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 py-16 sm:px-8 lg:px-12 lg:py-20"><div className="grid gap-8 rounded-[28px] bg-[var(--ink)] px-6 py-9 text-white sm:px-10 lg:grid-cols-[1.3fr_0.7fr] lg:items-end lg:px-14 lg:py-12"><div><p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[var(--aqua)]">ABOUT THE CAMPUS</p><h2 className="max-w-[680px] text-3xl font-extrabold leading-tight tracking-[-0.05em] sm:text-4xl">พื้นที่เล็ก ๆ ที่เต็มไปด้วย<br /><span className="text-[#9edbd1]">โอกาสการเรียนรู้</span></h2><p className="mt-4 max-w-[630px] text-sm leading-7 text-white/65">วิทยาลัยเทคนิคสมุทรสงครามมุ่งพัฒนากำลังคนสายอาชีพให้พร้อมสำหรับโลกการทำงาน ด้วยการเรียนรู้จากสถานที่จริง เทคโนโลยีจริง และความร่วมมือจากชุมชน</p></div><div className="flex flex-col gap-3 lg:items-end"><div className="flex items-center gap-2 text-sm font-bold text-white/80"><MapPin size={17} className="text-[var(--coral)]" /> {campusAddress}</div><a href={`mailto:${settings?.contactEmail || "info@smtc.ac.th"}`} className="flex items-center gap-2 text-sm font-bold text-[var(--aqua)] transition-colors hover:text-white">ติดต่อวิทยาลัย <ArrowUpRight size={15} /></a></div></div></section>
       </main>
-      <footer className="border-t border-[var(--border)] bg-white"><div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-3 px-5 py-6 text-[11px] font-medium text-[var(--muted-foreground)] sm:flex-row sm:px-8 lg:px-12"><span>© 2026 วิทยาลัยเทคนิคสมุทรสงคราม · Campus Guide</span><span>ข้อมูลสาธิตสำหรับโครงงาน frontend และ backend</span></div></footer>
+      <footer className="border-t border-[var(--border)] bg-white"><div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-3 px-5 py-6 text-[11px] font-medium text-[var(--muted-foreground)] sm:flex-row sm:px-8 lg:px-12"><span>© 2026 วิทยาลัยเทคนิคสมุทรสงคราม · Campus Guide</span><span className="flex items-center gap-3">{user?.role === "admin" && <a href="/admin" className="font-bold text-[#287c78]">ผู้ดูแลระบบ</a>}<span>ข้อมูลสาธิตสำหรับโครงงาน frontend และ backend</span></span></div></footer>
     </div>
   );
 }
