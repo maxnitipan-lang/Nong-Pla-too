@@ -1,32 +1,32 @@
 import { useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import { AIChatBox, type Message } from "@/components/AIChatBox";
-import { DirectionsModal } from "@/components/DirectionsModal";
 import { trpc } from "@/lib/trpc";
-import type { CampusBuilding } from "@shared/campus";
+
+type CampusChatProps = {
+  /** Called when the bot decides to show a walking route to a building. */
+  onShowRoute?: (buildingId: string) => void;
+};
 
 /**
  * Floating "น้องปลาทู" chatbot. Only renders when the server has an AI key
  * configured (`trpc.chat.configured`). Answers from the campus building / news
- * data via `trpc.chat.ask`, and can open the walking-route map on request.
+ * data via `trpc.chat.ask`; a directions request calls `onShowRoute` so the
+ * page can draw the route on the main map.
  */
-export function CampusChat() {
+export function CampusChat({ onShowRoute }: CampusChatProps) {
   const { data: configured } = trpc.chat.configured.useQuery(undefined, {
     staleTime: Infinity,
   });
-  const { data: buildings } = trpc.campus.buildings.useQuery(undefined, {
-    staleTime: 1000 * 60 * 10,
-  });
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
-  const [routeBuilding, setRouteBuilding] = useState<CampusBuilding | null>(null);
 
   const ask = trpc.chat.ask.useMutation({
     onSuccess: ({ reply, routeToBuildingId }) => {
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
       if (routeToBuildingId) {
-        const target = buildings?.find((b) => b.id === routeToBuildingId);
-        if (target) setRouteBuilding(target);
+        setOpen(false);
+        onShowRoute?.(routeToBuildingId);
       }
     },
     onError: (error) =>
@@ -49,11 +49,6 @@ export function CampusChat() {
 
   return (
     <>
-      <DirectionsModal
-        building={routeBuilding}
-        onClose={() => setRouteBuilding(null)}
-      />
-
       {!open && (
         <button
           type="button"

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import * as L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { CampusBuilding } from "@shared/campus";
+import { fetchWalkingRoute, formatDistance, formatWalk, haversineMeters } from "@/lib/directions";
 import { cn } from "@/lib/utils";
 
 function pinIcon(color: string, active: boolean) {
@@ -19,19 +20,30 @@ function pinIcon(color: string, active: boolean) {
   });
 }
 
+const youIcon = L.divIcon({
+  className: "",
+  html: `<span style="display:block;width:16px;height:16px;border-radius:9999px;background:#2f7fb5;border:3px solid #fff;box-shadow:0 0 0 3px rgba(47,127,181,.35)"></span>`,
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
+});
+
 type CampusInteractiveMapProps = {
   buildings: CampusBuilding[];
   selectedId: string;
   onSelect: (id: string) => void;
   center: { lat: number; lng: number };
   className?: string;
+  /** When set, draw the walking route from the viewer to this building. */
+  routeToId?: string | null;
+  /** Reports the route summary ("เดิน ~350 เมตร · ~5 นาที") or null when cleared. */
+  onRouteInfo?: (text: string | null) => void;
 };
 
 /**
  * The interactive campus map: Leaflet + OpenStreetMap (free, no API key), one
  * marker per building drawn straight from our data — so every building shows up
  * without touching Google My Maps. Clicking the list smoothly flies the map to
- * that building.
+ * that building, and "ดูเส้นทางในแอป" draws the walking route right here.
  */
 export function CampusInteractiveMap({
   buildings,
@@ -39,12 +51,18 @@ export function CampusInteractiveMap({
   onSelect,
   center,
   className,
+  routeToId,
+  onRouteInfo,
 }: CampusInteractiveMapProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
+  const routeLayerRef = useRef<L.Polyline | null>(null);
+  const youMarkerRef = useRef<L.Marker | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
+  const onRouteInfoRef = useRef(onRouteInfo);
+  onRouteInfoRef.current = onRouteInfo;
   const [ready, setReady] = useState(false);
 
   // 1. Create the map once.
@@ -67,6 +85,8 @@ export function CampusInteractiveMap({
       map.remove();
       mapRef.current = null;
       markersRef.current.clear();
+      routeLayerRef.current = null;
+      youMarkerRef.current = null;
     };
     // center is the initial camera only — not a dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -117,12 +137,94 @@ export function CampusInteractiveMap({
     });
 
     const sel = buildings.find((b) => b.id === selectedId);
-    if (sel?.latitude && sel?.longitude) {
+    if (sel?.latitude && sel?.longitude && !routeToId) {
       map.flyTo([Number(sel.latitude), Number(sel.longitude)], 18, {
         duration: 0.8,
       });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ready, selectedId, buildings]);
+
+  // 4. Walking route: draw from the viewer's location to `routeToId`.
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!ready || !map) return;
+
+    const clear = () => {
+      routeLayerRef.current?.remove();
+      routeLayerRef.current = null;
+      youMarkerRef.current?.remove();
+      youMarkerRef.current = null;
+    };
+    clear();
+
+    const target = routeToId
+      ? buildings.find((b) => b.id === routeToId)
+      : undefined;
+    if (!target?.latitude || !target?.longitude) {
+      onRouteInfoRef.current?.(null);
+      return;
+    }
+    const dest = { lat: Number(target.latitude), lng: Number(target.longitude) };
+
+    if (!navigator.geolocation) {
+      onRouteInfoRef.current?.("อุปกรณ์นี้ไม่รองรับ GPS — แสดงเฉพาะที่ตั้งอาคาร");
+      map.flyTo([dest.lat, dest.lng], 18, { duration: 0.8 });
+      return;
+    }
+
+    let cancelled = false;
+    onRouteInfoRef.current?.("กำลังขอตำแหน่งของคุณ…");
+
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        if (cancelled || !mapRef.current) return;
+        const origin = { lat: pos.coords.latitude, lng: pos.coords.longitude };
+        youMarkerRef.current = L.marker([origin.lat, origin.lng], {
+          icon: youIcon,
+        })
+          .addTo(map)
+          .bindTooltip("ตำแหน่งของคุณ", { direction: "top" });
+
+        const route = await fetchWalkingRoute(origin, dest);
+        if (cancelled || !mapRef.current) return;
+
+        if (route) {
+          routeLayerRef.current = L.polyline(route.points, {
+            color: "#123b52",
+            weight: 5,
+            opacity: 0.85,
+          }).addTo(map);
+          onRouteInfoRef.current?.(formatWalk(route));
+        } else {
+          routeLayerRef.current = L.polyline(
+            [
+              [origin.lat, origin.lng],
+              [dest.lat, dest.lng],
+            ],
+            { color: "#123b52", weight: 4, opacity: 0.7, dashArray: "6 8" },
+          ).addTo(map);
+          onRouteInfoRef.current?.(
+            `ระยะเส้นตรง ~${formatDistance(haversineMeters(origin, dest))} (โดยประมาณ)`,
+          );
+        }
+        map.fitBounds(routeLayerRef.current.getBounds().pad(0.25));
+      },
+      () => {
+        if (cancelled) return;
+        onRouteInfoRef.current?.(
+          "ไม่ได้รับสิทธิ์ตำแหน่ง — กด “เปิดใน Google Maps” เพื่อนำทางจากตำแหน่งจริง",
+        );
+        map.flyTo([dest.lat, dest.lng], 18, { duration: 0.8 });
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ready, routeToId, buildings]);
 
   return (
     <div
