@@ -54,14 +54,14 @@ export function CampusChat({ onShowRoute }: CampusChatProps) {
           type="button"
           onClick={() => setOpen(true)}
           aria-label="เปิดแชตถามน้องปลาทู"
-          className="fixed bottom-5 right-5 z-50 flex h-14 items-center gap-2 rounded-full bg-[var(--ink)] px-5 text-sm font-bold text-white shadow-[0_10px_30px_rgba(16,41,58,0.28)] transition-transform hover:-translate-y-0.5"
+          className="fixed bottom-5 right-5 z-[1200] flex h-14 items-center gap-2 rounded-full bg-[var(--ink)] px-5 text-sm font-bold text-white shadow-[0_10px_30px_rgba(16,41,58,0.28)] transition-transform hover:-translate-y-0.5"
         >
           <Sparkles size={18} /> ถามน้องปลาทู
         </button>
       )}
 
       {open && (
-        <div className="fixed bottom-5 right-5 z-50 flex h-[560px] max-h-[calc(100dvh-2.5rem)] w-[calc(100vw-2.5rem)] max-w-[400px] flex-col overflow-hidden rounded-[20px] border border-[var(--border)] bg-white shadow-[0_20px_60px_rgba(16,41,58,0.25)]">
+        <div className="fixed bottom-5 right-5 z-[1200] flex h-[560px] max-h-[calc(100dvh-2.5rem)] w-[calc(100vw-2.5rem)] max-w-[400px] flex-col overflow-hidden rounded-[20px] border border-[var(--border)] bg-white shadow-[0_20px_60px_rgba(16,41,58,0.25)]">
           <div className="flex items-center justify-between bg-[var(--ink)] px-4 py-3 text-white">
             <span className="flex items-center gap-2 text-sm font-bold">
               <Sparkles size={16} /> น้องปลาทู · ผู้ช่วยประจำวิทยาลัย
