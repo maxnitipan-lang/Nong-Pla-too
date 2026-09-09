@@ -27,6 +27,56 @@ const youIcon = L.divIcon({
   iconAnchor: [8, 8],
 });
 
+type Fix = { lat: number; lng: number; accuracy: number };
+
+/**
+ * Get the viewer's location, favouring accuracy over speed. The first fix a
+ * phone/laptop returns is often a coarse wi-fi/IP estimate that can land in the
+ * next province; `watchPosition` lets the GPS refine it. Keeps the best reading
+ * for up to ~9s, resolving early once it is within 40m.
+ */
+function locateBest(onProgress?: (fix: Fix) => void): Promise<Fix> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("no-geolocation"));
+      return;
+    }
+    let best: Fix | null = null;
+    let settled = false;
+    const finish = () => {
+      if (settled) return;
+      settled = true;
+      navigator.geolocation.clearWatch(watchId);
+      clearTimeout(timer);
+      if (best) resolve(best);
+      else reject(new Error("no-fix"));
+    };
+    const timer = setTimeout(finish, 9000);
+    const watchId = navigator.geolocation.watchPosition(
+      (pos) => {
+        const fix: Fix = {
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+          accuracy: pos.coords.accuracy || 9999,
+        };
+        if (!best || fix.accuracy < best.accuracy) {
+          best = fix;
+          onProgress?.(fix);
+        }
+        if (fix.accuracy <= 40) finish();
+      },
+      (err) => {
+        if (!best) {
+          settled = true;
+          clearTimeout(timer);
+          reject(err);
+        }
+      },
+      { enableHighAccuracy: true, timeout: 9000, maximumAge: 0 },
+    );
+  });
+}
+
 type CampusInteractiveMapProps = {
   buildings: CampusBuilding[];
   selectedId: string;
@@ -72,12 +122,17 @@ export function CampusInteractiveMap({
     const map = mapRef.current;
     if (!map) return;
     myLocRef.current = { lat, lng };
+    const label =
+      accuracy > 60
+        ? `ตำแหน่งของคุณ · คลาดเคลื่อน ~${formatDistance(accuracy)}`
+        : "ตำแหน่งของคุณ";
     if (youMarkerRef.current) {
       youMarkerRef.current.setLatLng([lat, lng]);
+      youMarkerRef.current.setTooltipContent(label);
     } else {
       youMarkerRef.current = L.marker([lat, lng], { icon: youIcon })
         .addTo(map)
-        .bindTooltip("ตำแหน่งของคุณ", { direction: "top" });
+        .bindTooltip(label, { direction: "top" });
     }
     if (accuracy > 0) {
       if (youCircleRef.current) {
@@ -125,26 +180,27 @@ export function CampusInteractiveMap({
             return;
           }
           btn.style.opacity = "0.5";
-          navigator.geolocation.getCurrentPosition(
-            (pos) => {
+          locateBest((fix) => setMyLocation(fix.lat, fix.lng, fix.accuracy))
+            .then((fix) => {
               btn.style.opacity = "1";
-              setMyLocation(
-                pos.coords.latitude,
-                pos.coords.longitude,
-                pos.coords.accuracy,
-              );
-              map.flyTo([pos.coords.latitude, pos.coords.longitude], 18, {
-                duration: 0.8,
-              });
-            },
-            () => {
+              setMyLocation(fix.lat, fix.lng, fix.accuracy);
+              youMarkerRef.current?.openTooltip();
+              // Poor fix (wi-fi/IP, often the wrong district): show the
+              // uncertainty circle instead of zooming onto a wrong point.
+              if (fix.accuracy > 300 && youCircleRef.current) {
+                map.flyToBounds(youCircleRef.current.getBounds().pad(0.2), {
+                  duration: 0.8,
+                });
+              } else {
+                map.flyTo([fix.lat, fix.lng], 18, { duration: 0.8 });
+              }
+            })
+            .catch(() => {
               btn.style.opacity = "1";
               onRouteInfoRef.current?.(
                 "เปิดสิทธิ์ตำแหน่งไม่สำเร็จ — อนุญาตในเบราว์เซอร์แล้วลองใหม่",
               );
-            },
-            { enableHighAccuracy: true, timeout: 10000 },
-          );
+            });
         });
         return btn;
       },
@@ -295,24 +351,19 @@ export function CampusInteractiveMap({
       void drawFrom(myLocRef.current);
     } else {
       onRouteInfoRef.current?.("กำลังขอตำแหน่งของคุณ…");
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          setMyLocation(
-            pos.coords.latitude,
-            pos.coords.longitude,
-            pos.coords.accuracy,
-          );
-          void drawFrom({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        },
-        () => {
+      locateBest((fix) => setMyLocation(fix.lat, fix.lng, fix.accuracy))
+        .then((fix) => {
+          if (cancelled) return;
+          setMyLocation(fix.lat, fix.lng, fix.accuracy);
+          void drawFrom({ lat: fix.lat, lng: fix.lng });
+        })
+        .catch(() => {
           if (cancelled) return;
           onRouteInfoRef.current?.(
             "ไม่ได้รับสิทธิ์ตำแหน่ง — กด “เปิดใน Google Maps” เพื่อนำทางจากตำแหน่งจริง",
           );
           map.flyTo([dest.lat, dest.lng], 18, { duration: 0.8 });
-        },
-        { enableHighAccuracy: true, timeout: 10000 },
-      );
+        });
     }
 
     return () => {
