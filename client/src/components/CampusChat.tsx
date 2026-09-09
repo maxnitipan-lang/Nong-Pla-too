@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Sparkles, X } from "lucide-react";
 import { AIChatBox, type Message } from "@/components/AIChatBox";
 import { trpc } from "@/lib/trpc";
@@ -18,32 +18,53 @@ export function CampusChat({ onShowRoute }: CampusChatProps) {
   const { data: configured } = trpc.chat.configured.useQuery(undefined, {
     staleTime: Infinity,
   });
+  const utils = trpc.useUtils();
   const [open, setOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
+  const [pending, setPending] = useState(false);
+  const abortRef = useRef<AbortController | null>(null);
 
-  const ask = trpc.chat.ask.useMutation({
-    onSuccess: ({ reply, routeToBuildingId }) => {
+  const handleSend = async (content: string) => {
+    const next: Message[] = [...messages, { role: "user", content }];
+    setMessages(next);
+
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setPending(true);
+    try {
+      const { reply, routeToBuildingId } = await utils.client.chat.ask.mutate(
+        { messages: next },
+        { signal: controller.signal },
+      );
       setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
       if (routeToBuildingId) {
         setOpen(false);
         onShowRoute?.(routeToBuildingId);
       }
-    },
-    onError: (error) =>
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: "assistant",
-          content: `ขออภัย ระบบยังตอบไม่ได้ตอนนี้\n(${error.message})`,
-        },
-      ]),
-  });
-
-  const handleSend = (content: string) => {
-    const next: Message[] = [...messages, { role: "user", content }];
-    setMessages(next);
-    ask.mutate({ messages: next });
+    } catch (error) {
+      if (controller.signal.aborted) {
+        setMessages((prev) => [
+          ...prev,
+          { role: "assistant", content: "หยุดแล้วครับ — ถามใหม่ได้เลย" },
+        ]);
+      } else {
+        const message =
+          error instanceof Error ? error.message : "ไม่ทราบสาเหตุ";
+        setMessages((prev) => [
+          ...prev,
+          {
+            role: "assistant",
+            content: `ขออภัย ระบบยังตอบไม่ได้ตอนนี้\n(${message})`,
+          },
+        ]);
+      }
+    } finally {
+      setPending(false);
+      abortRef.current = null;
+    }
   };
+
+  const handleStop = () => abortRef.current?.abort();
 
   if (!configured) return null;
 
@@ -79,7 +100,8 @@ export function CampusChat({ onShowRoute }: CampusChatProps) {
             <AIChatBox
               messages={messages}
               onSendMessage={handleSend}
-              isLoading={ask.isPending}
+              onStop={handleStop}
+              isLoading={pending}
               height="100%"
               placeholder="ถามน้องปลาทูเกี่ยวกับวิทยาลัย…"
               emptyStateMessage="สวัสดีครับ น้องปลาทูเองครับ ถามเรื่องอาคาร สาขา ข่าวสาร หรือขอเส้นทางได้เลย"

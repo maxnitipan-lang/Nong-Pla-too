@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { cn } from "@/lib/utils";
-import { Loader2, Send, User, Sparkles } from "lucide-react";
+import { Loader2, Send, Square, User, Sparkles } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { Streamdown } from "streamdown";
 
@@ -31,6 +31,12 @@ export type AIChatBoxProps = {
    * Whether the AI is currently generating a response
    */
   isLoading?: boolean;
+
+  /**
+   * Called when the user clicks "stop" while a response is loading.
+   * When provided, the send button turns into a stop button during loading.
+   */
+  onStop?: () => void;
 
   /**
    * Placeholder text for the input field
@@ -114,6 +120,7 @@ export function AIChatBox({
   messages,
   onSendMessage,
   isLoading = false,
+  onStop,
   placeholder = "Type your message...",
   className,
   height = "600px",
@@ -319,18 +326,32 @@ export function AIChatBox({
           className="flex-1 max-h-32 resize-none min-h-9"
           rows={1}
         />
-        <Button
-          type="submit"
-          size="icon"
-          disabled={!input.trim() || isLoading}
-          className="shrink-0 h-[38px] w-[38px]"
-        >
-          {isLoading ? (
-            <Loader2 className="size-4 animate-spin" />
-          ) : (
-            <Send className="size-4" />
-          )}
-        </Button>
+        {isLoading && onStop ? (
+          <Button
+            type="button"
+            size="icon"
+            variant="secondary"
+            onClick={onStop}
+            aria-label="หยุด"
+            title="หยุด"
+            className="shrink-0 h-[38px] w-[38px]"
+          >
+            <Square className="size-3.5 fill-current" />
+          </Button>
+        ) : (
+          <Button
+            type="submit"
+            size="icon"
+            disabled={!input.trim() || isLoading}
+            className="shrink-0 h-[38px] w-[38px]"
+          >
+            {isLoading ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <Send className="size-4" />
+            )}
+          </Button>
+        )}
       </form>
     </div>
   );
