@@ -1,0 +1,1 @@
+ALTER TABLE `campus_buildings` MODIFY COLUMN `category` enum('สายอุตสาหกรรม','พาณิชยกรรม/คหกรรม/สามัญ','บริหาร-สนับสนุน','ส่วนกลาง-กิจกรรม') NOT NULL;

@@ -58,7 +58,7 @@ describe("admin API access control", () => {
         id: "demo-test",
         name: "อาคารทดสอบ",
         shortName: "ทดสอบ",
-        category: "บริการ",
+        category: "บริหาร-สนับสนุน",
         description: "อาคารสำหรับทดสอบ",
         floors: 1,
         latitude: "",

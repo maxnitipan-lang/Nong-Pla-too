@@ -22,6 +22,20 @@
       "when": 1788677355825,
       "tag": "0002_admin_fields",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1788887483675,
+      "tag": "0003_nasty_boom_boom",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1788889460389,
+      "tag": "0004_slow_wiccan",
+      "breakpoints": true
     }
   ]
 }

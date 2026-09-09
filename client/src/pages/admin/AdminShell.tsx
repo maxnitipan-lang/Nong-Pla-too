@@ -103,7 +103,7 @@ export function AdminShell({
           </div>
           <div>
             <p className="text-sm font-bold text-[var(--ink)]">ผู้ดูแลระบบ</p>
-            <p className="text-[11px] text-[var(--muted-foreground)]">Campus Guide</p>
+            <p className="text-[11px] text-[var(--muted-foreground)]">น้องปลาทู</p>
           </div>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:pb-0">

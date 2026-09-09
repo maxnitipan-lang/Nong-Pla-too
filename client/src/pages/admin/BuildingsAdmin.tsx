@@ -55,7 +55,7 @@ const EMPTY: FormState = {
   id: "",
   name: "",
   shortName: "",
-  category: "วิชาการ",
+  category: "สายอุตสาหกรรม",
   description: "",
   floors: 1,
   accent: "#123b52",

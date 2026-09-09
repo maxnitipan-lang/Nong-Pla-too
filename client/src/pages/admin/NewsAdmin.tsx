@@ -19,7 +19,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { newsInputSchema } from "@shared/adminSchemas";
-import { Pencil, Plus, Trash2 } from "lucide-react";
+import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell, DbBanner } from "./AdminShell";
@@ -33,6 +33,9 @@ type NewsRow = {
   date: string;
   time: string;
   accent: string;
+  link: string;
+  image: string;
+  source: string;
   published: boolean;
   sortOrder: number;
 };
@@ -45,6 +48,9 @@ type FormState = {
   dateLabel: string;
   timeLabel: string;
   accent: string;
+  link: string;
+  imageUrl: string;
+  source: string;
   published: boolean;
   sortOrder: number;
 };
@@ -57,6 +63,9 @@ const EMPTY: FormState = {
   dateLabel: "",
   timeLabel: "",
   accent: "#3c8f8d",
+  link: "",
+  imageUrl: "",
+  source: "",
   published: true,
   sortOrder: 0,
 };
@@ -91,6 +100,13 @@ export default function NewsAdmin() {
     },
     onError: (e) => toast.error(e.message),
   });
+  const sync = trpc.admin.news.syncFromWebsite.useMutation({
+    onSuccess: (res) => {
+      invalidate();
+      toast.success(`ดึงข่าวจากเว็บวิทยาลัยแล้ว ${res.imported} รายการ`);
+    },
+    onError: (e) => toast.error(e.message),
+  });
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
     setForm((prev) => ({ ...prev, [key]: value }));
@@ -110,6 +126,9 @@ export default function NewsAdmin() {
       dateLabel: n.date,
       timeLabel: n.time,
       accent: n.accent,
+      link: n.link,
+      imageUrl: n.image,
+      source: n.source,
       published: n.published,
       sortOrder: n.sortOrder,
     });
@@ -133,7 +152,11 @@ export default function NewsAdmin() {
   return (
     <AdminShell section="news" title="จัดการข่าวสาร">
       <DbBanner />
-      <div className="mb-4 flex justify-end">
+      <div className="mb-4 flex flex-wrap justify-end gap-2">
+        <Button variant="outline" onClick={() => sync.mutate()} disabled={sync.isPending}>
+          <RefreshCw size={16} className={sync.isPending ? "animate-spin" : ""} />
+          {sync.isPending ? "กำลังดึง…" : "ดึงข่าวจากเว็บวิทยาลัย"}
+        </Button>
         <Button onClick={openCreate}>
           <Plus size={16} /> เพิ่มข่าว
         </Button>
@@ -158,6 +181,11 @@ export default function NewsAdmin() {
                   {!n.published && (
                     <span className="shrink-0 rounded-full bg-[var(--muted)] px-2 py-0.5 text-[10px] font-bold text-[var(--muted-foreground)]">
                       ฉบับร่าง
+                    </span>
+                  )}
+                  {n.source && (
+                    <span className="shrink-0 rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-bold text-[var(--secondary-foreground)]">
+                      จากเว็บวิทยาลัย
                     </span>
                   )}
                 </div>
@@ -228,6 +256,19 @@ export default function NewsAdmin() {
               placeholder="09:00–15:30 น."
             />
           </div>
+          <TextField
+            label="ลิงก์ข่าว (ไม่บังคับ)"
+            hint="คลิกการ์ดข่าวแล้วเปิดหน้านี้"
+            value={form.link}
+            onChange={(v) => set("link", v)}
+            placeholder="https://www.sstc.ac.th/news-detail_325_..."
+          />
+          <TextField
+            label="ลิงก์รูปภาพ (ไม่บังคับ)"
+            value={form.imageUrl}
+            onChange={(v) => set("imageUrl", v)}
+            placeholder="https://..."
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             <ColorField label="สีเน้น" value={form.accent} onChange={(v) => set("accent", v)} />
             <NumberField

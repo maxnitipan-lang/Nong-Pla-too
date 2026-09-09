@@ -6,7 +6,12 @@
 // launch. `x` / `y` are percentage positions on the illustrated campus map;
 // swap to real lat/lng when wiring `google.maps.marker.AdvancedMarkerElement`.
 
-export type CampusCategory = "วิชาการ" | "ปฏิบัติการ" | "บริการ" | "กิจกรรม";
+// The four Google My Maps layers of the campus PR map.
+export type CampusCategory =
+  | "สายอุตสาหกรรม"
+  | "พาณิชยกรรม/คหกรรม/สามัญ"
+  | "บริหาร-สนับสนุน"
+  | "ส่วนกลาง-กิจกรรม";
 
 export type FloorDetail = {
   level: number;
@@ -54,6 +59,12 @@ export type CampusNewsItem = {
   date: string;
   time: string;
   accent: string;
+  /** Full-article URL, or "" for a card with no link. */
+  link: string;
+  /** Thumbnail image URL, or "" for a plain accent card. */
+  image: string;
+  /** "" = added by hand, "sstc.ac.th" = pulled from the college website. */
+  source: string;
 };
 
 export type CampusOverview = {
@@ -64,115 +75,250 @@ export type CampusOverview = {
 
 export const CAMPUS_BUILDINGS: CampusBuilding[] = [
   {
-    id: "main",
-    name: "อาคารอำนวยการ",
-    shortName: "อาคารอำนวยการ",
-    category: "บริการ",
-    description:
-      "ศูนย์กลางการติดต่อราชการ งานทะเบียน และบริการข้อมูลสำหรับนักเรียน นักศึกษาและผู้มาติดต่อ",
-    floors: 3,
-    x: 47,
-    y: 34,
-    width: 19,
-    height: 17,
-    accent: "#123b52",
-    floorsDetail: [
-      { level: 1, label: "ชั้น 1", rooms: ["ประชาสัมพันธ์", "งานสารบรรณ", "ห้องผู้อำนวยการ"] },
-      { level: 2, label: "ชั้น 2", rooms: ["งานทะเบียน", "งานการเงิน", "ห้องประชุมเล็ก"] },
-      { level: 3, label: "ชั้น 3", rooms: ["งานบุคลากร", "ห้องประชุมใหญ่", "งานแผนงาน"] },
-    ],
-  },
-  {
-    id: "mechanical",
-    name: "อาคารช่างยนต์",
+    id: "mech-auto",
+    name: "สาขาวิชาช่างยนต์",
     shortName: "ช่างยนต์",
-    category: "ปฏิบัติการ",
+    category: "สายอุตสาหกรรม",
     description:
-      "พื้นที่เรียนรู้และฝึกปฏิบัติด้านเครื่องยนต์ ระบบยานยนต์ และเทคโนโลยีรถไฟฟ้า",
+      "สาขาวิชาช่างยนต์ · 18 ห้อง",
     floors: 2,
-    x: 16,
-    y: 30,
-    width: 19,
-    height: 20,
-    accent: "#eb8b67",
-    floorsDetail: [
-      { level: 1, label: "ชั้น 1", rooms: ["โรงฝึกเครื่องยนต์", "ห้องปฏิบัติการ EV", "คลังเครื่องมือ"] },
-      { level: 2, label: "ชั้น 2", rooms: ["ห้องเรียนทฤษฎี", "ห้องพักครูช่างยนต์", "ห้องสื่อการเรียนรู้"] },
-    ],
-  },
-  {
-    id: "business",
-    name: "อาคารพาณิชยกรรม",
-    shortName: "พาณิชยกรรม",
-    category: "วิชาการ",
-    description:
-      "แหล่งเรียนรู้ด้านธุรกิจดิจิทัล การบัญชี การตลาด และการจัดการสำนักงานสมัยใหม่",
-    floors: 4,
-    x: 72,
-    y: 21,
-    width: 17,
-    height: 19,
-    accent: "#3c8f8d",
-    floorsDetail: [
-      { level: 1, label: "ชั้น 1", rooms: ["ห้องปฏิบัติการสำนักงาน", "ศูนย์ฝึกธุรกิจจำลอง"] },
-      { level: 2, label: "ชั้น 2", rooms: ["ห้องเรียนบัญชี", "ห้องปฏิบัติการการตลาด"] },
-      { level: 3, label: "ชั้น 3", rooms: ["ห้องคอมพิวเตอร์ธุรกิจ", "สตูดิโอสื่อดิจิทัล"] },
-      { level: 4, label: "ชั้น 4", rooms: ["ห้องประชุมสาขา", "ห้องพักครูพาณิชยกรรม"] },
-    ],
-  },
-  {
-    id: "industrial",
-    name: "อาคารช่างอุตสาหกรรม",
-    shortName: "ช่างอุตสาหกรรม",
-    category: "ปฏิบัติการ",
-    description:
-      "เวิร์กช็อปและห้องปฏิบัติการสำหรับงานเชื่อม กลโรงงาน ไฟฟ้ากำลัง และระบบอัตโนมัติ",
-    floors: 3,
-    x: 67,
-    y: 58,
-    width: 23,
-    height: 18,
-    accent: "#bc7a3e",
-    floorsDetail: [
-      { level: 1, label: "ชั้น 1", rooms: ["โรงงานเชื่อมโลหะ", "โรงงานผลิตชิ้นส่วน", "ห้องเครื่องมือช่าง"] },
-      { level: 2, label: "ชั้น 2", rooms: ["ห้อง PLC และระบบอัตโนมัติ", "ห้องไฟฟ้ากำลัง"] },
-      { level: 3, label: "ชั้น 3", rooms: ["ห้องเขียนแบบ", "ห้องพักครูช่างอุตสาหกรรม"] },
-    ],
-  },
-  {
-    id: "library",
-    name: "อาคารวิทยบริการและห้องสมุด",
-    shortName: "ห้องสมุด",
-    category: "บริการ",
-    description:
-      "พื้นที่อ่านหนังสือ ห้องสืบค้นดิจิทัล และมุมทำงานร่วมกันสำหรับการเรียนรู้ตลอดชีวิต",
-    floors: 2,
-    x: 28,
-    y: 67,
-    width: 22,
+    x: 50,
+    y: 10,
+    width: 18,
     height: 16,
-    accent: "#5b7da9",
+    accent: "#e8863f",
+    latitude: "13.4207317663681",
+    longitude: "100.010368922857",
     floorsDetail: [
-      { level: 1, label: "ชั้น 1", rooms: ["โถงบริการยืมคืน", "มุมอ่านหนังสือ", "ห้องสืบค้นออนไลน์"] },
-      { level: 2, label: "ชั้น 2", rooms: ["ห้องทำงานกลุ่ม", "ห้องเรียนรู้ด้วยตนเอง", "ห้องประชุมย่อย"] },
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างยนต์"] },
     ],
   },
   {
-    id: "student",
-    name: "อาคารกิจการนักเรียน",
-    shortName: "กิจการนักเรียน",
-    category: "กิจกรรม",
+    id: "electronics-it",
+    name: "สาขาวิชาอิเล็กทรอนิกส์และเทคโนโลยีสารสนเทศ",
+    shortName: "อิเล็กทรอนิกส์ / IT",
+    category: "สายอุตสาหกรรม",
     description:
-      "ศูนย์กลางกิจกรรม ชมรม ทุนการศึกษา งานแนะแนว และพื้นที่สนับสนุนชีวิตนักศึกษา",
-    floors: 2,
-    x: 8,
-    y: 63,
-    width: 16,
-    height: 17,
-    accent: "#7e6aa8",
+      "สาขาวิชาอิเล็กทรอนิกส์ / เทคโนโลยีสารสนเทศ, สาขาวิชาเทคนิคคอมพิวเตอร์ · 33 ห้อง",
+    floors: 3,
+    x: 55,
+    y: 22,
+    width: 18,
+    height: 16,
+    accent: "#e8863f",
+    latitude: "13.4204089013263",
+    longitude: "100.010475464028",
     floorsDetail: [
-      { level: 1, label: "ชั้น 1", rooms: ["งานแนะแนว", "ห้องพยาบาล", "ห้องสภานักเรียน"] },
-      { level: 2, label: "ชั้น 2", rooms: ["ห้องชมรม", "งานทุนการศึกษา", "ห้องกิจกรรมอเนกประสงค์"] },
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาอิเล็กทรอนิกส์ / เทคโนโลยีสารสนเทศ","สาขาวิชาเทคนิคคอมพิวเตอร์"] },
+    ],
+  },
+  {
+    id: "electrical-construction",
+    name: "สาขาวิชาไฟฟ้ากำลังและก่อสร้าง",
+    shortName: "ไฟฟ้ากำลัง / ก่อสร้าง",
+    category: "สายอุตสาหกรรม",
+    description:
+      "สาขาวิชาไฟฟ้ากำลัง / ก่อสร้าง · 48 ห้อง",
+    floors: 4,
+    x: 59,
+    y: 36,
+    width: 18,
+    height: 16,
+    accent: "#e8863f",
+    latitude: "13.4200514503851",
+    longitude: "100.010592746633",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาไฟฟ้ากำลัง / ก่อสร้าง"] },
+    ],
+  },
+  {
+    id: "ict-building",
+    name: "ตึก ICT",
+    shortName: "ตึก ICT",
+    category: "สายอุตสาหกรรม",
+    description:
+      "สาขาวิชาช่างเชื่อมโลหะ, สาขาวิชาเมคคาทรอนิกส์และหุ่นยนต์, สาขาวิชาการจัดการสำนักงาน · 30 ห้อง",
+    floors: 4,
+    x: 87,
+    y: 61,
+    width: 18,
+    height: 16,
+    accent: "#e8863f",
+    latitude: "13.4193720017185",
+    longitude: "100.011311702798",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างเชื่อมโลหะ","สาขาวิชาเมคคาทรอนิกส์และหุ่นยนต์","สาขาวิชาการจัดการสำนักงาน"] },
+    ],
+  },
+  {
+    id: "general-subjects",
+    name: "สาขาวิชาสามัญสัมพันธ์",
+    shortName: "สามัญสัมพันธ์",
+    category: "พาณิชยกรรม/คหกรรม/สามัญ",
+    description:
+      "หมวดวิชาสามัญ ไทย คณิต วิทย์ อังกฤษ ภาษาจีน · 46 ห้อง",
+    floors: 4,
+    x: 50,
+    y: 76,
+    width: 18,
+    height: 16,
+    accent: "#2f7fb5",
+    latitude: "13.4189665484955",
+    longitude: "100.010348443725",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["หมวดวิชาสามัญ ไทย คณิต วิทย์ อังกฤษ ภาษาจีน"] },
+    ],
+  },
+  {
+    id: "commerce",
+    name: "สาขาวิชาพาณิชยกรรม",
+    shortName: "พาณิชยกรรม",
+    category: "พาณิชยกรรม/คหกรรม/สามัญ",
+    description:
+      "สาขาการตลาดและธุรกิจค้าปลีก, สาขาการบัญชี · 24 ห้อง",
+    floors: 3,
+    x: 50,
+    y: 85,
+    width: 18,
+    height: 16,
+    accent: "#2f7fb5",
+    latitude: "13.4187456064652",
+    longitude: "100.010345639489",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาการตลาดและธุรกิจค้าปลีก","สาขาการบัญชี"] },
+    ],
+  },
+  {
+    id: "home-economics",
+    name: "สาขาวิชาคหกรรมศาสตร์",
+    shortName: "คหกรรมศาสตร์",
+    category: "พาณิชยกรรม/คหกรรม/สามัญ",
+    description:
+      "สาขาวิชาคหกรรมศาสตร์ · 11 ห้อง",
+    floors: 2,
+    x: 75,
+    y: 82,
+    width: 18,
+    height: 16,
+    accent: "#2f7fb5",
+    latitude: "13.4188110707917",
+    longitude: "100.01098780958",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาคหกรรมศาสตร์"] },
+    ],
+  },
+  {
+    id: "food-nutrition",
+    name: "สาขาวิชาอาหารและโภชนาการ",
+    shortName: "อาหารและโภชนาการ",
+    category: "พาณิชยกรรม/คหกรรม/สามัญ",
+    description:
+      "สาขาวิชาอาหารและโภชนาการ · 1 หลัง",
+    floors: 1,
+    x: 90,
+    y: 70,
+    width: 18,
+    height: 16,
+    accent: "#2f7fb5",
+    latitude: "13.4191424870995",
+    longitude: "100.011380674762",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาอาหารและโภชนาการ"] },
+    ],
+  },
+  {
+    id: "student-development",
+    name: "อาคารพัฒนาศักยภาพนักเรียน",
+    shortName: "พัฒนาศักยภาพนักเรียน",
+    category: "บริหาร-สนับสนุน",
+    description:
+      "ฝ่ายบริหาร / ธุรการวิทยาลัย · 12 ห้อง",
+    floors: 2,
+    x: 58,
+    y: 90,
+    width: 18,
+    height: 16,
+    accent: "#6b7a86",
+    latitude: "13.4186010393477",
+    longitude: "100.01055876144",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายบริหาร / ธุรการวิทยาลัย"] },
+    ],
+  },
+  {
+    id: "building-85",
+    name: "อาคาร 85 ปี",
+    shortName: "อาคาร 85 ปี",
+    category: "บริหาร-สนับสนุน",
+    description:
+      "ฝ่ายบริหารทรัพยากร, ฝ่ายยุทธศาสตร์และแผนงาน, ฝ่ายกิจการนักเรียนนักศึกษา, ฝ่ายวิชาการ · 4 ชั้น",
+    floors: 4,
+    x: 41,
+    y: 68,
+    width: 18,
+    height: 16,
+    accent: "#6b7a86",
+    latitude: "13.4191765796198",
+    longitude: "100.010118496356",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายบริหารทรัพยากร","ฝ่ายยุทธศาสตร์และแผนงาน","ฝ่ายกิจการนักเรียนนักศึกษา","ฝ่ายวิชาการ"] },
+    ],
+  },
+  {
+    id: "ivec-central-5",
+    name: "อาคารสถาบันการอาชีวศึกษาภาคกลาง 5",
+    shortName: "สอฐ.ภาคกลาง 5",
+    category: "บริหาร-สนับสนุน",
+    description:
+      "สถาบันการอาชีวศึกษาภาคกลาง 5 · 33 ห้อง",
+    floors: 3,
+    x: 62,
+    y: 49,
+    width: 18,
+    height: 16,
+    accent: "#6b7a86",
+    latitude: "13.4196921080512",
+    longitude: "100.010664863585",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สถาบันการอาชีวศึกษาภาคกลาง 5"] },
+    ],
+  },
+  {
+    id: "auditorium",
+    name: "หอประชุม (โรงอาหาร)",
+    shortName: "หอประชุม / โรงอาหาร",
+    category: "ส่วนกลาง-กิจกรรม",
+    description:
+      "พื้นที่ส่วนกลาง จัดกิจกรรมและรับประทานอาหาร · 2 ห้อง",
+    floors: 1,
+    x: 71,
+    y: 64,
+    width: 18,
+    height: 16,
+    accent: "#3f9d6d",
+    latitude: "13.419306679309",
+    longitude: "100.01088199252",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["พื้นที่ส่วนกลาง จัดกิจกรรมและรับประทานอาหาร"] },
+    ],
+  },
+  {
+    id: "activity-building",
+    name: "อาคารกิจกรรม",
+    shortName: "อาคารกิจกรรม",
+    category: "ส่วนกลาง-กิจกรรม",
+    description:
+      "พื้นที่จัดกิจกรรมนักเรียนนักศึกษาและชมรม · 8 ห้อง",
+    floors: 2,
+    x: 10,
+    y: 32,
+    width: 18,
+    height: 16,
+    accent: "#3f9d6d",
+    latitude: "13.4201489200418",
+    longitude: "100.009332305166",
+    floorsDetail: [
+      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["พื้นที่จัดกิจกรรมนักเรียนนักศึกษาและชมรม"] },
     ],
   },
 ];
@@ -187,6 +333,9 @@ export const CAMPUS_NEWS: CampusNewsItem[] = [
     date: "18 ก.ย. 2569",
     time: "09:00–15:30 น.",
     accent: "#eb8b67",
+    link: "",
+    image: "",
+    source: "",
   },
   {
     id: "enrollment-2026",
@@ -197,6 +346,9 @@ export const CAMPUS_NEWS: CampusNewsItem[] = [
     date: "วันนี้ – 30 ก.ย. 2569",
     time: "ประกาศล่าสุด",
     accent: "#3c8f8d",
+    link: "",
+    image: "",
+    source: "",
   },
   {
     id: "skills-competition",
@@ -207,16 +359,19 @@ export const CAMPUS_NEWS: CampusNewsItem[] = [
     date: "05 ก.ย. 2569",
     time: "อ่าน 128 ครั้ง",
     accent: "#bc7a3e",
+    link: "",
+    image: "",
+    source: "",
   },
 ];
 
-// ข้อมูลสาธิต — ปรับให้ตรงกับวิทยาลัยจริงก่อนเผยแพร่
+// อาคาร 13 หลัง + พิกัด นำเข้าจาก Google My Maps ของวิทยาลัย (KMZ, ก.ย. 2569)
 export const CAMPUS_OVERVIEW: CampusOverview = {
   address: "วิทยาลัยเทคนิคสมุทรสงคราม อำเภอเมืองสมุทรสงคราม จังหวัดสมุทรสงคราม",
-  mapCenter: { lat: 13.4166, lng: 100.0023 },
+  mapCenter: { lat: 13.41967, lng: 100.01036 },
   stats: [
-    { label: "อาคารเรียนหลัก", value: `${CAMPUS_BUILDINGS.length} อาคาร` },
-    { label: "ประเภทการใช้งาน", value: "4 กลุ่ม" },
+    { label: "อาคาร/หน่วยงาน", value: `${CAMPUS_BUILDINGS.length} จุด` },
+    { label: "กลุ่มเลเยอร์", value: "4 กลุ่ม" },
     { label: "ข่าวสารล่าสุด", value: `${CAMPUS_NEWS.length} เรื่อง` },
   ],
 };

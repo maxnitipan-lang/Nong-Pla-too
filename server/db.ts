@@ -194,6 +194,9 @@ function rowToNews(row: CampusNewsRow): CampusNewsItem {
     date: row.dateLabel,
     time: row.timeLabel,
     accent: row.accent,
+    link: row.link ?? "",
+    image: row.imageUrl ?? "",
+    source: row.source ?? "",
   };
 }
 
@@ -241,6 +244,9 @@ export async function upsertCampusNews(input: NewsInput): Promise<void> {
     dateLabel: input.dateLabel,
     timeLabel: input.timeLabel,
     accent: input.accent,
+    link: input.link,
+    imageUrl: input.imageUrl,
+    source: input.source,
     published: input.published ? 1 : 0,
     sortOrder: input.sortOrder,
   };

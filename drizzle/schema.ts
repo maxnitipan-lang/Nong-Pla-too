@@ -16,7 +16,12 @@ export const campusBuildings = mysqlTable("campus_buildings", {
   id: varchar("id", { length: 64 }).primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   shortName: varchar("shortName", { length: 120 }).notNull(),
-  category: mysqlEnum("category", ["วิชาการ", "ปฏิบัติการ", "บริการ", "กิจกรรม"]).notNull(),
+  category: mysqlEnum("category", [
+    "สายอุตสาหกรรม",
+    "พาณิชยกรรม/คหกรรม/สามัญ",
+    "บริหาร-สนับสนุน",
+    "ส่วนกลาง-กิจกรรม",
+  ]).notNull(),
   description: text("description").notNull(),
   floors: int("floors").notNull(),
   latitude: varchar("latitude", { length: 32 }).notNull(),
@@ -43,6 +48,12 @@ export const campusNews = mysqlTable("campus_news", {
   dateLabel: varchar("dateLabel", { length: 80 }).notNull(),
   timeLabel: varchar("timeLabel", { length: 120 }).notNull(),
   accent: varchar("accent", { length: 20 }).notNull(),
+  /** Full-article URL — clicking the card opens this. "" = no link. */
+  link: varchar("link", { length: 500 }).default("").notNull(),
+  /** Thumbnail image URL. "" = show the plain accent card. */
+  imageUrl: varchar("imageUrl", { length: 500 }).default("").notNull(),
+  /** "" = added by hand, "sstc.ac.th" = pulled from the college website. */
+  source: varchar("source", { length: 80 }).default("").notNull(),
   published: int("published").default(1).notNull(),
   sortOrder: int("sortOrder").default(0).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),

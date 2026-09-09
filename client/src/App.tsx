@@ -1,3 +1,4 @@
+import { CampusChat } from "@/components/CampusChat";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
@@ -33,6 +34,7 @@ function App() {
         <TooltipProvider>
           <Toaster />
           <Router />
+          <CampusChat />
         </TooltipProvider>
       </ThemeProvider>
     </ErrorBoundary>

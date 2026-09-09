@@ -19,6 +19,7 @@ import {
   upsertCampusBuilding,
   upsertCampusNews,
 } from "./db";
+import { syncCollegeNews } from "./newsScraper";
 import { adminProcedure, router } from "./_core/trpc";
 
 const idInput = z.object({ id: z.string().trim().min(1).max(64) });
@@ -73,6 +74,17 @@ export const adminRouter = router({
     delete: adminProcedure
       .input(idInput)
       .mutation(({ input }) => run(() => deleteCampusNews(input.id))),
+    syncFromWebsite: adminProcedure.mutation(async () => {
+      try {
+        return await syncCollegeNews();
+      } catch (error) {
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message:
+            error instanceof Error ? error.message : "ดึงข่าวจากเว็บวิทยาลัยไม่สำเร็จ",
+        });
+      }
+    }),
   }),
 
   users: router({

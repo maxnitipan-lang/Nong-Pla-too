@@ -1,0 +1,103 @@
+import { useState } from "react";
+import { Sparkles, X } from "lucide-react";
+import { AIChatBox, type Message } from "@/components/AIChatBox";
+import { DirectionsModal } from "@/components/DirectionsModal";
+import { trpc } from "@/lib/trpc";
+import type { CampusBuilding } from "@shared/campus";
+
+/**
+ * Floating "น้องปลาทู" chatbot. Only renders when the server has an AI key
+ * configured (`trpc.chat.configured`). Answers from the campus building / news
+ * data via `trpc.chat.ask`, and can open the walking-route map on request.
+ */
+export function CampusChat() {
+  const { data: configured } = trpc.chat.configured.useQuery(undefined, {
+    staleTime: Infinity,
+  });
+  const { data: buildings } = trpc.campus.buildings.useQuery(undefined, {
+    staleTime: 1000 * 60 * 10,
+  });
+  const [open, setOpen] = useState(false);
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [routeBuilding, setRouteBuilding] = useState<CampusBuilding | null>(null);
+
+  const ask = trpc.chat.ask.useMutation({
+    onSuccess: ({ reply, routeToBuildingId }) => {
+      setMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+      if (routeToBuildingId) {
+        const target = buildings?.find((b) => b.id === routeToBuildingId);
+        if (target) setRouteBuilding(target);
+      }
+    },
+    onError: (error) =>
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: `ขออภัย ระบบยังตอบไม่ได้ตอนนี้\n(${error.message})`,
+        },
+      ]),
+  });
+
+  const handleSend = (content: string) => {
+    const next: Message[] = [...messages, { role: "user", content }];
+    setMessages(next);
+    ask.mutate({ messages: next });
+  };
+
+  if (!configured) return null;
+
+  return (
+    <>
+      <DirectionsModal
+        building={routeBuilding}
+        onClose={() => setRouteBuilding(null)}
+      />
+
+      {!open && (
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          aria-label="เปิดแชตถามน้องปลาทู"
+          className="fixed bottom-5 right-5 z-50 flex h-14 items-center gap-2 rounded-full bg-[var(--ink)] px-5 text-sm font-bold text-white shadow-[0_10px_30px_rgba(16,41,58,0.28)] transition-transform hover:-translate-y-0.5"
+        >
+          <Sparkles size={18} /> ถามน้องปลาทู
+        </button>
+      )}
+
+      {open && (
+        <div className="fixed bottom-5 right-5 z-50 flex h-[560px] max-h-[calc(100dvh-2.5rem)] w-[calc(100vw-2.5rem)] max-w-[400px] flex-col overflow-hidden rounded-[20px] border border-[var(--border)] bg-white shadow-[0_20px_60px_rgba(16,41,58,0.25)]">
+          <div className="flex items-center justify-between bg-[var(--ink)] px-4 py-3 text-white">
+            <span className="flex items-center gap-2 text-sm font-bold">
+              <Sparkles size={16} /> น้องปลาทู · ผู้ช่วยประจำวิทยาลัย
+            </span>
+            <button
+              type="button"
+              onClick={() => setOpen(false)}
+              aria-label="ปิด"
+              className="rounded-lg p-1 transition-colors hover:bg-white/10"
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="min-h-0 flex-1">
+            <AIChatBox
+              messages={messages}
+              onSendMessage={handleSend}
+              isLoading={ask.isPending}
+              height="100%"
+              placeholder="ถามน้องปลาทูเกี่ยวกับวิทยาลัย…"
+              emptyStateMessage="สวัสดีครับ น้องปลาทูเองครับ ถามเรื่องอาคาร สาขา ข่าวสาร หรือขอเส้นทางได้เลย"
+              suggestedPrompts={[
+                "ขอเส้นทางไปสาขาช่างยนต์",
+                "สาขาการบัญชีอยู่อาคารไหน",
+                "มีข่าวกิจกรรมอะไรล่าสุด",
+                "อาคารเรียนสายอุตสาหกรรมมีสาขาอะไรบ้าง",
+              ]}
+            />
+          </div>
+        </div>
+      )}
+    </>
+  );
+}

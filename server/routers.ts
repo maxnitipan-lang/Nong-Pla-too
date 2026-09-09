@@ -1,5 +1,8 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { adminRouter } from "./adminRouter";
+import { askCampusChat, isChatConfigured } from "./chat";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
@@ -21,6 +24,35 @@ export const appRouter = router({
     buildings: publicProcedure.query(() => getCampusBuildings()),
     news: publicProcedure.query(() => getCampusNews()),
     settings: publicProcedure.query(() => getCampusSettings()),
+  }),
+
+  chat: router({
+    configured: publicProcedure.query(() => isChatConfigured()),
+    ask: publicProcedure
+      .input(
+        z.object({
+          messages: z
+            .array(
+              z.object({
+                role: z.enum(["system", "user", "assistant"]),
+                content: z.string().trim().min(1).max(4000),
+              }),
+            )
+            .min(1)
+            .max(30),
+        }),
+      )
+      .mutation(async ({ input }) => {
+        try {
+          return await askCampusChat(input.messages);
+        } catch (error) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message:
+              error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเรียก AI",
+          });
+        }
+      }),
   }),
 });
 

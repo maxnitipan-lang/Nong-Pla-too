@@ -1,7 +1,12 @@
 // Zod schemas shared by the admin tRPC procedures and the admin UI forms.
 import { z } from "zod";
 
-export const CAMPUS_CATEGORIES = ["วิชาการ", "ปฏิบัติการ", "บริการ", "กิจกรรม"] as const;
+export const CAMPUS_CATEGORIES = [
+  "สายอุตสาหกรรม",
+  "พาณิชยกรรม/คหกรรม/สามัญ",
+  "บริหาร-สนับสนุน",
+  "ส่วนกลาง-กิจกรรม",
+] as const;
 
 const idSchema = z
   .string()
@@ -44,10 +49,23 @@ export const newsInputSchema = z.object({
   id: idSchema,
   tag: z.string().trim().min(1, "ระบุป้ายกำกับ").max(80),
   title: z.string().trim().min(1, "ระบุหัวข้อ").max(255),
-  excerpt: z.string().trim().min(1, "ระบุเนื้อหาย่อ").max(2000),
+  excerpt: z.string().trim().max(2000).default(""),
   dateLabel: z.string().trim().min(1, "ระบุวันที่").max(80),
-  timeLabel: z.string().trim().min(1, "ระบุเวลา/สถานะ").max(120),
+  timeLabel: z.string().trim().max(120).default(""),
   accent: hexColorSchema.default("#3c8f8d"),
+  link: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์ http(s)")
+    .default(""),
+  imageUrl: z
+    .string()
+    .trim()
+    .max(500)
+    .refine((v) => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์รูปภาพ http(s)")
+    .default(""),
+  source: z.string().trim().max(80).default(""),
   published: z.boolean().default(true),
   sortOrder: z.number().int().min(0).max(9999).default(0),
 });
