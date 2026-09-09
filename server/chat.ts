@@ -5,7 +5,7 @@
 // overriding CHAT_BASE_URL + CHAT_MODEL + the key.
 //
 //   GEMINI_API_KEY   your key from https://aistudio.google.com/apikey
-//   CHAT_MODEL       (optional) default "gemini-flash-lite-latest"
+//   CHAT_MODEL       (optional) default "gemini-3.1-flash-lite"
 //   CHAT_BASE_URL    (optional) default Gemini's OpenAI-compatible base
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
@@ -14,9 +14,10 @@ import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db";
 const CHAT_BASE_URL =
   process.env.CHAT_BASE_URL ||
   "https://generativelanguage.googleapis.com/v1beta/openai";
-// flash-lite has the most generous free-tier quota (the newest full models are
-// capped at ~20 requests/day on the free tier).
-const CHAT_MODEL = process.env.CHAT_MODEL || "gemini-flash-lite-latest";
+// A pinned flash-lite model: generous free-tier quota AND consistently fast
+// (~3-5s). The "-latest" alias has been resolving to a build that takes
+// 30-60s per reply, which makes the chat look hung.
+const CHAT_MODEL = process.env.CHAT_MODEL || "gemini-3.1-flash-lite";
 const CHAT_API_KEY = process.env.CHAT_API_KEY || process.env.GEMINI_API_KEY || "";
 
 const ROUTE_TOOL = "show_walking_route";
@@ -94,6 +95,10 @@ type OpenAiChoice = {
   };
 };
 
+/** A bare greeting as the first turn — answer instantly, skip the slow AI call. */
+const GREETING_RE =
+  /^(สวัส?ดี|หวัดดี|ดีครับ|ดีค่ะ|ดีจ้า|hello|hi|hey|ทัก(ทาย)?)[\s!.ๆครับค่ะจ้าา]*$/i;
+
 /** Send the conversation to the model and return the assistant answer. */
 export async function askCampusChat(history: ChatMessage[]): Promise<ChatAnswer> {
   if (!CHAT_API_KEY) {
@@ -102,10 +107,20 @@ export async function askCampusChat(history: ChatMessage[]): Promise<ChatAnswer>
     );
   }
 
+  const settingsEarly = await getCampusSettings();
+  const userTurns = history.filter((m) => m.role === "user");
+  const lastUser = userTurns.at(-1)?.content.trim() ?? "";
+  if (userTurns.length === 1 && GREETING_RE.test(lastUser)) {
+    return {
+      reply: `สวัสดีครับ ยินดีต้อนรับสู่${settingsEarly.collegeName}ครับ มีอะไรให้น้องปลาทูช่วยไหมครับ`,
+      routeToBuildingId: null,
+    };
+  }
+
   const [buildings, news, settings] = await Promise.all([
     getCampusBuildings(),
     getCampusNews(),
-    getCampusSettings(),
+    Promise.resolve(settingsEarly),
   ]);
   const byId = new Map(buildings.map((b) => [b.id, b]));
   const routableIds = buildings
