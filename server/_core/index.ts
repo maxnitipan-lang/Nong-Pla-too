@@ -46,13 +46,18 @@ async function startServer(): Promise<void> {
   }
 
   const preferredPort = parseInt(process.env.PORT || "3000", 10);
-  const port = await findAvailablePort(preferredPort);
-  if (port !== preferredPort) {
+  // In production (a host like Render/Railway) bind to the assigned $PORT exactly;
+  // the port-scan is only a local-dev convenience so parallel runs don't collide.
+  const isProduction = process.env.NODE_ENV === "production";
+  const port = isProduction
+    ? preferredPort
+    : await findAvailablePort(preferredPort);
+  if (!isProduction && port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
-  server.listen(port, () => {
-    console.log(`Server running on http://localhost:${port}/`);
+  server.listen(port, "0.0.0.0", () => {
+    console.log(`Server running on port ${port}`);
   });
 }
 

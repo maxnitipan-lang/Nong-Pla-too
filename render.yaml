@@ -1,0 +1,27 @@
+# Render.com Blueprint — deploy the whole app (frontend + API) as one web service.
+# https://render.com → New → Blueprint → connect this repo. Fill the secret
+# values (marked "sync: false") in the Render dashboard after it creates the service.
+services:
+  - type: web
+    name: nong-pla-too
+    runtime: node
+    plan: free
+    region: singapore
+    buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
+    startCommand: pnpm start
+    healthCheckPath: /
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      # --- ฐานข้อมูล TiDB (backend, runtime) ---
+      - key: DATABASE_URL
+        sync: false
+      # --- แชตบอตน้องปลาทู (backend, runtime) ---
+      - key: GEMINI_API_KEY
+        sync: false
+      # --- แผนที่ + เส้นทาง (frontend, ใส่ก่อน build) ---
+      - key: VITE_MYMAPS_EMBED_URL
+        sync: false
+      - key: VITE_ORS_API_KEY
+        sync: false
