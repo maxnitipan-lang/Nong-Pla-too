@@ -1,6 +1,5 @@
 import { CampusChat } from "@/components/CampusChat";
 import { CampusInteractiveMap } from "@/components/CampusInteractiveMap";
-import { CampusMyMap } from "@/components/CampusMyMap";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { hasCoords, walkingDeepLink } from "@/lib/directions";
 import { trpc } from "@/lib/trpc";
@@ -43,25 +42,6 @@ function LogoMark() {
       <div className="absolute -bottom-3 -left-2 h-8 w-8 rounded-full border-[5px] border-[var(--coral)] opacity-90" />
       <span className="relative font-display text-sm font-bold tracking-[-0.08em]">SM</span>
     </div>
-  );
-}
-
-function MapPinMarker({ building, selected, onClick }: { building: CampusBuilding; selected: boolean; onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label={`ดูข้อมูล ${building.name}`}
-      className="group absolute z-20 -translate-x-1/2 -translate-y-full outline-none transition-transform duration-200 hover:scale-110 focus-visible:scale-110"
-      style={{ left: `${building.x}%`, top: `${building.y}%` }}
-    >
-      <span className={`relative flex h-10 w-10 items-center justify-center rounded-full border-4 border-white text-white shadow-[0_8px_18px_rgba(16,41,58,0.24)] ${selected ? "marker-pulse scale-110" : ""}`} style={{ backgroundColor: building.accent }}>
-        <MapPin size={17} fill="currentColor" strokeWidth={1.7} />
-      </span>
-      <span className={`pointer-events-none absolute left-1/2 top-[calc(100%+10px)] w-max -translate-x-1/2 rounded-full bg-white/95 px-3 py-1.5 text-[11px] font-bold text-[var(--ink)] shadow-[0_8px_20px_rgba(16,41,58,0.15)] transition-all duration-200 ${selected ? "opacity-100" : "opacity-0 group-hover:opacity-100"}`}>
-        {building.shortName}
-      </span>
-    </button>
   );
 }
 
@@ -114,7 +94,6 @@ export default function Home() {
   const { user } = useAuth();
   const buildings = buildingsData?.length ? buildingsData : CAMPUS_BUILDINGS;
   const news = newsData?.length ? newsData : CAMPUS_NEWS;
-  const mapEmbedUrl = settings?.mapEmbedUrl ?? "";
   const campusAddress = settings?.address ?? CAMPUS_OVERVIEW.address;
   const selectedBuilding = buildings.find((item) => item.id === selectedId) ?? buildings[0];
 
@@ -231,20 +210,17 @@ export default function Home() {
                   <div className="flex items-center gap-2.5"><Compass size={17} className="text-[var(--aqua)]" /><span className="text-xs font-bold">CAMPUS LIVE MAP</span></div>
                   <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#a8d6c6]"><span className="h-1.5 w-1.5 rounded-full bg-[#72d5a9]" /> พร้อมใช้งาน</span>
                 </div>
-                <div className="map-surface relative h-[390px] overflow-hidden sm:h-[470px]">
-                  <CampusMyMap embedUrl={mapEmbedUrl}>
-                    <div className="map-road left-[-5%] top-[48%] w-[120%] rotate-[18deg]" />
-                    <div className="map-road left-[41%] top-[-12%] h-[125%] w-[17px] rotate-[30deg]" />
-                    <div className="map-road left-[7%] top-[22%] w-[92%] rotate-[-22deg] opacity-75" />
-                    <div className="map-building left-[15%] top-[28%] h-[21%] w-[21%]" />
-                    <div className="map-building left-[45%] top-[32%] h-[17%] w-[21%]" />
-                    <div className="map-building left-[72%] top-[18%] h-[21%] w-[18%]" />
-                    <div className="map-building left-[67%] top-[57%] h-[19%] w-[24%]" />
-                    <div className="map-building left-[28%] top-[67%] h-[17%] w-[23%]" />
-                    <div className="map-building left-[8%] top-[62%] h-[19%] w-[17%]" />
-                    {buildings.map((building) => <MapPinMarker key={building.id} building={building} selected={building.id === selectedId} onClick={() => focusBuilding(building)} />)}
-                  </CampusMyMap>
-                  <div className="absolute bottom-4 left-4 z-20 flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><Layers3 size={13} className="text-[var(--aqua)]" /> แผนผังวิทยาลัย</div>
+                <div className="map-surface relative isolate h-[390px] overflow-hidden sm:h-[470px]">
+                  <CampusInteractiveMap
+                    buildings={buildings}
+                    selectedId={selectedId}
+                    onSelect={(id) => {
+                      selectBuilding(id);
+                      scrollToMap();
+                    }}
+                    center={settings?.mapCenter ?? CAMPUS_OVERVIEW.mapCenter}
+                  />
+                  <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><Layers3 size={13} className="text-[var(--aqua)]" /> แผนผังวิทยาลัย</div>
                 </div>
                 <div className="flex items-center justify-between gap-4 bg-white px-4 py-3.5 sm:px-5"><div><p className="text-xs font-extrabold text-[var(--ink)]">วิทยาลัยเทคนิคสมุทรสงคราม</p><p className="mt-1 text-[10px] text-[var(--muted-foreground)]">{campusAddress}</p></div><button type="button" onClick={() => scrollToId("campus-map")} className="flex shrink-0 items-center gap-1.5 text-xs font-extrabold text-[#287c78]">เปิดแผนที่เต็ม <ArrowUpRight size={14} /></button></div>
               </div>
