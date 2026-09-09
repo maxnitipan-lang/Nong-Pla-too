@@ -20,6 +20,9 @@ services:
       # --- แชตบอตน้องปลาทู (backend, runtime) ---
       - key: GEMINI_API_KEY
         sync: false
+      # --- รหัสผ่านเข้า /admin (backend, runtime) ---
+      - key: ADMIN_PASSWORD
+        sync: false
       # --- แผนที่ + เส้นทาง (frontend, ใส่ก่อน build) ---
       - key: VITE_MYMAPS_EMBED_URL
         sync: false

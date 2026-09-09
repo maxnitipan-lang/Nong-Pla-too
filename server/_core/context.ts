@@ -1,6 +1,8 @@
+import { parse as parseCookieHeader } from "cookie";
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
 import { getUserByOpenId, upsertUser } from "../db";
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from "./adminSession";
 import { ENV } from "./env";
 import { sdk } from "./sdk";
 
@@ -11,6 +13,24 @@ export type TrpcContext = {
 };
 
 const DEV_ADMIN_OPEN_ID = "local-dev-admin";
+
+/** Synthetic admin user for the password-based login (no DB row needed). */
+function passwordAdminUser(req: CreateExpressContextOptions["req"]): User | null {
+  const token = parseCookieHeader(req.headers.cookie ?? "")[ADMIN_COOKIE_NAME];
+  if (!verifyAdminToken(token)) return null;
+  const now = new Date();
+  return {
+    id: -2,
+    openId: "password-admin",
+    name: "ผู้ดูแลระบบ",
+    email: null,
+    loginMethod: "password",
+    role: "admin",
+    createdAt: now,
+    updatedAt: now,
+    lastSignedIn: now,
+  };
+}
 
 /**
  * Local-only admin: with `DEV_ADMIN=1` in `.env` (never in production) the app
@@ -45,7 +65,7 @@ export async function createContext(
   }
 
   if (!user) {
-    user = await devAdminUser();
+    user = passwordAdminUser(opts.req) ?? (await devAdminUser());
   }
 
   return {

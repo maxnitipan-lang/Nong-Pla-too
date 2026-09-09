@@ -12,7 +12,8 @@ import {
   ShieldAlert,
   Users,
 } from "lucide-react";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
+import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
 
 export type AdminSection = "overview" | "buildings" | "news" | "users" | "settings";
@@ -24,6 +25,68 @@ const NAV: { section: AdminSection; label: string; path: string; icon: typeof Bu
   { section: "users", label: "ผู้ใช้และสิทธิ์", path: "/admin/users", icon: Users },
   { section: "settings", label: "ตั้งค่าเว็บ", path: "/admin/settings", icon: Settings },
 ];
+
+function AdminGate() {
+  const utils = trpc.useUtils();
+  const { data: passwordEnabled } = trpc.auth.adminLoginEnabled.useQuery(
+    undefined,
+    { staleTime: Infinity },
+  );
+  const [password, setPassword] = useState("");
+  const login = trpc.auth.adminLogin.useMutation({
+    onSuccess: () => {
+      setPassword("");
+      utils.auth.me.invalidate();
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  return (
+    <CenteredCard>
+      <ShieldAlert className="mx-auto mb-4 h-10 w-10 text-[var(--muted-foreground)]" />
+      <h1 className="text-lg font-bold text-[var(--ink)]">เข้าสู่ระบบผู้ดูแล</h1>
+
+      {passwordEnabled ? (
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (password) login.mutate({ password });
+          }}
+          className="mt-6 space-y-3"
+        >
+          <input
+            type="password"
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            placeholder="รหัสผ่านผู้ดูแล"
+            autoFocus
+            className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm outline-none transition-colors focus:border-[var(--aqua)]"
+          />
+          <button
+            type="submit"
+            disabled={login.isPending || !password}
+            className="h-11 w-full rounded-full bg-[var(--ink)] text-sm font-bold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-50"
+          >
+            {login.isPending ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
+          </button>
+        </form>
+      ) : (
+        <>
+          <p className="mt-2 text-sm text-[var(--muted-foreground)]">
+            ส่วนผู้ดูแลระบบเปิดให้เฉพาะบัญชีที่ได้รับสิทธิ์เท่านั้น
+          </p>
+          <button
+            type="button"
+            onClick={() => startLogin()}
+            className="mt-6 h-11 w-full rounded-full bg-[var(--ink)] text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
+          >
+            เข้าสู่ระบบ
+          </button>
+        </>
+      )}
+    </CenteredCard>
+  );
+}
 
 function CenteredCard({ children }: { children: ReactNode }) {
   return (
@@ -56,22 +119,7 @@ export function AdminShell({
   }
 
   if (!user) {
-    return (
-      <CenteredCard>
-        <ShieldAlert className="mx-auto mb-4 h-10 w-10 text-[var(--muted-foreground)]" />
-        <h1 className="text-lg font-bold text-[var(--ink)]">ต้องเข้าสู่ระบบก่อน</h1>
-        <p className="mt-2 text-sm text-[var(--muted-foreground)]">
-          ส่วนผู้ดูแลระบบเปิดให้เฉพาะบัญชีที่ได้รับสิทธิ์เท่านั้น
-        </p>
-        <button
-          type="button"
-          onClick={() => startLogin()}
-          className="mt-6 h-11 w-full rounded-full bg-[var(--ink)] text-sm font-bold text-white transition-transform hover:-translate-y-0.5"
-        >
-          เข้าสู่ระบบ
-        </button>
-      </CenteredCard>
-    );
+    return <AdminGate />;
   }
 
   if (user.role !== "admin") {
