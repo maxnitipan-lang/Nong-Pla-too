@@ -155,6 +155,10 @@ export async function askCampusChat(history: ChatMessage[]): Promise<ChatAnswer>
     if (attempt > 0) await new Promise((r) => setTimeout(r, 500 * attempt));
 
     let res: Response;
+    // Gemini can hold the connection open without ever responding; without a
+    // timeout the tRPC call hangs forever and the chat spinner never clears.
+    // The signal also aborts a stalled body read below.
+    const signal = AbortSignal.timeout(30_000);
     try {
       res = await fetch(`${CHAT_BASE_URL}/chat/completions`, {
         method: "POST",
@@ -163,15 +167,29 @@ export async function askCampusChat(history: ChatMessage[]): Promise<ChatAnswer>
           Authorization: `Bearer ${CHAT_API_KEY}`,
         },
         body: requestBody,
+        signal,
       });
     } catch (error) {
-      lastNetworkError =
-        error instanceof Error ? error.message : "unknown network error";
+      lastNetworkError = signal.aborted
+        ? "หมดเวลารอ AI ตอบกลับ"
+        : error instanceof Error
+          ? error.message
+          : "unknown network error";
       continue;
     }
 
     if (res.ok) {
-      const data = (await res.json()) as { choices?: OpenAiChoice[] };
+      let data: { choices?: OpenAiChoice[] };
+      try {
+        data = (await res.json()) as { choices?: OpenAiChoice[] };
+      } catch (error) {
+        lastNetworkError = signal.aborted
+          ? "หมดเวลารอ AI ตอบกลับ"
+          : error instanceof Error
+            ? error.message
+            : "unknown parse error";
+        continue;
+      }
       const choice = data?.choices?.[0];
       const message = choice?.message;
 
