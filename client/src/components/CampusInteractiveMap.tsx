@@ -59,11 +59,39 @@ export function CampusInteractiveMap({
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
   const routeLayerRef = useRef<L.Polyline | null>(null);
   const youMarkerRef = useRef<L.Marker | null>(null);
+  const youCircleRef = useRef<L.Circle | null>(null);
+  const myLocRef = useRef<{ lat: number; lng: number } | null>(null);
   const onSelectRef = useRef(onSelect);
   onSelectRef.current = onSelect;
   const onRouteInfoRef = useRef(onRouteInfo);
   onRouteInfoRef.current = onRouteInfo;
   const [ready, setReady] = useState(false);
+
+  // Show / refresh the "you are here" marker + accuracy circle.
+  const setMyLocation = (lat: number, lng: number, accuracy = 0) => {
+    const map = mapRef.current;
+    if (!map) return;
+    myLocRef.current = { lat, lng };
+    if (youMarkerRef.current) {
+      youMarkerRef.current.setLatLng([lat, lng]);
+    } else {
+      youMarkerRef.current = L.marker([lat, lng], { icon: youIcon })
+        .addTo(map)
+        .bindTooltip("ตำแหน่งของคุณ", { direction: "top" });
+    }
+    if (accuracy > 0) {
+      if (youCircleRef.current) {
+        youCircleRef.current.setLatLng([lat, lng]).setRadius(accuracy);
+      } else {
+        youCircleRef.current = L.circle([lat, lng], {
+          radius: accuracy,
+          color: "#2f7fb5",
+          weight: 1,
+          fillOpacity: 0.12,
+        }).addTo(map);
+      }
+    }
+  };
 
   // 1. Create the map once.
   useEffect(() => {
@@ -78,6 +106,51 @@ export function CampusInteractiveMap({
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap",
     }).addTo(map);
+
+    // "ตำแหน่งของฉัน" button
+    const LocateControl = L.Control.extend({
+      options: { position: "topright" as L.ControlPosition },
+      onAdd() {
+        const btn = L.DomUtil.create("button", "leaflet-bar");
+        btn.type = "button";
+        btn.title = "ไปที่ตำแหน่งของฉัน";
+        btn.style.cssText =
+          "width:34px;height:34px;display:flex;align-items:center;justify-content:center;background:#fff;border:none;cursor:pointer;border-radius:4px";
+        btn.innerHTML =
+          '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#123b52" stroke-width="2"><circle cx="12" cy="12" r="3.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></svg>';
+        L.DomEvent.on(btn, "click", (e) => {
+          L.DomEvent.stop(e);
+          if (!navigator.geolocation) {
+            onRouteInfoRef.current?.("อุปกรณ์นี้ไม่รองรับ GPS");
+            return;
+          }
+          btn.style.opacity = "0.5";
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              btn.style.opacity = "1";
+              setMyLocation(
+                pos.coords.latitude,
+                pos.coords.longitude,
+                pos.coords.accuracy,
+              );
+              map.flyTo([pos.coords.latitude, pos.coords.longitude], 18, {
+                duration: 0.8,
+              });
+            },
+            () => {
+              btn.style.opacity = "1";
+              onRouteInfoRef.current?.(
+                "เปิดสิทธิ์ตำแหน่งไม่สำเร็จ — อนุญาตในเบราว์เซอร์แล้วลองใหม่",
+              );
+            },
+            { enableHighAccuracy: true, timeout: 10000 },
+          );
+        });
+        return btn;
+      },
+    });
+    new LocateControl().addTo(map);
+
     mapRef.current = map;
     setReady(true);
     setTimeout(() => map.invalidateSize(), 200);
@@ -87,6 +160,7 @@ export function CampusInteractiveMap({
       markersRef.current.clear();
       routeLayerRef.current = null;
       youMarkerRef.current = null;
+      youCircleRef.current = null;
     };
     // center is the initial camera only — not a dependency
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -150,13 +224,9 @@ export function CampusInteractiveMap({
     const map = mapRef.current;
     if (!ready || !map) return;
 
-    const clear = () => {
-      routeLayerRef.current?.remove();
-      routeLayerRef.current = null;
-      youMarkerRef.current?.remove();
-      youMarkerRef.current = null;
-    };
-    clear();
+    // only the route line goes away — the "you are here" marker stays
+    routeLayerRef.current?.remove();
+    routeLayerRef.current = null;
 
     const target = routeToId
       ? buildings.find((b) => b.id === routeToId)
@@ -174,51 +244,59 @@ export function CampusInteractiveMap({
     }
 
     let cancelled = false;
-    onRouteInfoRef.current?.("กำลังขอตำแหน่งของคุณ…");
 
-    navigator.geolocation.getCurrentPosition(
-      async (pos) => {
-        if (cancelled || !mapRef.current) return;
-        const origin = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        youMarkerRef.current = L.marker([origin.lat, origin.lng], {
-          icon: youIcon,
-        })
-          .addTo(map)
-          .bindTooltip("ตำแหน่งของคุณ", { direction: "top" });
+    const drawFrom = async (origin: { lat: number; lng: number }) => {
+      if (cancelled || !mapRef.current) return;
+      const route = await fetchWalkingRoute(origin, dest);
+      if (cancelled || !mapRef.current) return;
 
-        const route = await fetchWalkingRoute(origin, dest);
-        if (cancelled || !mapRef.current) return;
-
-        if (route) {
-          routeLayerRef.current = L.polyline(route.points, {
-            color: "#123b52",
-            weight: 5,
-            opacity: 0.85,
-          }).addTo(map);
-          onRouteInfoRef.current?.(formatWalk(route));
-        } else {
-          routeLayerRef.current = L.polyline(
-            [
-              [origin.lat, origin.lng],
-              [dest.lat, dest.lng],
-            ],
-            { color: "#123b52", weight: 4, opacity: 0.7, dashArray: "6 8" },
-          ).addTo(map);
-          onRouteInfoRef.current?.(
-            `ระยะเส้นตรง ~${formatDistance(haversineMeters(origin, dest))} (โดยประมาณ)`,
-          );
-        }
-        map.fitBounds(routeLayerRef.current.getBounds().pad(0.25));
-      },
-      () => {
-        if (cancelled) return;
+      if (route) {
+        routeLayerRef.current = L.polyline(route.points, {
+          color: "#123b52",
+          weight: 5,
+          opacity: 0.85,
+        }).addTo(map);
+        onRouteInfoRef.current?.(formatWalk(route));
+      } else {
+        routeLayerRef.current = L.polyline(
+          [
+            [origin.lat, origin.lng],
+            [dest.lat, dest.lng],
+          ],
+          { color: "#123b52", weight: 4, opacity: 0.7, dashArray: "6 8" },
+        ).addTo(map);
         onRouteInfoRef.current?.(
-          "ไม่ได้รับสิทธิ์ตำแหน่ง — กด “เปิดใน Google Maps” เพื่อนำทางจากตำแหน่งจริง",
+          `ระยะเส้นตรง ~${formatDistance(haversineMeters(origin, dest))} (โดยประมาณ)`,
         );
-        map.flyTo([dest.lat, dest.lng], 18, { duration: 0.8 });
-      },
-      { enableHighAccuracy: true, timeout: 10000 },
-    );
+      }
+      map.fitBounds(routeLayerRef.current.getBounds().pad(0.25));
+    };
+
+    // Reuse a location fix from the "ตำแหน่งของฉัน" button if we have one.
+    if (myLocRef.current) {
+      onRouteInfoRef.current?.("กำลังหาเส้นทาง…");
+      void drawFrom(myLocRef.current);
+    } else {
+      onRouteInfoRef.current?.("กำลังขอตำแหน่งของคุณ…");
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          setMyLocation(
+            pos.coords.latitude,
+            pos.coords.longitude,
+            pos.coords.accuracy,
+          );
+          void drawFrom({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        },
+        () => {
+          if (cancelled) return;
+          onRouteInfoRef.current?.(
+            "ไม่ได้รับสิทธิ์ตำแหน่ง — กด “เปิดใน Google Maps” เพื่อนำทางจากตำแหน่งจริง",
+          );
+          map.flyTo([dest.lat, dest.lng], 18, { duration: 0.8 });
+        },
+        { enableHighAccuracy: true, timeout: 10000 },
+      );
+    }
 
     return () => {
       cancelled = true;
