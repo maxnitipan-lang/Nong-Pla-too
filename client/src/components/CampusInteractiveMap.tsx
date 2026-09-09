@@ -233,6 +233,15 @@ export function CampusInteractiveMap({
       : undefined;
     if (!target?.latitude || !target?.longitude) {
       onRouteInfoRef.current?.(null);
+      // route cleared → zoom the map back out to the whole campus
+      if (!routeToId) {
+        const pts = buildings
+          .filter((b) => b.latitude && b.longitude)
+          .map(
+            (b) => [Number(b.latitude), Number(b.longitude)] as [number, number],
+          );
+        if (pts.length) map.flyToBounds(L.latLngBounds(pts).pad(0.15));
+      }
       return;
     }
     const dest = { lat: Number(target.latitude), lng: Number(target.longitude) };
@@ -250,6 +259,7 @@ export function CampusInteractiveMap({
       const route = await fetchWalkingRoute(origin, dest);
       if (cancelled || !mapRef.current) return;
 
+      const straightM = haversineMeters(origin, dest);
       if (route) {
         routeLayerRef.current = L.polyline(route.points, {
           color: "#123b52",
@@ -266,10 +276,17 @@ export function CampusInteractiveMap({
           { color: "#123b52", weight: 4, opacity: 0.7, dashArray: "6 8" },
         ).addTo(map);
         onRouteInfoRef.current?.(
-          `ระยะเส้นตรง ~${formatDistance(haversineMeters(origin, dest))} (โดยประมาณ)`,
+          `ระยะเส้นตรง ~${formatDistance(straightM)} (โดยประมาณ)`,
         );
       }
-      map.fitBounds(routeLayerRef.current.getBounds().pad(0.25));
+      // Short walk → frame the whole route. Far away (not on campus) → stay on
+      // the building so the map doesn't zoom out to the whole province.
+      const distM = route?.distanceM ?? straightM;
+      if (distM <= 1500) {
+        map.fitBounds(routeLayerRef.current.getBounds().pad(0.25));
+      } else {
+        map.flyTo([dest.lat, dest.lng], 17, { duration: 0.8 });
+      }
     };
 
     // Reuse a location fix from the "ตำแหน่งของฉัน" button if we have one.
