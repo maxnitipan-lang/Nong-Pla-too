@@ -3,6 +3,7 @@ import type { Maneuver } from "@shared/walkNetwork";
 import type { CampusNavigation } from "@/hooks/useCampusNavigation";
 import { formatDistance } from "@/lib/directions";
 import { cn } from "@/lib/utils";
+import { QrCode, phoneRouteUrl } from "@/components/QrCode";
 
 const ICONS: Record<Maneuver, typeof ArrowUp> = {
   depart: Footprints,
@@ -85,6 +86,7 @@ export function RoutePanel({ nav, className }: { nav: CampusNavigation; classNam
         <div className="min-w-0">
           <p className="text-[10px] font-black tracking-[0.14em] text-[#1a73e8]">เส้นทางเดินในวิทยาลัย</p>
           <p className="mt-1 truncate text-sm font-black text-[var(--ink)]">ไป {target?.name ?? "…"}</p>
+          {nav.fixedStart && <p className="truncate text-[11px] font-bold text-[var(--muted-foreground)]">เริ่มจาก: {nav.fixedStart.name} (คุณอยู่ที่นี่)</p>}
           {route && !busy && (
             <p className="mt-1 text-xs font-bold text-[var(--muted-foreground)]">
               {progress?.arrived ? "ถึงแล้ว 🎉" : `เดิน ~${formatDistance(remaining)} · ~${minutes(remaining)} นาที`}
@@ -101,6 +103,11 @@ export function RoutePanel({ nav, className }: { nav: CampusNavigation; classNam
           {busy && <Loader2 size={14} className="animate-spin" />} {message}
         </p>
       )}
+      {status === "error" && nav.targetId && (
+        <button type="button" onClick={() => void nav.routeTo(nav.targetId!)} className="mt-2 flex h-10 items-center gap-2 rounded-xl bg-[var(--ink)] px-4 text-xs font-black text-white">
+          <Navigation size={14} /> ลองอีกครั้ง
+        </button>
+      )}
 
       {route?.offCampus && !busy && (
         <p className="mt-3 rounded-xl bg-[#fff6e5] px-3 py-2 text-[11px] font-bold leading-5 text-[#8a6412]">
@@ -108,7 +115,20 @@ export function RoutePanel({ nav, className }: { nav: CampusNavigation; classNam
         </p>
       )}
 
-      {route && !busy && (
+      {route && !busy && nav.fixedStart && nav.targetId && (
+        // Kiosk: the walker leaves the kiosk — hand the route over to their phone.
+        <div className="mt-3 flex items-center gap-4 rounded-2xl bg-[#e8f0fe] p-3">
+          <QrCode value={phoneRouteUrl(nav.targetId)} className="w-32 shrink-0" label="QR สำหรับนำทางต่อบนมือถือ" />
+          <div className="min-w-0">
+            <p className="text-sm font-black text-[#1a4fa8]">สแกนเพื่อเดินตามเส้นทางนี้บนมือถือ</p>
+            <p className="mt-1 text-[11px] font-bold leading-5 text-[var(--muted-foreground)]">
+              มือถือจะนำทางทีละโค้งด้วย GPS พร้อมเสียงบอกทาง — ใช้กล้องมือถือสแกนได้เลย ไม่ต้องลงแอป
+            </p>
+          </div>
+        </div>
+      )}
+
+      {route && !busy && !nav.fixedStart && (
         <div className="mt-3 flex gap-2">
           {live ? (
             <button type="button" onClick={nav.stopLive} className="flex h-11 flex-1 items-center justify-center gap-2 rounded-xl bg-[#c46242] text-xs font-black text-white">

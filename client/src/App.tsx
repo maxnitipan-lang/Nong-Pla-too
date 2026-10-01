@@ -1,7 +1,8 @@
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
-import { Route, Switch } from "wouter";
+import { Redirect, Route, Switch } from "wouter";
+import MobileApp from "./pages/MobileApp";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
@@ -12,13 +13,14 @@ import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import UsersAdmin from "./pages/admin/UsersAdmin";
 import WalkwaysAdmin from "./pages/admin/WalkwaysAdmin";
 import KioskHome from "./pages/KioskHome";
-import BuildingMobile from "./pages/BuildingMobile";
 
 function Router() {
   return (
     <Switch>
       <Route path="/" component={KioskHome} />
-      <Route path="/building/:id" component={BuildingMobile} />
+      <Route path="/app" component={MobileApp} />
+      {/* Old QR codes / shared links → the phone app with that place open. */}
+      <Route path="/building/:id">{(params) => <Redirect to={`/app?place=${encodeURIComponent(params.id)}`} replace />}</Route>
       <Route path="/explore" component={Home} />
       <Route path="/admin" component={AdminOverview} />
       <Route path="/admin/buildings" component={BuildingsAdmin} />

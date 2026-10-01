@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell, useAdminAccess, DbBanner } from "./AdminShell";
 import { NumberField, TextAreaField, TextField } from "./formKit";
+import { PointPicker } from "@/components/PointPicker";
 
 type FormState = {
   collegeName: string;
@@ -13,6 +14,9 @@ type FormState = {
   mapEmbedUrl: string;
   mapCenterLat: number;
   mapCenterLng: number;
+  kioskName: string;
+  kioskLat: number | null;
+  kioskLng: number | null;
 };
 
 export default function SettingsAdmin() {
@@ -30,6 +34,9 @@ export default function SettingsAdmin() {
       mapEmbedUrl: data.mapEmbedUrl,
       mapCenterLat: data.mapCenter.lat,
       mapCenterLng: data.mapCenter.lng,
+      kioskName: data.kiosk?.name ?? "ตู้ประชาสัมพันธ์",
+      kioskLat: data.kiosk?.lat ?? null,
+      kioskLng: data.kiosk?.lng ?? null,
     });
   }, [data]);
 
@@ -98,6 +105,32 @@ export default function SettingsAdmin() {
               value={form.mapCenterLng}
               onChange={(v) => set("mapCenterLng", v)}
             />
+          </div>
+          <div className="rounded-2xl border border-[var(--border)] p-4">
+            <p className="text-sm font-bold text-[var(--ink)]">ตำแหน่งตู้ประชาสัมพันธ์ (Kiosk)</p>
+            <p className="mt-1 text-xs leading-5 text-[var(--muted-foreground)]">
+              แตะบนแผนที่ตรงจุดที่ตั้งตู้ (ลากหมุดเพื่อปรับ) — เส้นทางที่แสดงบนตู้จะเริ่มจากจุดนี้ และแผนที่บนตู้ขึ้น "คุณอยู่ที่นี่"
+              ถ้าไม่ตั้ง ตู้จะใช้ตำแหน่ง GPS ของเครื่องแทน (คอมพิวเตอร์ตั้งโต๊ะมักคลาดเคลื่อนมาก)
+            </p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
+              <TextField label="ชื่อจุดตั้งตู้" value={form.kioskName} onChange={(v) => set("kioskName", v)} placeholder="เช่น ตู้ประชาสัมพันธ์ หน้าอาคารอำนวยการ" />
+              {canEdit && form.kioskLat !== null && (
+                <Button variant="outline" onClick={() => setForm((f) => (f ? { ...f, kioskLat: null, kioskLng: null } : f))}>
+                  ล้างตำแหน่งตู้
+                </Button>
+              )}
+            </div>
+            <div className="mt-3">
+              <PointPicker
+                value={form.kioskLat !== null && form.kioskLng !== null ? { lat: form.kioskLat, lng: form.kioskLng } : null}
+                onChange={(p) => setForm((f) => (f ? { ...f, kioskLat: p.lat, kioskLng: p.lng } : f))}
+                disabled={!canEdit}
+              />
+            </div>
+            <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
+              {form.kioskLat !== null ? `ตำแหน่ง: ${form.kioskLat.toFixed(6)}, ${form.kioskLng?.toFixed(6)}` : "ยังไม่ได้ตั้งตำแหน่งตู้"}
+              {" · "}เปิดหน้าตู้ที่ <code className="rounded bg-black/5 px-1">/</code> แอปมือถืออยู่ที่ <code className="rounded bg-black/5 px-1">/app</code>
+            </p>
           </div>
           {canEdit && <div className="flex justify-end">
             <Button onClick={submit} disabled={update.isPending}>

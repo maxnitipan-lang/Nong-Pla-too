@@ -2,6 +2,9 @@ import { trpc } from "@/lib/trpc";
 import {
   aiVoiceAvailable,
   hasBrowserRecognition,
+  inAppBrowser,
+  preferredListenEngine,
+  unlockAudio,
   hasMicrophone,
   isSecureForMic,
   listen,
@@ -48,6 +51,18 @@ export function openVoiceAssistant() {
   window.dispatchEvent(new Event(OPEN_VOICE_EVENT));
 }
 
+/** Open the assistant panel (no auto-listening). */
+export const OPEN_ASSISTANT_EVENT = "nongplatoo:open";
+export function openAssistant() {
+  window.dispatchEvent(new Event(OPEN_ASSISTANT_EVENT));
+}
+
+/** Kiosk idle reset: stop talking/listening, forget the conversation, close the panel. */
+export const RESET_ASSISTANT_EVENT = "nongplatoo:reset";
+export function resetAssistant() {
+  window.dispatchEvent(new Event(RESET_ASSISTANT_EVENT));
+}
+
 type VoiceSettings = { speakReplies: boolean; handsFree: boolean; engine: SpeakEngine; rate: number };
 const SETTINGS_KEY = "nong-platoo-voice-settings-v1";
 const DEFAULT_SETTINGS: VoiceSettings = { speakReplies: true, handsFree: true, engine: "ai", rate: 1 };
@@ -72,6 +87,8 @@ const PHASE_TEXT: Record<Phase, string> = {
 type CampusAIWidgetProps = {
   /** Called when the bot decides to show a walking route (`chat.ask` → routeToBuildingId). */
   onShowRoute?: (buildingId: string) => void;
+  /** Hide the floating "ถามน้องปลาทู" button (the page opens the panel itself, e.g. from a tab bar). */
+  hideLauncher?: boolean;
 };
 
 /**
@@ -82,7 +99,7 @@ type CampusAIWidgetProps = {
  * browser recogniser → server transcription; AI voice → device voice.
  * Chat itself is `chat.ask` like the old app (stateless, full history each time).
  */
-export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
+export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWidgetProps = {}) {
   const { data: configured } = trpc.chat.configured.useQuery(undefined, { staleTime: Infinity });
   const utils = trpc.useUtils();
 
@@ -211,10 +228,8 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
       setNotice(null);
       setInterim("");
       setPhase("listening");
-      const l = listen(
-        { onInterim: setInterim, onLevel: setLevel, onProcessing: () => setPhase("transcribing") },
-        preferServer ? "server" : undefined,
-      );
+      const engine = preferServer ? "server" : preferredListenEngine(aiVoice);
+      const l = listen({ onInterim: setInterim, onLevel: setLevel, onProcessing: () => setPhase("transcribing") }, engine);
       listeningRef.current = l;
       l.result
         .then((text) => {
@@ -244,7 +259,7 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
           setInterim("");
           setPhase("idle");
           // The browser recogniser failed (e.g. no network to its speech service) → try the server.
-          if (error.message.startsWith("recognizer:") && !preferServer && aiVoice) {
+          if (error.message.startsWith("recognizer:") && engine === "browser" && aiVoice) {
             startListeningRef.current(true);
             return;
           }
@@ -257,6 +272,7 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
 
   /** The big mic button does the obvious thing for each state. */
   const onMic = () => {
+    unlockAudio(); // phones: allow the reply to be played and the mic to be recorded later
     if (phase === "listening") {
       listeningRef.current?.stop(); // done talking → use what was heard
     } else if (phase === "speaking" || phase === "idle") {
@@ -270,6 +286,7 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
   // Kiosk "ถามด้วยเสียง" → open straight into a conversation.
   useEffect(() => {
     const onVoice = () => {
+      unlockAudio();
       setOpen(true);
       setSettings((s) => ({ ...s, handsFree: true }));
       setTimeout(() => startListeningRef.current(), 250);
@@ -278,12 +295,35 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
     return () => window.removeEventListener(OPEN_VOICE_EVENT, onVoice);
   }, []);
 
+  useEffect(() => {
+    const onOpen = () => {
+      unlockAudio();
+      setOpen(true);
+    };
+    window.addEventListener(OPEN_ASSISTANT_EVENT, onOpen);
+    return () => window.removeEventListener(OPEN_ASSISTANT_EVENT, onOpen);
+  }, []);
+
+  useEffect(() => {
+    const onReset = () => {
+      stopAll();
+      setOpen(false);
+      setShowSettings(false);
+      setNotice(null);
+      setTextInput("");
+      setMessages([{ role: "assistant", content: GREETING }]);
+    };
+    window.addEventListener(RESET_ASSISTANT_EVENT, onReset);
+    return () => window.removeEventListener(RESET_ASSISTANT_EVENT, onReset);
+  }, [stopAll]);
+
   const close = () => {
     stopAll();
     setOpen(false);
   };
 
   const submitText = (event: FormEvent) => {
+    unlockAudio();
     event.preventDefault();
     const q = textInput.trim();
     if (!q || phase === "thinking") return;
@@ -303,7 +343,7 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
         <div
           role="dialog"
           aria-label="ผู้ช่วยน้องปลาทู"
-          className="fixed bottom-24 right-3 z-[1200] flex max-h-[calc(100dvh-7rem)] w-[min(440px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--card)] shadow-[0_24px_80px_rgba(16,41,58,0.28)] sm:right-6"
+          className={cn("fixed right-3 z-[1200] flex max-h-[calc(100dvh-7rem)] w-[min(440px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--card)] shadow-[0_24px_80px_rgba(16,41,58,0.28)] sm:right-6", hideLauncher ? "bottom-20" : "bottom-24")}
         >
           {/* Header */}
           <div className="flex items-center justify-between bg-[var(--deep)] px-5 py-3.5 text-white">
@@ -393,7 +433,7 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
               </label>
               <button
                 type="button"
-                onClick={() => speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", { engine, rate: settings.rate })}
+                onClick={() => unlockAudio() ?? speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", { engine, rate: settings.rate })}
                 className="flex items-center gap-1.5 font-bold text-[#1a73e8]"
               >
                 <Volume2 size={13} /> ทดลองฟังเสียง
@@ -420,6 +460,7 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
                     onClick={() => {
                       const session = sessionRef.current;
                       setPhase("speaking");
+                      unlockAudio();
                       void speak(message.content, { engine, rate: settings.rate }).done.then(() => {
                         if (session === sessionRef.current) setPhase("idle");
                       });
@@ -440,6 +481,21 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
 
           {/* Voice stage */}
           <div className="border-t border-[var(--border)] bg-[var(--card)] px-4 pb-4 pt-3">
+            {inAppBrowser() && (
+              <div className="mb-3 rounded-xl bg-[#fff6e5] px-3 py-2 text-center text-[11px] font-bold leading-5 text-[#8a6412]">
+                เบราว์เซอร์ในแอป {inAppBrowser() === "line" ? "LINE" : "Facebook/IG"} มักใช้ไมโครโฟนไม่ได้
+                {inAppBrowser() === "line" ? (
+                  <a
+                    href={`${window.location.pathname}${window.location.search ? window.location.search + "&" : "?"}openExternalBrowser=1`}
+                    className="ml-1 underline"
+                  >
+                    เปิดใน Chrome/Safari
+                  </a>
+                ) : (
+                  " — แตะ ⋯ แล้วเลือกเปิดในเบราว์เซอร์"
+                )}
+              </div>
+            )}
             {canListen ? (
               <div className="flex flex-col items-center">
                 <div className="relative flex h-24 w-24 items-center justify-center">
@@ -486,7 +542,10 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
                 <button
                   key={label}
                   type="button"
-                  onClick={() => void ask(label, false)}
+                  onClick={() => {
+                    unlockAudio();
+                    void ask(label, false);
+                  }}
                   disabled={busy}
                   className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-[11px] font-black text-[var(--foreground)] hover:border-[var(--aqua)] disabled:opacity-50"
                 >
@@ -517,9 +576,13 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
         </div>
       )}
 
-      <button
+      {!hideLauncher && <button
         type="button"
-        onClick={() => (open ? close() : setOpen(true))}
+        onClick={() => {
+          unlockAudio();
+          if (open) close();
+          else setOpen(true);
+        }}
         className="fixed bottom-5 right-3 z-[1200] flex h-14 items-center gap-2 rounded-full bg-[var(--deep)] px-4 text-white shadow-[0_14px_35px_rgba(16,41,58,0.3)] transition-all hover:-translate-y-1 sm:right-6"
         aria-label={open ? "ปิด Nong Platoo AI" : "เปิด Nong Platoo AI"}
       >
@@ -527,7 +590,7 @@ export function CampusAIWidget({ onShowRoute }: CampusAIWidgetProps = {}) {
           {phase === "listening" ? <Mic size={17} className="animate-pulse" /> : <MessageCircle size={17} />}
         </span>
         <span className="hidden text-xs font-extrabold sm:inline">{open ? "ปิดผู้ช่วย" : "ถามน้องปลาทู"}</span>
-      </button>
+      </button>}
     </>
   );
 }

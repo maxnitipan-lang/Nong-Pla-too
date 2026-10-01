@@ -40,6 +40,61 @@ function recognitionCtor(): RecognitionCtor | undefined {
 }
 
 export const hasBrowserRecognition = () => Boolean(recognitionCtor());
+
+const ua = () => (typeof navigator === "undefined" ? "" : navigator.userAgent);
+/** iPhone / iPad (iPadOS reports itself as a Mac with touch). */
+export const isIOS = () =>
+  /iPhone|iPad|iPod/i.test(ua()) || (typeof navigator !== "undefined" && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+export const isMobileDevice = () => /Android|iPhone|iPad|iPod/i.test(ua()) || isIOS();
+/** LINE / Facebook / Instagram in-app browsers usually can't use the microphone. */
+export const inAppBrowser = (): "line" | "other" | null =>
+  /\bLine\//i.test(ua()) ? "line" : /FBAN|FBAV|Instagram|MicroMessenger|TikTok/i.test(ua()) ? "other" : null;
+
+// Phones only let a page make sound / use the mic's audio graph if it was started
+// from a tap. Everything is "unlocked" once, during the first tap, and reused.
+let sharedCtx: AudioContext | null = null;
+let player: HTMLAudioElement | null = null;
+let ttsUnlocked = false;
+const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAIA+AAACABAAZGF0YQAAAAA=";
+
+function audioContext(): AudioContext {
+  if (!sharedCtx || sharedCtx.state === "closed") {
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    sharedCtx = new Ctx();
+  }
+  if (sharedCtx.state === "suspended") void sharedCtx.resume().catch(() => undefined);
+  return sharedCtx;
+}
+
+function audioPlayer(): HTMLAudioElement {
+  player ??= new Audio();
+  return player;
+}
+
+/**
+ * Call synchronously inside every tap that may lead to listening or speaking
+ * (mic button, send, quick question…). On iOS/Android this is what allows the
+ * reply to be played several seconds later and the recorder to hear the mic.
+ */
+export function unlockAudio(): void {
+  if (typeof window === "undefined") return;
+  try {
+    audioContext();
+    const p = audioPlayer();
+    if (!p.src || p.src === SILENT_WAV || p.ended || p.paused) {
+      p.src = SILENT_WAV;
+      void p.play().catch(() => undefined);
+    }
+    if (!ttsUnlocked && window.speechSynthesis) {
+      const u = new SpeechSynthesisUtterance(" ");
+      u.volume = 0;
+      window.speechSynthesis.speak(u);
+      ttsUnlocked = true;
+    }
+  } catch {
+    /* best effort */
+  }
+}
 export const hasMicrophone = () => typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
 export const isSecureForMic = () => typeof window === "undefined" || window.isSecureContext;
 
@@ -201,7 +256,8 @@ export function speak(rawText: string, options: SpeakOptions): Speech {
         const blob = await fetchAiAudio(text, controller.signal);
         if (controller.signal.aborted) return;
         const url = URL.createObjectURL(blob);
-        audio = new Audio(url);
+        audio = audioPlayer(); // unlocked during the user's tap — a new Audio() would be blocked on iOS
+        audio.src = url;
         audio.playbackRate = rate;
         (audio as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
         await new Promise<void>((resolve, reject) => {
@@ -275,8 +331,7 @@ async function openMic(): Promise<{ stream: MediaStream; ctx: AudioContext; anal
     const name = (error as { name?: string }).name;
     throw new Error(name === "NotAllowedError" || name === "SecurityError" ? MIC_DENIED : NO_MIC);
   }
-  const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-  const ctx = new Ctx();
+  const ctx = audioContext();
   const source = ctx.createMediaStreamSource(stream);
   const analyser = ctx.createAnalyser();
   analyser.fftSize = 1024;
@@ -327,20 +382,21 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
     };
     rec.onerror = (event) => {
       if (event.error === "no-speech" || event.error === "aborted") return; // onend resolves with ""
-      if (event.error === "not-allowed" || event.error === "service-not-allowed") reject(new Error(MIC_DENIED));
+      if (event.error === "not-allowed") reject(new Error(MIC_DENIED));
       else if (event.error === "audio-capture") reject(new Error(NO_MIC));
       else reject(new Error(`recognizer:${event.error}`)); // e.g. "network" → caller may retry with the server engine
     };
     rec.onend = () => {
       cleanupMeter();
       mic?.stream.getTracks().forEach((t) => t.stop());
-      void mic?.ctx.close();
+      mic?.source.disconnect();
       resolve(cancelled ? "" : (finalText || interimText).trim());
     };
   });
 
-  // Level meter is optional; if the mic can't be opened twice, recognition still works.
-  void openMic()
+  // Level meter is optional. Phones hand the microphone to one user at a time, so
+  // opening it a second time there would starve the recogniser — skip it.
+  if (!isMobileDevice()) void openMic()
     .then((m) => {
       mic = m;
       cleanupMeter = startLevelMeter(m.analyser, cb.onLevel);
@@ -368,6 +424,7 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
 function listenWithServer(cb: ListenCallbacks): Listening {
   let stopNow: (() => void) | null = null;
   let cancelled = false;
+  audioContext(); // create/resume now, while we're still inside the user's tap
 
   const result = (async () => {
     const mic = await openMic();
@@ -407,7 +464,6 @@ function listenWithServer(cb: ListenCallbacks): Listening {
     cleanupMeter();
     stream.getTracks().forEach((t) => t.stop());
     const sampleRate = ctx.sampleRate;
-    void ctx.close();
     if (cancelled || !heardSpeech) return "";
 
     cb.onProcessing?.();
@@ -477,9 +533,20 @@ function encodeWav16k(chunks: Float32Array[], inRate: number): Blob {
  * otherwise (or when `prefer` is "server") records and transcribes on the server.
  */
 export function listen(cb: ListenCallbacks, prefer?: ListenEngine): Listening {
+  // (Callers decide; see preferredListenEngine.)
   if (!isSecureForMic()) {
     return { engine: "browser", result: Promise.reject(new Error(INSECURE)), stop: () => undefined, cancel: () => undefined };
   }
   const engine: ListenEngine = prefer ?? (hasBrowserRecognition() ? "browser" : "server");
   return engine === "browser" && hasBrowserRecognition() ? listenWithBrowser(cb) : listenWithServer(cb);
+}
+
+/**
+ * Which recogniser to use: iPhones record + transcribe on the server (Safari's own
+ * recogniser needs Siri and often returns nothing); everyone else uses the
+ * browser's live recogniser when present.
+ */
+export function preferredListenEngine(serverAvailable: boolean): ListenEngine {
+  if (serverAvailable && (isIOS() || !hasBrowserRecognition())) return "server";
+  return hasBrowserRecognition() ? "browser" : "server";
 }

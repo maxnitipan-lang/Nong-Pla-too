@@ -90,6 +90,8 @@ export type CampusSettings = {
   /** Google My Maps "embed on my site" URL, or "" (kept for API compatibility; the site no longer shows it). */
   mapEmbedUrl: string;
   mapCenter: { lat: number; lng: number };
+  /** New: where the kiosk stands — its walking routes start here instead of GPS. null = not set. */
+  kiosk: { name: string; lat: number; lng: number } | null;
 };
 
 export const CAMPUS_OVERVIEW = {
@@ -563,6 +565,7 @@ export const CAMPUS_SETTINGS_DEFAULTS: CampusSettings = {
   contactEmail: "info@smtc.ac.th",
   mapEmbedUrl: "",
   mapCenter: CAMPUS_OVERVIEW.mapCenter,
+  kiosk: null,
 };
 
 /** Keys stored as rows in the `site_settings` table. */
@@ -573,5 +576,8 @@ export const CAMPUS_SETTINGS_KEYS = [
   "mapEmbedUrl",
   "mapCenterLat",
   "mapCenterLng",
+  "kioskName",
+  "kioskLat",
+  "kioskLng",
 ] as const;
 export type CampusSettingKey = (typeof CAMPUS_SETTINGS_KEYS)[number];

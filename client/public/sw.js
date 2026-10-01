@@ -1,7 +1,7 @@
 // Bump the version whenever the caching rules change: `activate` deletes every
 // other cache, so users stuck on an old copy get cleaned up automatically.
-const CACHE_NAME = "nong-platoo-ontour-v3";
-const APP_SHELL = ["/", "/manifest.json", "/pwa-icon.svg"];
+const CACHE_NAME = "nong-platoo-ontour-v4";
+const APP_SHELL = ["/", "/app", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
   event.waitUntil(caches.open(CACHE_NAME).then((cache) => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

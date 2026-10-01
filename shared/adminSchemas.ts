@@ -131,6 +131,10 @@ export const settingsInputSchema = z.object({
     ),
   mapCenterLat: z.number().min(-90).max(90),
   mapCenterLng: z.number().min(-180).max(180),
+  // New (optional so the old settings form still validates): the kiosk's spot.
+  kioskName: z.string().trim().max(80).optional(),
+  kioskLat: z.number().min(-90).max(90).nullable().optional(),
+  kioskLng: z.number().min(-180).max(180).nullable().optional(),
 });
 export type SettingsInput = z.infer<typeof settingsInputSchema>;
 

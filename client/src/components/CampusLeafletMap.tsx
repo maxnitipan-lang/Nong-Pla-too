@@ -98,6 +98,12 @@ type CampusLeafletMapProps = {
   activeStep?: number;
   /** Show the "ตำแหน่งของฉัน" button (default true). */
   showLocateButton?: boolean;
+  /** Permanent label on the walker's dot, e.g. "คุณอยู่ที่นี่" on the kiosk. */
+  userLabel?: string;
+  /** +/− buttons (default true; phones pinch instead). */
+  zoomControl?: boolean;
+  /** Distance (px) of the locate button from the top — leave room for overlays like a search bar. */
+  controlsTop?: number;
 };
 
 export function CampusLeafletMap({
@@ -116,7 +122,12 @@ export function CampusLeafletMap({
   followUser = false,
   activeStep,
   showLocateButton = true,
+  userLabel,
+  zoomControl = true,
+  controlsTop = 84,
 }: CampusLeafletMapProps) {
+  const userLabelRef = useRef(userLabel);
+  userLabelRef.current = userLabel;
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markersRef = useRef<Map<string, L.Marker>>(new Map());
@@ -168,7 +179,13 @@ export function CampusLeafletMap({
         fillOpacity: 0.12,
         interactive: false,
       }),
-      L.marker([fix.lat, fix.lng], { icon: meIcon, zIndexOffset: 2000, interactive: false }),
+      (() => {
+        const me = L.marker([fix.lat, fix.lng], { icon: meIcon, zIndexOffset: 2000, interactive: false });
+        if (userLabelRef.current) {
+          me.bindTooltip(userLabelRef.current, { permanent: true, direction: "top", offset: [0, -10], className: "!rounded-full !bg-[#1a73e8] !px-2.5 !py-1 !text-[11px] !font-black !text-white !border-0" });
+        }
+        return me;
+      })(),
     ]).addTo(map);
   };
 
@@ -187,7 +204,7 @@ export function CampusLeafletMap({
     const fitMinZoom = () => map.setMinZoom(Math.max(15, map.getBoundsZoom(bounds, false)));
     fitMinZoom();
     map.on("resize", fitMinZoom);
-    L.control.zoom({ position: "topright" }).addTo(map);
+    if (zoomControl) L.control.zoom({ position: "topright" }).addTo(map);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 19,
       attribution: "&copy; OpenStreetMap",
@@ -368,7 +385,7 @@ export function CampusLeafletMap({
         </div>
       )}
       {showLocateButton && (
-        <div className="pointer-events-none absolute right-[10px] top-[84px] z-[1000] flex flex-col items-end gap-2">
+        <div className="pointer-events-none absolute right-[10px] z-[1000] flex flex-col items-end gap-2" style={{ top: controlsTop }}>
           <button
             type="button"
             onClick={locateMe}

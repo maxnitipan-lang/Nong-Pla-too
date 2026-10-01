@@ -400,6 +400,12 @@ export async function getCampusSettings(): Promise<CampusSettings> {
         lat: num("mapCenterLat", CAMPUS_SETTINGS_DEFAULTS.mapCenter.lat),
         lng: num("mapCenterLng", CAMPUS_SETTINGS_DEFAULTS.mapCenter.lng),
       },
+      kiosk: (() => {
+        const lat = Number(map.get("kioskLat"));
+        const lng = Number(map.get("kioskLng"));
+        if (!map.get("kioskLat") || !Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+        return { name: map.get("kioskName") || "ตู้ประชาสัมพันธ์", lat, lng };
+      })(),
     };
   } catch (error) {
     console.warn("[Database] Could not load site settings, using defaults:", error);
@@ -417,6 +423,10 @@ export async function updateCampusSettings(input: SettingsInput): Promise<void> 
     ["mapCenterLat", String(input.mapCenterLat)],
     ["mapCenterLng", String(input.mapCenterLng)],
   ];
+  // Kiosk fields are only written when the form sends them (old clients don't).
+  if (input.kioskName !== undefined) entries.push(["kioskName", input.kioskName]);
+  if (input.kioskLat !== undefined) entries.push(["kioskLat", input.kioskLat === null ? "" : String(input.kioskLat)]);
+  if (input.kioskLng !== undefined) entries.push(["kioskLng", input.kioskLng === null ? "" : String(input.kioskLng)]);
   for (const [key, value] of entries) {
     await db
       .insert(siteSettings)

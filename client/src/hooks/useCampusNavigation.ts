@@ -60,7 +60,18 @@ function speak(text: string) {
  * Routing runs in the browser (shared/walkNetwork.ts), so it works offline. Only
  * the stretch from off campus to the gate goes to the server (OpenRouteService).
  */
-export function useCampusNavigation(buildings: CampusBuilding[]) {
+export type NavigationOptions = {
+  /**
+   * Kiosk: routes always start here (the kiosk's spot) instead of GPS, and there
+   * is no live mode — the walker continues on their phone via the QR code.
+   */
+  fixedStart?: { lat: number; lng: number; name: string } | null;
+};
+
+export function useCampusNavigation(buildings: CampusBuilding[], options: NavigationOptions = {}) {
+  const fixedStart = options.fixedStart ?? null;
+  const fixedStartRef = useRef(fixedStart);
+  fixedStartRef.current = fixedStart;
   const { data: serverNetwork } = trpc.campus.walkNetwork.useQuery(undefined, { staleTime: 10 * 60 * 1000 });
   const [cachedNetwork] = useState(readCachedNetwork);
   useEffect(() => {
@@ -154,16 +165,21 @@ export function useCampusNavigation(buildings: CampusBuilding[]) {
       setRoute(null);
       setApproachPath(null);
       setProgress(null);
-      setStatus("locating");
-      setMessage("กำลังหาตำแหน่งของคุณ…");
       let here: GpsFix;
-      try {
-        here = await getBestPosition();
-      } catch (error) {
-        if (requestId !== requestRef.current) return;
-        setStatus("error");
-        setMessage(error instanceof Error ? error.message : "หาตำแหน่งไม่สำเร็จ");
-        return;
+      const kiosk = fixedStartRef.current;
+      if (kiosk) {
+        here = { lat: kiosk.lat, lng: kiosk.lng, accuracy: 3 };
+      } else {
+        setStatus("locating");
+        setMessage("กำลังหาตำแหน่งของคุณ…");
+        try {
+          here = await getBestPosition();
+        } catch (error) {
+          if (requestId !== requestRef.current) return;
+          setStatus("error");
+          setMessage(error instanceof Error ? error.message : "หาตำแหน่งไม่สำเร็จ");
+          return;
+        }
       }
       if (requestId !== requestRef.current) return;
       setFix(here);
@@ -225,7 +241,7 @@ export function useCampusNavigation(buildings: CampusBuilding[]) {
   );
 
   const startLive = useCallback(() => {
-    if (!navigator.geolocation || !stateRef.current.route) return;
+    if (fixedStartRef.current || !navigator.geolocation || !stateRef.current.route) return;
     stopWatch();
     setLive(true);
     spokenStepRef.current = -1;
@@ -249,8 +265,12 @@ export function useCampusNavigation(buildings: CampusBuilding[]) {
   }, [stopWatch]);
 
   useEffect(() => () => stopWatch(), [stopWatch]);
+  useEffect(() => {
+    if (fixedStart) setFix({ lat: fixedStart.lat, lng: fixedStart.lng, accuracy: 3 });
+  }, [fixedStart?.lat, fixedStart?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return {
+    fixedStart,
     network,
     targetId,
     target,

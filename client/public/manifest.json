@@ -1,15 +1,23 @@
 {
-  "name": "Nong Platoo Ontour",
-  "short_name": "Nong Platoo",
-  "description": "ผู้ช่วยประชาสัมพันธ์อัจฉริยะ วิทยาลัยเทคนิคสมุทรสงคราม",
+  "id": "/app",
+  "name": "น้องปลาทู · นำทางวิทยาลัยเทคนิคสมุทรสงคราม",
+  "short_name": "น้องปลาทู",
+  "description": "แผนที่ นำทางเดินด้วย GPS ข่าวสาร และผู้ช่วยตอบคำถามด้วยเสียง ของวิทยาลัยเทคนิคสมุทรสงคราม",
   "lang": "th",
-  "start_url": "/",
+  "dir": "ltr",
+  "start_url": "/app?source=pwa",
   "scope": "/",
   "display": "standalone",
-  "orientation": "any",
+  "orientation": "portrait",
   "background_color": "#f5faf7",
   "theme_color": "#10293a",
+  "categories": ["education", "navigation", "travel"],
   "icons": [
-    { "src": "/pwa-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "ถามน้องปลาทูด้วยเสียง", "short_name": "ถามด้วยเสียง", "url": "/app?voice=1", "icons": [{ "src": "/icons/icon-192.png", "sizes": "192x192" }] }
   ]
 }
