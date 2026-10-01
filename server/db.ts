@@ -285,6 +285,22 @@ export async function deleteCampusBuilding(id: string): Promise<void> {
 // Campus news
 // ---------------------------------------------------------------------------
 
+/**
+ * Hand-entered news first (by sortOrder), then items pulled from the college
+ * website newest-first — their ids end in the site's increasing article number,
+ * which is more reliable than sortOrder across separate sync runs.
+ */
+function sortNewsRows<T extends { id: string; source: string; sortOrder: number; createdAt: Date }>(rows: T[]): T[] {
+  const siteNumber = (id: string) => Number(/(\d+)$/.exec(id)?.[1] ?? 0);
+  return [...rows].sort((a, b) => {
+    const aSite = a.source === "sstc.ac.th";
+    const bSite = b.source === "sstc.ac.th";
+    if (aSite !== bSite) return aSite ? 1 : -1;
+    if (aSite) return siteNumber(b.id) - siteNumber(a.id);
+    return a.sortOrder - b.sortOrder || a.createdAt.getTime() - b.createdAt.getTime();
+  });
+}
+
 function rowToNews(row: CampusNewsRow): CampusNewsItem {
   return {
     id: row.id,
@@ -311,7 +327,7 @@ export async function getCampusNews(): Promise<CampusNewsItem[]> {
       .where(eq(campusNews.published, 1))
       .orderBy(asc(campusNews.sortOrder), asc(campusNews.createdAt));
     if (!rows.length) return CAMPUS_NEWS;
-    return rows.map(rowToNews);
+    return sortNewsRows(rows).map(rowToNews);
   } catch (error) {
     console.warn("[Database] Could not load campus news, using demo data:", error);
     return CAMPUS_NEWS;
@@ -327,7 +343,7 @@ export async function listCampusNewsAdmin(): Promise<CampusNewsAdmin[]> {
     .select()
     .from(campusNews)
     .orderBy(asc(campusNews.sortOrder), asc(campusNews.createdAt));
-  return rows.map((row) => ({
+  return sortNewsRows(rows).map((row) => ({
     ...rowToNews(row),
     published: row.published === 1,
     sortOrder: row.sortOrder,
