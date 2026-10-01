@@ -2,6 +2,7 @@ import { CampusLeafletMap } from "@/components/CampusLeafletMap";
 import { CampusAIWidget, openVoiceAssistant, resetAssistant } from "@/components/CampusAIWidget";
 import { QrCode, phoneRouteUrl } from "@/components/QrCode";
 import { useIdle } from "@/hooks/useIdle";
+import { isMobileDevice } from "@/lib/voice";
 import { InstallPWAButton } from "@/components/InstallPWAButton";
 import { trpc } from "@/lib/trpc";
 import { DEPARTMENT_LOGOS, KIOSK_ASSETS } from "@/config/kioskAssets";
@@ -52,7 +53,26 @@ function DepartmentPanel({ building }: { building: CampusBuilding }) {
   return <div className="space-y-4"><div className="flex items-start gap-3"><span className="flex h-12 w-12 items-center justify-center rounded-2xl text-white" style={{ backgroundColor: building.accent }}><Building2 size={22} /></span><div><p className="text-[11px] font-black tracking-[0.12em] text-[#398e89]">ข้อมูลหมุดอาคาร</p><h2 className="mt-1 font-display text-2xl font-black tracking-[-0.04em] text-[var(--ink)]">{building.name}</h2><p className="mt-1 text-xs font-bold text-[var(--muted-foreground)]">{building.category} · {building.floors} ชั้น</p></div></div><p className="text-sm leading-7 text-[var(--muted-foreground)]">{building.description}</p><div className="rounded-2xl bg-[#f2f8f5] p-4"><div className="mb-3 flex items-center justify-between"><p className="text-xs font-black text-[var(--ink)]">ข้อมูลแต่ละชั้น</p><span className="text-[10px] font-bold text-[var(--muted-foreground)]">{building.floors} ชั้น</span></div><div className="flex gap-2 overflow-x-auto pb-1">{building.floorsDetail.map((floor) => <div key={floor.level} className="min-w-[118px] rounded-xl bg-white p-3 ring-1 ring-[#dcebe5]"><p className="text-[11px] font-black text-[var(--ink)]">{floor.label}</p><p className="mt-2 text-[10px] leading-5 text-[var(--muted-foreground)]">{floor.rooms.slice(0, 2).join(" · ")}</p></div>)}</div></div><div><p className="mb-3 text-xs font-black text-[var(--ink)]">สาขาวิชาและกิจกรรมในหมุดนี้</p><div className="space-y-3">{departments.map((department) => <div key={department.id} className="rounded-2xl border border-[var(--border)] bg-white p-3"><div className="flex items-center gap-3"><DeptLogo department={department} size="sm" /><div><p className="text-sm font-black text-[var(--ink)]">{department.name}</p><p className="mt-1 text-[10px] font-bold text-[var(--muted-foreground)]">ชั้น {department.floor} · {department.code}</p></div></div><div className="mt-3 flex flex-wrap gap-1.5">{(department.activities ?? ["กิจกรรมแนะนำสาขา", "ฝึกปฏิบัติจากสถานการณ์จริง"]).map((activity) => <span key={activity} className="rounded-full bg-[#fff3ed] px-2.5 py-1 text-[10px] font-bold text-[#b85e46]">{activity}</span>)}</div></div>)}</div></div></div>;
 }
 
+/**
+ * "/" is the kiosk. A phone that lands here (typed the address, followed a shared
+ * link) gets the phone app instead — unless the URL says ?kiosk=1 (for testing
+ * the kiosk on a small screen).
+ */
+function shouldUsePhoneApp(): boolean {
+  if (typeof window === "undefined") return false;
+  if (new URLSearchParams(window.location.search).get("kiosk") === "1") return false;
+  return isMobileDevice() && window.matchMedia("(max-width: 820px)").matches;
+}
+
 export default function KioskHome() {
+  if (shouldUsePhoneApp()) {
+    window.location.replace(`/app${window.location.search}`);
+    return null;
+  }
+  return <KioskScreen />;
+}
+
+function KioskScreen() {
   const { theme, toggleTheme } = useTheme();
   const { data } = trpc.campus.buildings.useQuery(undefined, { staleTime: 1000 * 60 * 10 });
   const { data: news } = trpc.campus.news.useQuery(undefined, { staleTime: 1000 * 60 * 10 });
