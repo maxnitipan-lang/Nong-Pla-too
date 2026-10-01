@@ -5,6 +5,7 @@ import { cn } from "@/lib/utils";
 import {
   Building2,
   ExternalLink,
+  Footprints,
   LayoutDashboard,
   LogOut,
   Newspaper,
@@ -15,28 +16,39 @@ import {
 import { useState, type ReactNode } from "react";
 import { toast } from "sonner";
 import { Link, useLocation } from "wouter";
+import { ROLE_LABELS, canEdit, canManageUsers, isStaff, type UserRole } from "@shared/roles";
 
-export type AdminSection = "overview" | "buildings" | "news" | "users" | "settings";
+/** What the signed-in person may do in /admin — for hiding buttons (the server enforces it too). */
+export function useAdminAccess() {
+  const { user } = useAuth();
+  const role = (user?.role ?? "user") as UserRole;
+  return { role, canEdit: canEdit(role), canManageUsers: canManageUsers(role) };
+}
 
-const NAV: { section: AdminSection; label: string; path: string; icon: typeof Building2 }[] = [
+export type AdminSection = "overview" | "buildings" | "walkways" | "news" | "users" | "settings";
+
+const NAV: { section: AdminSection; label: string; path: string; icon: typeof Building2; adminOnly?: boolean }[] = [
   { section: "overview", label: "ภาพรวม", path: "/admin", icon: LayoutDashboard },
   { section: "buildings", label: "อาคาร", path: "/admin/buildings", icon: Building2 },
+  { section: "walkways", label: "ทางเดิน (นำทาง)", path: "/admin/walkways", icon: Footprints },
   { section: "news", label: "ข่าวสาร", path: "/admin/news", icon: Newspaper },
-  { section: "users", label: "ผู้ใช้และสิทธิ์", path: "/admin/users", icon: Users },
+  { section: "users", label: "ผู้ใช้และสิทธิ์", path: "/admin/users", icon: Users, adminOnly: true },
   { section: "settings", label: "ตั้งค่าเว็บ", path: "/admin/settings", icon: Settings },
 ];
 
 function AdminGate() {
-  const utils = trpc.useUtils();
   const { data: passwordEnabled } = trpc.auth.adminLoginEnabled.useQuery(
     undefined,
     { staleTime: Infinity },
   );
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const login = trpc.auth.adminLogin.useMutation({
     onSuccess: () => {
       setPassword("");
-      utils.auth.me.invalidate();
+      // Admin queries on this page already failed with 403 before login and
+      // react-query won't reliably refetch them — a reload starts clean.
+      window.location.reload();
     },
     onError: (error) => toast.error(error.message),
   });
@@ -50,21 +62,33 @@ function AdminGate() {
         <form
           onSubmit={(event) => {
             event.preventDefault();
-            if (password) login.mutate({ password });
+            if (username.trim() && password) login.mutate({ username: username.trim(), password });
           }}
           className="mt-6 space-y-3"
         >
           <input
+            type="text"
+            value={username}
+            onChange={(event) => setUsername(event.target.value)}
+            placeholder="ชื่อผู้ใช้"
+            required
+            autoComplete="username"
+            autoCapitalize="none"
+            autoFocus
+            className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm outline-none transition-colors focus:border-[var(--aqua)]"
+          />
+          <input
             type="password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
-            placeholder="รหัสผ่านผู้ดูแล"
-            autoFocus
+            placeholder="รหัสผ่าน"
+            required
+            autoComplete="current-password"
             className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] px-4 text-sm outline-none transition-colors focus:border-[var(--aqua)]"
           />
           <button
             type="submit"
-            disabled={login.isPending || !password}
+            disabled={login.isPending || !password || !username.trim()}
             className="h-11 w-full rounded-full bg-[var(--ink)] text-sm font-bold text-white transition-transform hover:-translate-y-0.5 disabled:opacity-50"
           >
             {login.isPending ? "กำลังเข้าสู่ระบบ…" : "เข้าสู่ระบบ"}
@@ -122,15 +146,25 @@ export function AdminShell({
     return <AdminGate />;
   }
 
-  if (user.role !== "admin") {
+  const adminOnlyPage = NAV.find((item) => item.section === section)?.adminOnly;
+  if (!isStaff(user.role) || (adminOnlyPage && !canManageUsers(user.role))) {
     return (
       <CenteredCard>
         <ShieldAlert className="mx-auto mb-4 h-10 w-10 text-[var(--destructive)]" />
         <h1 className="text-lg font-bold text-[var(--ink)]">ไม่มีสิทธิ์เข้าถึง</h1>
         <p className="mt-2 text-sm text-[var(--muted-foreground)]">
           บัญชี <span className="font-semibold">{user.email ?? user.name}</span>{" "}
-          ยังไม่ได้รับสิทธิ์ผู้ดูแลระบบ
+          {isStaff(user.role) ? "ไม่มีสิทธิ์จัดการผู้ใช้ (เฉพาะผู้ดูแล)" : "ยังไม่ได้รับสิทธิ์เข้าส่วนผู้ดูแล"}
         </p>
+        {isStaff(user.role) && (
+          <button
+            type="button"
+            onClick={() => navigate("/admin")}
+            className="mt-6 h-11 w-full rounded-full bg-[var(--ink)] text-sm font-bold text-white"
+          >
+            ไปหน้าภาพรวม
+          </button>
+        )}
         <button
           type="button"
           onClick={() => navigate("/")}
@@ -155,7 +189,7 @@ export function AdminShell({
           </div>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:pb-0">
-          {NAV.map((item) => {
+          {NAV.filter((item) => !item.adminOnly || canManageUsers(user.role)).map((item) => {
             const active = item.section === section;
             const Icon = item.icon;
             return (
@@ -198,8 +232,11 @@ export function AdminShell({
             <h1 className="font-display text-2xl font-bold tracking-[-0.03em] text-[var(--ink)]">
               {title}
             </h1>
-            <p className="mt-1 text-xs text-[var(--muted-foreground)]">
+            <p className="mt-1 flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
               เข้าสู่ระบบเป็น {user.name ?? user.email}
+              <span className="rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-bold text-[var(--secondary-foreground)]">
+                {ROLE_LABELS[user.role as UserRole] ?? user.role}
+              </span>
             </p>
           </div>
           <a
@@ -209,6 +246,11 @@ export function AdminShell({
             <ExternalLink size={13} /> หน้าเว็บ
           </a>
         </header>
+        {!canEdit(user.role) && (
+          <div className="mb-5 rounded-xl border border-[var(--border)] bg-[#fff6e5] px-4 py-3 text-sm font-semibold text-[#8a6412]">
+            บัญชีนี้ดูได้อย่างเดียว — ปุ่มแก้ไขถูกซ่อนไว้
+          </div>
+        )}
         {children}
       </main>
     </div>

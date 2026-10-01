@@ -1,0 +1,880 @@
+{
+ "version": 1,
+ "nodes": [
+  {
+   "id": "osm-5039550268",
+   "lat": 13.4192151,
+   "lng": 100.011147
+  },
+  {
+   "id": "osm-5039550324",
+   "lat": 13.4193157,
+   "lng": 100.0115695
+  },
+  {
+   "id": "osm-5039553195",
+   "lat": 13.4211403,
+   "lng": 100.0100529,
+   "gate": true,
+   "name": "ประตูวิทยาลัย"
+  },
+  {
+   "id": "osm-7756248390",
+   "lat": 13.4209277,
+   "lng": 100.010112
+  },
+  {
+   "id": "osm-7704938454",
+   "lat": 13.4204925,
+   "lng": 100.0102294
+  },
+  {
+   "id": "osm-7704938452",
+   "lat": 13.4202391,
+   "lng": 100.0102985
+  },
+  {
+   "id": "osm-5039553196",
+   "lat": 13.4198793,
+   "lng": 100.0104095
+  },
+  {
+   "id": "osm-5039553224",
+   "lat": 13.4198827,
+   "lng": 100.0104233
+  },
+  {
+   "id": "osm-5039553223",
+   "lat": 13.4198808,
+   "lng": 100.0104501
+  },
+  {
+   "id": "osm-5039553222",
+   "lat": 13.4198708,
+   "lng": 100.010475
+  },
+  {
+   "id": "osm-5039553221",
+   "lat": 13.4198538,
+   "lng": 100.0104955
+  },
+  {
+   "id": "osm-5039553220",
+   "lat": 13.4198315,
+   "lng": 100.0105095
+  },
+  {
+   "id": "osm-5039553219",
+   "lat": 13.419806,
+   "lng": 100.0105156
+  },
+  {
+   "id": "osm-5039553218",
+   "lat": 13.4197799,
+   "lng": 100.0105133
+  },
+  {
+   "id": "osm-5039553217",
+   "lat": 13.4197559,
+   "lng": 100.0105028
+  },
+  {
+   "id": "osm-5039553216",
+   "lat": 13.4197362,
+   "lng": 100.0104851
+  },
+  {
+   "id": "osm-5039553215",
+   "lat": 13.4197228,
+   "lng": 100.010462
+  },
+  {
+   "id": "osm-5039553214",
+   "lat": 13.419717,
+   "lng": 100.0104332
+  },
+  {
+   "id": "osm-5039553213",
+   "lat": 13.4197211,
+   "lng": 100.0104041
+  },
+  {
+   "id": "osm-5039553212",
+   "lat": 13.4197345,
+   "lng": 100.0103781
+  },
+  {
+   "id": "osm-5039553211",
+   "lat": 13.4197557,
+   "lng": 100.0103584
+  },
+  {
+   "id": "osm-5039553210",
+   "lat": 13.4197822,
+   "lng": 100.0103472
+  },
+  {
+   "id": "osm-5039553209",
+   "lat": 13.4198107,
+   "lng": 100.0103459
+  },
+  {
+   "id": "osm-5039553208",
+   "lat": 13.419838,
+   "lng": 100.0103547
+  },
+  {
+   "id": "osm-5039553207",
+   "lat": 13.4198608,
+   "lng": 100.0103725
+  },
+  {
+   "id": "osm-5039553206",
+   "lat": 13.4198764,
+   "lng": 100.0103972
+  },
+  {
+   "id": "osm-7755990641",
+   "lat": 13.4198586,
+   "lng": 100.0107158
+  },
+  {
+   "id": "osm-5039553234",
+   "lat": 13.4199137,
+   "lng": 100.0109249
+  },
+  {
+   "id": "osm-5039553228",
+   "lat": 13.4199391,
+   "lng": 100.0110189
+  },
+  {
+   "id": "osm-5039553229",
+   "lat": 13.4204317,
+   "lng": 100.0108827
+  },
+  {
+   "id": "osm-5039553233",
+   "lat": 13.4204891,
+   "lng": 100.0111335
+  },
+  {
+   "id": "osm-5039553235",
+   "lat": 13.4187664,
+   "lng": 100.0112355
+  },
+  {
+   "id": "osm-7755990643",
+   "lat": 13.4196235,
+   "lng": 100.0110144
+  },
+  {
+   "id": "osm-7755990644",
+   "lat": 13.4196806,
+   "lng": 100.0109968
+  },
+  {
+   "id": "osm-9396651631",
+   "lat": 13.4196272,
+   "lng": 100.0097679
+  },
+  {
+   "id": "osm-5039553236",
+   "lat": 13.4195445,
+   "lng": 100.0094211
+  },
+  {
+   "id": "osm-5039550270",
+   "lat": 13.4183875,
+   "lng": 100.0104904
+  },
+  {
+   "id": "osm-5039550269",
+   "lat": 13.418387,
+   "lng": 100.0105415
+  },
+  {
+   "id": "osm-5039550272",
+   "lat": 13.419526,
+   "lng": 100.0126199
+  },
+  {
+   "id": "osm-7704938450",
+   "lat": 13.4200011,
+   "lng": 100.0112755
+  },
+  {
+   "id": "osm-9396230280",
+   "lat": 13.4200088,
+   "lng": 100.0090085
+  },
+  {
+   "id": "osm-7756248397",
+   "lat": 13.4202846,
+   "lng": 100.0087635
+  },
+  {
+   "id": "osm-7704938453",
+   "lat": 13.4203425,
+   "lng": 100.0107413
+  },
+  {
+   "id": "osm-7704938455",
+   "lat": 13.4206109,
+   "lng": 100.0106954
+  },
+  {
+   "id": "osm-7755990645",
+   "lat": 13.4196255,
+   "lng": 100.010804
+  },
+  {
+   "id": "osm-7755990646",
+   "lat": 13.4197869,
+   "lng": 100.0107601
+  },
+  {
+   "id": "osm-9396230281",
+   "lat": 13.4197669,
+   "lng": 100.0087112
+  },
+  {
+   "id": "osm-9396637392",
+   "lat": 13.419519,
+   "lng": 100.0106598
+  },
+  {
+   "id": "osm-9396651630",
+   "lat": 13.4197578,
+   "lng": 100.0102354
+  },
+  {
+   "id": "j-mech-auto",
+   "lat": 13.4206824,
+   "lng": 100.0101782
+  },
+  {
+   "id": "entrance-mech-auto",
+   "lat": 13.4207318,
+   "lng": 100.0103689,
+   "buildingId": "mech-auto",
+   "name": "ช่างยนต์"
+  },
+  {
+   "id": "j-electronics-it",
+   "lat": 13.4202873,
+   "lng": 100.0105051
+  },
+  {
+   "id": "entrance-electronics-it",
+   "lat": 13.4204089,
+   "lng": 100.0104755,
+   "buildingId": "electronics-it",
+   "name": "อิเล็กทรอนิกส์ / IT"
+  },
+  {
+   "id": "entrance-electrical-construction",
+   "lat": 13.4200515,
+   "lng": 100.0105927,
+   "buildingId": "electrical-construction",
+   "name": "ไฟฟ้ากำลัง / ก่อสร้าง"
+  },
+  {
+   "id": "j-ict-building",
+   "lat": 13.4192609,
+   "lng": 100.0113393
+  },
+  {
+   "id": "entrance-ict-building",
+   "lat": 13.419372,
+   "lng": 100.0113117,
+   "buildingId": "ict-building",
+   "name": "ตึก ICT"
+  },
+  {
+   "id": "j-general-subjects",
+   "lat": 13.418775,
+   "lng": 100.0101323
+  },
+  {
+   "id": "entrance-general-subjects",
+   "lat": 13.4189665,
+   "lng": 100.0103484,
+   "buildingId": "general-subjects",
+   "name": "สามัญสัมพันธ์"
+  },
+  {
+   "id": "j-commerce",
+   "lat": 13.4186549,
+   "lng": 100.0102433
+  },
+  {
+   "id": "entrance-commerce",
+   "lat": 13.4187456,
+   "lng": 100.0103456,
+   "buildingId": "commerce",
+   "name": "พาณิชยกรรม"
+  },
+  {
+   "id": "j-home-economics",
+   "lat": 13.4186738,
+   "lng": 100.0110661
+  },
+  {
+   "id": "entrance-home-economics",
+   "lat": 13.4188111,
+   "lng": 100.0109878,
+   "buildingId": "home-economics",
+   "name": "คหกรรมศาสตร์"
+  },
+  {
+   "id": "j-food-nutrition",
+   "lat": 13.4192636,
+   "lng": 100.0113506
+  },
+  {
+   "id": "entrance-food-nutrition",
+   "lat": 13.4191425,
+   "lng": 100.0113807,
+   "buildingId": "food-nutrition",
+   "name": "อาหารและโภชนาการ"
+  },
+  {
+   "id": "j-student-development",
+   "lat": 13.4184451,
+   "lng": 100.0106477
+  },
+  {
+   "id": "entrance-student-development",
+   "lat": 13.418601,
+   "lng": 100.0105588,
+   "buildingId": "student-development",
+   "name": "พัฒนาศักยภาพนักเรียน"
+  },
+  {
+   "id": "j-building-85",
+   "lat": 13.4190025,
+   "lng": 100.009922
+  },
+  {
+   "id": "entrance-building-85",
+   "lat": 13.4191766,
+   "lng": 100.0101185,
+   "buildingId": "building-85",
+   "name": "อาคาร 85 ปี"
+  },
+  {
+   "id": "j-ivec-central-5",
+   "lat": 13.4197216,
+   "lng": 100.0107779
+  },
+  {
+   "id": "entrance-ivec-central-5",
+   "lat": 13.4196921,
+   "lng": 100.0106649,
+   "buildingId": "ivec-central-5",
+   "name": "สอฐ.ภาคกลาง 5"
+  },
+  {
+   "id": "j-auditorium",
+   "lat": 13.4193732,
+   "lng": 100.0110957
+  },
+  {
+   "id": "entrance-auditorium",
+   "lat": 13.4193067,
+   "lng": 100.010882,
+   "buildingId": "auditorium",
+   "name": "หอประชุม / โรงอาหาร"
+  },
+  {
+   "id": "j-activity-building",
+   "lat": 13.4199315,
+   "lng": 100.0090772
+  },
+  {
+   "id": "entrance-activity-building",
+   "lat": 13.4201489,
+   "lng": 100.0093323,
+   "buildingId": "activity-building",
+   "name": "อาคารกิจกรรม"
+  },
+  {
+   "id": "j-building-1",
+   "lat": 13.4196755,
+   "lng": 100.0099406
+  },
+  {
+   "id": "entrance-building-1",
+   "lat": 13.4195378,
+   "lng": 100.0099807,
+   "buildingId": "building-1",
+   "name": "อาคาร 1"
+  },
+  {
+   "id": "j-parking-1",
+   "lat": 13.4209946,
+   "lng": 100.0100934
+  },
+  {
+   "id": "entrance-parking-1",
+   "lat": 13.4210548,
+   "lng": 100.0103193,
+   "buildingId": "parking-1",
+   "name": "โรงจอดรถ 1"
+  },
+  {
+   "id": "j-building-10",
+   "lat": 13.4197087,
+   "lng": 100.0109881
+  },
+  {
+   "id": "entrance-building-10",
+   "lat": 13.419733,
+   "lng": 100.01107,
+   "buildingId": "building-10",
+   "name": "ตึก 10"
+  },
+  {
+   "id": "j-construction-workshop",
+   "lat": 13.420134,
+   "lng": 100.010965
+  },
+  {
+   "id": "entrance-construction-workshop",
+   "lat": 13.4200931,
+   "lng": 100.0108105,
+   "buildingId": "construction-workshop",
+   "name": "ช่างก่อสร้าง"
+  },
+  {
+   "id": "j-machine-shop",
+   "lat": 13.420161,
+   "lng": 100.0109576
+  },
+  {
+   "id": "entrance-machine-shop",
+   "lat": 13.4201708,
+   "lng": 100.0109945,
+   "buildingId": "machine-shop",
+   "name": "ช่างกลโรงงาน"
+  },
+  {
+   "id": "entrance-personnel-registration",
+   "lat": 13.4195567,
+   "lng": 100.0104247,
+   "buildingId": "personnel-registration",
+   "name": "บุคคล / ทะเบียน"
+  },
+  {
+   "id": "j-supplies-dept",
+   "lat": 13.4187705,
+   "lng": 100.0110109
+  },
+  {
+   "id": "entrance-supplies-dept",
+   "lat": 13.4187655,
+   "lng": 100.0110017,
+   "buildingId": "supplies-dept",
+   "name": "ฝ่ายพัสดุ"
+  },
+  {
+   "id": "j-discipline-dept",
+   "lat": 13.4209083,
+   "lng": 100.0101172
+  },
+  {
+   "id": "entrance-discipline-dept",
+   "lat": 13.4209309,
+   "lng": 100.0102047,
+   "buildingId": "discipline-dept",
+   "name": "ฝ่ายปกครอง"
+  },
+  {
+   "id": "j-director-office",
+   "lat": 13.4196036,
+   "lng": 100.0096689
+  },
+  {
+   "id": "entrance-director-office",
+   "lat": 13.4194815,
+   "lng": 100.0096992,
+   "buildingId": "director-office",
+   "name": "ห้อง ผอ."
+  }
+ ],
+ "edges": [
+  {
+   "a": "osm-5039550268",
+   "b": "j-ict-building"
+  },
+  {
+   "a": "j-ict-building",
+   "b": "j-food-nutrition"
+  },
+  {
+   "a": "j-food-nutrition",
+   "b": "osm-5039550324"
+  },
+  {
+   "a": "osm-5039553195",
+   "b": "j-parking-1"
+  },
+  {
+   "a": "j-parking-1",
+   "b": "osm-7756248390"
+  },
+  {
+   "a": "osm-7756248390",
+   "b": "j-discipline-dept"
+  },
+  {
+   "a": "j-discipline-dept",
+   "b": "j-mech-auto"
+  },
+  {
+   "a": "j-mech-auto",
+   "b": "osm-7704938454"
+  },
+  {
+   "a": "osm-7704938454",
+   "b": "osm-7704938452"
+  },
+  {
+   "a": "osm-7704938452",
+   "b": "osm-5039553196"
+  },
+  {
+   "a": "osm-5039553224",
+   "b": "osm-5039553223"
+  },
+  {
+   "a": "osm-5039553223",
+   "b": "osm-5039553222"
+  },
+  {
+   "a": "osm-5039553222",
+   "b": "osm-5039553221"
+  },
+  {
+   "a": "osm-5039553221",
+   "b": "osm-5039553220"
+  },
+  {
+   "a": "osm-5039553220",
+   "b": "osm-5039553219"
+  },
+  {
+   "a": "osm-5039553219",
+   "b": "osm-5039553218"
+  },
+  {
+   "a": "osm-5039553218",
+   "b": "osm-5039553217"
+  },
+  {
+   "a": "osm-5039553217",
+   "b": "osm-5039553216"
+  },
+  {
+   "a": "osm-5039553216",
+   "b": "osm-5039553215"
+  },
+  {
+   "a": "osm-5039553215",
+   "b": "osm-5039553214"
+  },
+  {
+   "a": "osm-5039553214",
+   "b": "osm-5039553213"
+  },
+  {
+   "a": "osm-5039553213",
+   "b": "osm-5039553212"
+  },
+  {
+   "a": "osm-5039553212",
+   "b": "osm-5039553211"
+  },
+  {
+   "a": "osm-5039553211",
+   "b": "osm-5039553210"
+  },
+  {
+   "a": "osm-5039553210",
+   "b": "osm-5039553209"
+  },
+  {
+   "a": "osm-5039553209",
+   "b": "osm-5039553208"
+  },
+  {
+   "a": "osm-5039553208",
+   "b": "osm-5039553207"
+  },
+  {
+   "a": "osm-5039553207",
+   "b": "osm-5039553206"
+  },
+  {
+   "a": "osm-5039553206",
+   "b": "osm-5039553196"
+  },
+  {
+   "a": "osm-5039553196",
+   "b": "osm-5039553224"
+  },
+  {
+   "a": "osm-5039553219",
+   "b": "osm-7755990641"
+  },
+  {
+   "a": "osm-7755990641",
+   "b": "osm-5039553234"
+  },
+  {
+   "a": "osm-5039553234",
+   "b": "osm-5039553228"
+  },
+  {
+   "a": "osm-5039553228",
+   "b": "j-construction-workshop"
+  },
+  {
+   "a": "j-construction-workshop",
+   "b": "j-machine-shop"
+  },
+  {
+   "a": "j-machine-shop",
+   "b": "osm-5039553229"
+  },
+  {
+   "a": "osm-5039553229",
+   "b": "osm-5039553233"
+  },
+  {
+   "a": "osm-5039553235",
+   "b": "osm-5039550268"
+  },
+  {
+   "a": "osm-5039550268",
+   "b": "j-auditorium"
+  },
+  {
+   "a": "j-auditorium",
+   "b": "osm-7755990643"
+  },
+  {
+   "a": "osm-7755990643",
+   "b": "osm-7755990644"
+  },
+  {
+   "a": "osm-7755990644",
+   "b": "j-building-10"
+  },
+  {
+   "a": "j-building-10",
+   "b": "osm-5039553234"
+  },
+  {
+   "a": "osm-9396651631",
+   "b": "j-director-office"
+  },
+  {
+   "a": "j-director-office",
+   "b": "osm-5039553236"
+  },
+  {
+   "a": "osm-5039553236",
+   "b": "j-building-85"
+  },
+  {
+   "a": "j-building-85",
+   "b": "j-general-subjects"
+  },
+  {
+   "a": "j-general-subjects",
+   "b": "j-commerce"
+  },
+  {
+   "a": "j-commerce",
+   "b": "osm-5039550270"
+  },
+  {
+   "a": "osm-5039550270",
+   "b": "osm-5039550269"
+  },
+  {
+   "a": "osm-5039550269",
+   "b": "j-student-development"
+  },
+  {
+   "a": "j-student-development",
+   "b": "j-home-economics"
+  },
+  {
+   "a": "j-home-economics",
+   "b": "osm-5039553235"
+  },
+  {
+   "a": "osm-5039553235",
+   "b": "osm-5039550272"
+  },
+  {
+   "a": "osm-5039553228",
+   "b": "osm-7704938450"
+  },
+  {
+   "a": "osm-7704938450",
+   "b": "osm-5039553233"
+  },
+  {
+   "a": "osm-5039553236",
+   "b": "j-activity-building"
+  },
+  {
+   "a": "j-activity-building",
+   "b": "osm-9396230280"
+  },
+  {
+   "a": "osm-9396230280",
+   "b": "osm-7756248397"
+  },
+  {
+   "a": "osm-7704938452",
+   "b": "j-electronics-it"
+  },
+  {
+   "a": "j-electronics-it",
+   "b": "osm-7704938453"
+  },
+  {
+   "a": "osm-7704938454",
+   "b": "osm-7704938455"
+  },
+  {
+   "a": "osm-7755990644",
+   "b": "osm-7755990645"
+  },
+  {
+   "a": "osm-7755990645",
+   "b": "j-ivec-central-5"
+  },
+  {
+   "a": "j-ivec-central-5",
+   "b": "osm-7755990646"
+  },
+  {
+   "a": "osm-9396230281",
+   "b": "osm-9396230280"
+  },
+  {
+   "a": "osm-9396637392",
+   "b": "osm-7755990643"
+  },
+  {
+   "a": "osm-9396651630",
+   "b": "j-building-1"
+  },
+  {
+   "a": "j-building-1",
+   "b": "osm-9396651631"
+  },
+  {
+   "a": "osm-5039553210",
+   "b": "osm-9396651630"
+  },
+  {
+   "a": "j-mech-auto",
+   "b": "entrance-mech-auto"
+  },
+  {
+   "a": "j-electronics-it",
+   "b": "entrance-electronics-it"
+  },
+  {
+   "a": "osm-5039553222",
+   "b": "entrance-electrical-construction"
+  },
+  {
+   "a": "j-ict-building",
+   "b": "entrance-ict-building"
+  },
+  {
+   "a": "j-general-subjects",
+   "b": "entrance-general-subjects"
+  },
+  {
+   "a": "j-commerce",
+   "b": "entrance-commerce"
+  },
+  {
+   "a": "j-home-economics",
+   "b": "j-supplies-dept"
+  },
+  {
+   "a": "j-supplies-dept",
+   "b": "entrance-home-economics"
+  },
+  {
+   "a": "j-food-nutrition",
+   "b": "entrance-food-nutrition"
+  },
+  {
+   "a": "j-student-development",
+   "b": "entrance-student-development"
+  },
+  {
+   "a": "j-building-85",
+   "b": "entrance-building-85"
+  },
+  {
+   "a": "j-ivec-central-5",
+   "b": "entrance-ivec-central-5"
+  },
+  {
+   "a": "j-auditorium",
+   "b": "entrance-auditorium"
+  },
+  {
+   "a": "j-activity-building",
+   "b": "entrance-activity-building"
+  },
+  {
+   "a": "j-building-1",
+   "b": "entrance-building-1"
+  },
+  {
+   "a": "j-parking-1",
+   "b": "entrance-parking-1"
+  },
+  {
+   "a": "j-building-10",
+   "b": "entrance-building-10"
+  },
+  {
+   "a": "j-construction-workshop",
+   "b": "entrance-construction-workshop"
+  },
+  {
+   "a": "j-machine-shop",
+   "b": "entrance-machine-shop"
+  },
+  {
+   "a": "osm-5039553214",
+   "b": "entrance-personnel-registration"
+  },
+  {
+   "a": "j-supplies-dept",
+   "b": "entrance-supplies-dept"
+  },
+  {
+   "a": "j-discipline-dept",
+   "b": "entrance-discipline-dept"
+  },
+  {
+   "a": "j-director-office",
+   "b": "entrance-director-office"
+  }
+ ]
+}

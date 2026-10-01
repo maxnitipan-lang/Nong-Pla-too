@@ -4,6 +4,8 @@ import express from "express";
 import { createServer } from "http";
 import net from "net";
 import { appRouter } from "../routers";
+import { startNewsAutoSync } from "../newsScraper";
+import { registerVoiceRoutes } from "../voice";
 import { createContext } from "./context";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -33,6 +35,12 @@ async function startServer(): Promise<void> {
 
   registerStorageProxy(app);
   registerOAuthRoutes(app);
+  registerVoiceRoutes(app);
+  // Cheap liveness probe (no DB) — Render's health check and the kiosk keep-alive ping hit this.
+  app.get("/api/health", (_req, res) => {
+    res.setHeader("Cache-Control", "no-store");
+    res.json({ ok: true, uptime: Math.round(process.uptime()) });
+  });
 
   app.use(
     "/api/trpc",
@@ -55,6 +63,8 @@ async function startServer(): Promise<void> {
   if (!isProduction && port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
+
+  startNewsAutoSync();
 
   server.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);

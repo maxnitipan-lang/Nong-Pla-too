@@ -1,7 +1,8 @@
 import { parse as parseCookieHeader } from "cookie";
 import type { CreateExpressContextOptions } from "@trpc/server/adapters/express";
 import type { User } from "../../drizzle/schema";
-import { getUserByOpenId, upsertUser } from "../db";
+import { getUserByOpenId, getUserRowByOpenId, toSafeUser, upsertUser } from "../db";
+import { USER_COOKIE_NAME, isLocalAccount, readUserToken, verifyUserToken } from "./localAccounts";
 import { ADMIN_COOKIE_NAME, verifyAdminToken } from "./adminSession";
 import { ENV } from "./env";
 import { sdk } from "./sdk";
@@ -13,6 +14,20 @@ export type TrpcContext = {
 };
 
 const DEV_ADMIN_OPEN_ID = "local-dev-admin";
+
+/** Username/password account from the admin panel (`npt_user` cookie). */
+async function localAccountUser(req: CreateExpressContextOptions["req"]): Promise<User | null> {
+  const token = parseCookieHeader(req.headers.cookie ?? "")[USER_COOKIE_NAME];
+  const claimed = readUserToken(token);
+  if (!claimed || !isLocalAccount(claimed.openId)) return null;
+  try {
+    const row = await getUserRowByOpenId(claimed.openId);
+    if (!row || !verifyUserToken(token, row.passwordHash)) return null;
+    return toSafeUser(row);
+  } catch {
+    return null;
+  }
+}
 
 /** Synthetic admin user for the password-based login (no DB row needed). */
 function passwordAdminUser(req: CreateExpressContextOptions["req"]): User | null {
@@ -65,7 +80,7 @@ export async function createContext(
   }
 
   if (!user) {
-    user = passwordAdminUser(opts.req) ?? (await devAdminUser());
+    user = (await localAccountUser(opts.req)) ?? passwordAdminUser(opts.req) ?? (await devAdminUser());
   }
 
   return {

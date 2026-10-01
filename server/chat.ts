@@ -40,12 +40,27 @@ function buildSystemPrompt(
   buildings: Awaited<ReturnType<typeof getCampusBuildings>>,
   news: Awaited<ReturnType<typeof getCampusNews>>,
   settings: Awaited<ReturnType<typeof getCampusSettings>>,
+  spoken = false,
 ): string {
   const buildingLines = buildings
-    .map(
-      (b) =>
+    .map((b) => {
+      // Rooms per floor + kiosk departments, so "สาขา X อยู่ไหน" can be answered.
+      const floors = b.floorsDetail
+        .filter((f) => f.rooms.length)
+        .map((f) => `${f.label}: ${f.rooms.join(", ")}`)
+        .join(" / ");
+      const departments = (b.departments ?? [])
+        .filter((d) => d.name && !b.floorsDetail.some((f) => f.rooms.includes(d.name)))
+        .map((d) => `${d.name} (ชั้น ${d.floor})`)
+        .join(", ");
+      return [
         `- id:${b.id} | ชื่อ: ${b.name} | กลุ่ม: ${b.category} | ${b.floors} ชั้น | รายละเอียด: ${b.description}`,
-    )
+        floors && `ห้อง/หน่วยงาน: ${floors}`,
+        departments && `สาขา: ${departments}`,
+      ]
+        .filter(Boolean)
+        .join(" | ");
+    })
     .join("\n");
 
   const newsLines = news
@@ -54,7 +69,7 @@ function buildSystemPrompt(
 
   return [
     `คุณคือ "น้องปลาทู" ผู้ช่วยตอบคำถามประจำ "${settings.collegeName}" สำหรับนักเรียน ผู้ปกครอง และผู้มาติดต่อ`,
-    'บุคลิก: แทนตัวเองว่า "น้องปลาทู" เสมอ (ห้ามใช้ ผม/ดิฉัน/ฉัน/เรา) และลงท้ายประโยคด้วย "ครับ" เสมอ (ห้ามใช้ ค่ะ/นะคะ) พูดจาเป็นกันเองแต่สุภาพ',
+    'บุคลิก: เป็นผู้ชาย แทนตัวเองว่า "ผม" หรือ "น้องปลาทู" (ห้ามใช้ ดิฉัน/ฉัน/หนู) และลงท้ายประโยคด้วย "ครับ" เสมอ (ห้ามใช้ ค่ะ/นะคะ) พูดจาเป็นกันเองแต่สุภาพ',
     'เมื่อผู้ใช้ทักทาย (เช่น "สวัสดี" "หวัดดี" "hello") ให้ตอบทำนองว่า: "สวัสดีครับ ยินดีต้อนรับสู่' +
       settings.collegeName +
       'ครับ มีอะไรให้น้องปลาทูช่วยไหมครับ"',
@@ -80,6 +95,16 @@ function buildSystemPrompt(
     "   - เกริ่นนำ 1 บรรทัดสั้น ๆ ก่อนลิสต์ แล้วขึ้นบรรทัดใหม่",
     "   - แต่ละย่อหน้าไม่เกิน 2 ประโยค เว้นบรรทัดว่างระหว่างย่อหน้า",
     "   - ใช้ **ตัวหนา** เฉพาะชื่ออาคารหรือคำสำคัญ ใช้พอประมาณ",
+    spoken
+      ? [
+          "",
+          "== โหมดสนทนาด้วยเสียง (คำตอบจะถูกอ่านออกเสียงบนตู้/มือถือ) ==",
+          "- ตอบสั้นแบบพูดคุย 1–3 ประโยค เหมือนคุยกับคนตรงหน้า ถ้ามีหลายรายการให้บอกไม่เกิน 4 รายการแล้วถามว่าอยากรู้อันไหนเพิ่ม",
+          "- ห้ามใช้ markdown, bullet, ตัวหนา, ลิงก์ URL, อีโมจิ หรือสัญลักษณ์พิเศษ",
+          "- เขียนตัวเลขและหน่วยให้อ่านออกเสียงได้เป็นธรรมชาติ เช่น '200 เมตร' ไม่ใช่ '200 ม.'",
+          "- ถ้าคำถามฟังไม่ชัดหรือกำกวม ให้ถามกลับสั้น ๆ ว่าหมายถึงอะไร",
+        ].join("\n")
+      : "",
   ]
     .filter(Boolean)
     .join("\n");
@@ -100,7 +125,7 @@ const GREETING_RE =
   /^(สวัส?ดี|หวัดดี|ดีครับ|ดีค่ะ|ดีจ้า|hello|hi|hey|ทัก(ทาย)?)[\s!.ๆครับค่ะจ้าา]*$/i;
 
 /** Send the conversation to the model and return the assistant answer. */
-export async function askCampusChat(history: ChatMessage[]): Promise<ChatAnswer> {
+export async function askCampusChat(history: ChatMessage[], options: { spoken?: boolean } = {}): Promise<ChatAnswer> {
   if (!CHAT_API_KEY) {
     throw new Error(
       "ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในไฟล์ .env — ขอ key ฟรีที่ https://aistudio.google.com/apikey",
@@ -136,7 +161,7 @@ export async function askCampusChat(history: ChatMessage[]): Promise<ChatAnswer>
   const requestBody = JSON.stringify({
     model: CHAT_MODEL,
     messages: [
-      { role: "system", content: buildSystemPrompt(buildings, news, settings) },
+      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken) },
       ...turns,
     ],
     temperature: 0.3,

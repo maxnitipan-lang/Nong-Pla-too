@@ -5,30 +5,30 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: #f6f7f5;
-  --foreground: #10293a;
+  --background: #f2f8fc;
+  --foreground: #082c4a;
   --card: #ffffff;
-  --card-foreground: #10293a;
+  --card-foreground: #082c4a;
   --popover: #ffffff;
   --popover-foreground: #10293a;
-  --primary: #123b52;
+  --primary: #075985;
   --primary-foreground: #f8fbfa;
-  --secondary: #e3f2ef;
-  --secondary-foreground: #1d5b5a;
-  --muted: #edf1ef;
-  --muted-foreground: #6c7c84;
-  --accent: #f4b38a;
-  --accent-foreground: #5c2f20;
+  --secondary: #d9f1fa;
+  --secondary-foreground: #0e7490;
+  --muted: #e8f1f6;
+  --muted-foreground: #587286;
+  --accent: #e8b84d;
+  --accent-foreground: #563c08;
   --destructive: #c94d48;
-  --border: #dce5e1;
-  --input: #dce5e1;
-  --ring: #55aaa2;
+  --border: #cfe1ec;
+  --input: #cfe1ec;
+  --ring: #2aa7d6;
   --radius: 1rem;
-  --ink: #10293a;
-  --deep: #071a2b;
-  --aqua: #5bb9b0;
-  --coral: #eb8b67;
-  --sand: #f4ecdd;
+  --ink: #082c4a;
+  --deep: #031b30;
+  --aqua: #26a6d1;
+  --coral: #e8b84d;
+  --sand: #fff6d8;
   --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
 }
 
@@ -58,6 +58,58 @@
   --font-sans: 'Noto Sans Thai', sans-serif;
 }
 
+.dark {
+  --background: #061523;
+  --foreground: #edf9fc;
+  --card: #0d2940;
+  --card-foreground: #e8f6fb;
+  --popover: #102f48;
+  --popover-foreground: #e8f6fb;
+  --primary: #49c7ed;
+  --primary-foreground: #031b30;
+  --secondary: #12435f;
+  --secondary-foreground: #9de8f7;
+  --muted: #102f45;
+  --muted-foreground: #a8c1cf;
+  --border: #28516a;
+  --input: #28516a;
+  --ring: #e8b84d;
+  --ink: #e8f6fb;
+  --deep: #020d18;
+  --sand: #3c321c;
+}
+
+.dark body { background: radial-gradient(circle at 8% 0%, rgba(31, 111, 145, .18), transparent 34%), var(--background); }
+.dark .kiosk-shell { background: radial-gradient(circle at 92% 12%, rgba(232,184,77,.08), transparent 24%), var(--background) !important; }
+.dark .kiosk-shell .rounded-\[30px\].bg-white,
+.dark .kiosk-shell .rounded-\[26px\].bg-white { box-shadow: 0 22px 60px rgba(0,0,0,.28); }
+
+/* Shared legacy light surfaces on Mobile and Admin screens. */
+.dark [class*="bg-white"] { background-color: var(--card) !important; color: var(--card-foreground); }
+.dark [class*="bg-[#f"], .dark [class*="bg-[#e"] { background-color: var(--background) !important; }
+.dark [class*="text-[#10293a"], .dark [class*="text-[#082c4a"] { color: var(--foreground) !important; }
+.dark [class*="bg-[#fff1eb"], .dark [class*="bg-[#fff3ed"] { background-color: #3a2730 !important; }
+
+/* Keep legacy light utility classes readable when the app-shell is dark. */
+.dark .app-shell .nav-glass { background: rgba(6, 24, 39, 0.9); border-color: #23465e; }
+.dark .app-shell .hero-noise { background: linear-gradient(135deg, #061827 0%, #0b2b42 100%); }
+.dark .app-shell .map-surface { background-color: #0b2b42; background-image: linear-gradient(90deg, rgba(56,185,227,.1) 1px, transparent 1px), linear-gradient(rgba(56,185,227,.1) 1px, transparent 1px); }
+.dark .app-shell [class*="bg-white"] { background-color: var(--card) !important; color: var(--card-foreground); }
+.dark .app-shell [class*="bg-[#f"], .dark .app-shell [class*="bg-[#e"] { background-color: var(--background) !important; }
+.dark .app-shell [class*="text-[#10293a"], .dark .app-shell [class*="text-[#082c4a"] { color: var(--foreground) !important; }
+.dark .app-shell .map-building { background: rgba(11, 36, 56, .86); border-color: #35617a; box-shadow: 0 10px 18px rgba(0,0,0,.25); }
+.dark .app-shell .map-road { background: rgba(22, 55, 76, .95); box-shadow: 0 0 0 7px rgba(4, 20, 32, .42); }
+
+/* KioskHome is a separate shell from the public Explore page. Its original
+   light utility classes must be remapped independently in dark mode. */
+.dark .kiosk-shell { background: var(--background) !important; color: var(--foreground); }
+.dark .kiosk-shell .kiosk-header { background: var(--deep) !important; }
+.dark .kiosk-shell [class*="bg-white"] { background-color: var(--card) !important; }
+.dark .kiosk-shell [class*="bg-[#f"], .dark .kiosk-shell [class*="bg-[#e"], .dark .kiosk-shell [class*="bg-[#d"] { background-color: var(--background) !important; }
+.dark .kiosk-shell [class*="bg-[var(--ink)]"] { background-color: var(--deep) !important; }
+.dark .kiosk-shell [class*="text-[var(--ink)]"] { color: var(--card-foreground) !important; }
+.dark .kiosk-shell .map-road { background: rgba(22, 55, 76, .95); box-shadow: 0 0 0 7px rgba(4, 20, 32, .42); }
+
 * { box-sizing: border-box; }
 html { scroll-behavior: smooth; }
 body {
@@ -85,9 +137,9 @@ button:active { transform: scale(0.98); }
 .hero-noise {
   position: relative;
   background:
-    radial-gradient(circle at 15% 15%, rgba(91, 185, 176, 0.18), transparent 31%),
-    radial-gradient(circle at 85% 12%, rgba(235, 139, 103, 0.17), transparent 26%),
-    linear-gradient(135deg, #f7f8f5 0%, #eff5f0 100%);
+    radial-gradient(circle at 15% 15%, rgba(38, 166, 209, 0.18), transparent 31%),
+    radial-gradient(circle at 85% 12%, rgba(232, 184, 77, 0.2), transparent 26%),
+    linear-gradient(135deg, #f8fcff 0%, #eaf6fb 100%);
 }
 .hero-noise::after {
   content: '';
@@ -153,6 +205,19 @@ button:active { transform: scale(0.98); }
 
 .reveal-up { animation: revealUp 520ms var(--ease-out) both; }
 @keyframes revealUp { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+.kiosk-main > section { animation: pageEnter 320ms var(--ease-out) both; }
+.kiosk-main .rounded-\[26px\], .kiosk-main .rounded-\[28px\] { transition: transform 220ms var(--ease-out), box-shadow 220ms var(--ease-out), opacity 220ms ease; }
+.kiosk-main .rounded-\[26px\]:hover, .kiosk-main .rounded-\[28px\]:hover { transform: translateY(-2px); }
+@keyframes pageEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+.pwa-loading-sheen { position: relative; overflow: hidden; }
+.pwa-loading-sheen::after { content: ''; position: absolute; inset: 0; pointer-events: none; transform: translateX(-100%); background: linear-gradient(100deg, transparent, rgba(255,255,255,.38), transparent); animation: sheen 1.8s ease-in-out infinite; }
+@keyframes sheen { 55%, 100% { transform: translateX(100%); } }
+.speaking-indicator { animation: speakingGlow 1.8s ease-in-out infinite; }
+.voice-bar { display: inline-block; width: 3px; height: 10px; border-radius: 999px; background: #e8b84d; animation: voiceWave 720ms ease-in-out infinite alternate; }
+.voice-bar:nth-child(2), .voice-bar:nth-child(5) { animation-delay: 140ms; height: 16px; }
+.voice-bar:nth-child(3), .voice-bar:nth-child(4) { animation-delay: 280ms; height: 22px; }
+@keyframes voiceWave { from { transform: scaleY(.45); opacity: .55; } to { transform: scaleY(1); opacity: 1; } }
+@keyframes speakingGlow { 50% { box-shadow: 0 0 0 5px rgba(232,184,77,.13); } }
 
 @media (prefers-reduced-motion: reduce) {
   html { scroll-behavior: auto; }
@@ -161,4 +226,31 @@ button:active { transform: scale(0.98); }
 
 @media (max-width: 720px) {
   .map-road { height: 16px; }
+}
+
+/* Adaptive kiosk sizing: scales with the user's viewport without JS configuration. */
+.kiosk-shell { min-height: 100dvh; }
+.kiosk-main { width: min(100%, 1800px); padding: clamp(0.75rem, 2vw, 2rem); }
+.kiosk-header { min-height: clamp(3.5rem, 6vw, 4.75rem); }
+
+@media (max-width: 640px) {
+  .kiosk-main { padding: 0.75rem; }
+  .kiosk-header { border-radius: 1.25rem; padding: 0.75rem 1rem; }
+  .kiosk-header .font-display { font-size: 0.95rem; }
+  .kiosk-header p:last-child { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+
+@media (min-width: 1600px) and (min-height: 900px) {
+  .kiosk-main { padding: clamp(2rem, 3vw, 3.5rem); }
+}
+
+@media (orientation: landscape) and (max-height: 680px) {
+  .kiosk-main { padding-block: 0.75rem; }
+  .kiosk-header { min-height: 3.25rem; }
+  .kiosk-shell footer { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kiosk-shell * { scroll-behavior: auto; }
+  .kiosk-main > section, .pwa-loading-sheen::after { animation: none; }
 }

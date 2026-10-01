@@ -1,0 +1,15 @@
+{
+  "name": "Nong Platoo Ontour",
+  "short_name": "Nong Platoo",
+  "description": "ผู้ช่วยประชาสัมพันธ์อัจฉริยะ วิทยาลัยเทคนิคสมุทรสงคราม",
+  "lang": "th",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f5faf7",
+  "theme_color": "#10293a",
+  "icons": [
+    { "src": "/pwa-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}

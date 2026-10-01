@@ -10,13 +10,19 @@ import BuildingsAdmin from "./pages/admin/BuildingsAdmin";
 import NewsAdmin from "./pages/admin/NewsAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import UsersAdmin from "./pages/admin/UsersAdmin";
+import WalkwaysAdmin from "./pages/admin/WalkwaysAdmin";
+import KioskHome from "./pages/KioskHome";
+import BuildingMobile from "./pages/BuildingMobile";
 
 function Router() {
   return (
     <Switch>
-      <Route path="/" component={Home} />
+      <Route path="/" component={KioskHome} />
+      <Route path="/building/:id" component={BuildingMobile} />
+      <Route path="/explore" component={Home} />
       <Route path="/admin" component={AdminOverview} />
       <Route path="/admin/buildings" component={BuildingsAdmin} />
+      <Route path="/admin/walkways" component={WalkwaysAdmin} />
       <Route path="/admin/news" component={NewsAdmin} />
       <Route path="/admin/users" component={UsersAdmin} />
       <Route path="/admin/settings" component={SettingsAdmin} />
@@ -29,7 +35,7 @@ function Router() {
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider defaultTheme="light">
+      <ThemeProvider defaultTheme="light" switchable>
         <TooltipProvider>
           <Toaster />
           <Router />

@@ -1,7 +1,7 @@
-import { parse as parseCookieHeader } from "cookie";
-import type { Express, Request } from "express";
 import { COOKIE_NAME, ONE_YEAR_MS, OAUTH_STATE_COOKIE, decodeOAuthState } from "@shared/const";
-import { upsertUser } from "../db";
+import { parse as parseCookieHeader } from "cookie";
+import type { Express, Request, Response } from "express";
+import * as db from "../db";
 import { getSessionCookieOptions } from "./cookies";
 import { sdk } from "./sdk";
 
@@ -10,17 +10,19 @@ function getQueryParam(req: Request, key: string): string | undefined {
   return typeof value === "string" ? value : undefined;
 }
 
-export function registerOAuthRoutes(app: Express): void {
-  app.get("/api/oauth/callback", async (req, res) => {
+export function registerOAuthRoutes(app: Express) {
+  app.get("/api/oauth/callback", async (req: Request, res: Response) => {
     const code = getQueryParam(req, "code");
     const state = getQueryParam(req, "state");
+
     if (!code || !state) {
       res.status(400).json({ error: "code and state are required" });
       return;
     }
 
-    // Cross-check the one-time nonce echoed back in `state` against the cookie
-    // we set in `startLogin()` to defend against login CSRF.
+    // CSRF guard: the nonce in `state` must match the one-time cookie that
+    // startLogin set in the browser that began this login. An attacker can
+    // forge `state`, but cannot plant this cookie in the victim's browser.
     const { nonce } = decodeOAuthState(state);
     const expectedNonce = parseCookieHeader(req.headers.cookie ?? "")[OAUTH_STATE_COOKIE];
     if (!nonce || nonce !== expectedNonce) {
@@ -32,12 +34,13 @@ export function registerOAuthRoutes(app: Express): void {
     try {
       const tokenResponse = await sdk.exchangeCodeForToken(code, state);
       const userInfo = await sdk.getUserInfo(tokenResponse.accessToken);
+
       if (!userInfo.openId) {
         res.status(400).json({ error: "openId missing from user info" });
         return;
       }
 
-      await upsertUser({
+      await db.upsertUser({
         openId: userInfo.openId,
         name: userInfo.name || null,
         email: userInfo.email ?? null,
@@ -52,6 +55,7 @@ export function registerOAuthRoutes(app: Express): void {
 
       const cookieOptions = getSessionCookieOptions(req);
       res.cookie(COOKIE_NAME, sessionToken, { ...cookieOptions, maxAge: ONE_YEAR_MS });
+
       res.redirect(302, "/");
     } catch (error) {
       console.error("[OAuth] Callback failed", error);

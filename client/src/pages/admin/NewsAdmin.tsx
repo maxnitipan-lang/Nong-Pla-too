@@ -22,7 +22,7 @@ import { newsInputSchema } from "@shared/adminSchemas";
 import { Pencil, Plus, RefreshCw, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AdminShell, DbBanner } from "./AdminShell";
+import { AdminShell, DbBanner, useAdminAccess } from "./AdminShell";
 import { ColorField, Field, NumberField, TextAreaField, TextField } from "./formKit";
 
 type NewsRow = {
@@ -71,6 +71,7 @@ const EMPTY: FormState = {
 };
 
 export default function NewsAdmin() {
+  const { canEdit } = useAdminAccess();
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.admin.news.list.useQuery();
   const [open, setOpen] = useState(false);
@@ -152,7 +153,7 @@ export default function NewsAdmin() {
   return (
     <AdminShell section="news" title="จัดการข่าวสาร">
       <DbBanner />
-      <div className="mb-4 flex flex-wrap justify-end gap-2">
+      {canEdit && <div className="mb-4 flex flex-wrap justify-end gap-2">
         <Button variant="outline" onClick={() => sync.mutate()} disabled={sync.isPending}>
           <RefreshCw size={16} className={sync.isPending ? "animate-spin" : ""} />
           {sync.isPending ? "กำลังดึง…" : "ดึงข่าวจากเว็บวิทยาลัย"}
@@ -160,7 +161,7 @@ export default function NewsAdmin() {
         <Button onClick={openCreate}>
           <Plus size={16} /> เพิ่มข่าว
         </Button>
-      </div>
+      </div>}
 
       {isLoading ? (
         <p className="text-sm text-[var(--muted-foreground)]">กำลังโหลด…</p>
@@ -193,7 +194,7 @@ export default function NewsAdmin() {
                   {n.tag} · {n.date}
                 </p>
               </div>
-              <button
+              {canEdit && <><button
                 type="button"
                 onClick={() => openEdit(n)}
                 className="rounded-lg p-2 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
@@ -208,7 +209,7 @@ export default function NewsAdmin() {
                 aria-label="ลบ"
               >
                 <Trash2 size={15} />
-              </button>
+              </button></>}
             </div>
           ))}
           {!data?.length && (

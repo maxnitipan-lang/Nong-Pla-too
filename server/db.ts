@@ -7,9 +7,16 @@ import {
   type CampusBuilding,
   type CampusNewsItem,
   type CampusSettings,
+  type DepartmentProfile,
   type FloorDetail,
+  type GalleryImage,
 } from "@shared/campus";
-import type { BuildingInput, NewsInput, SettingsInput } from "@shared/adminSchemas";
+import type {
+  BuildingInput,
+  ImportedBuildingInput,
+  NewsInput,
+  SettingsInput,
+} from "@shared/adminSchemas";
 import {
   campusBuildings,
   campusNews,
@@ -17,9 +24,16 @@ import {
   type CampusNewsRow,
   InsertUser,
   siteSettings,
+  type User,
+  type UserRow,
   users,
+  walkNetworks,
 } from "../drizzle/schema";
+import type { WalkNetwork } from "@shared/walkNetwork";
+import DEFAULT_WALK_NETWORK from "@shared/data/campusWalkNetwork.json";
 import { ENV } from "./_core/env";
+import type { StaffRole, UserRole } from "@shared/roles";
+import { LOCAL_PREFIX, hashPassword, isLocalAccount, usernameToOpenId } from "./_core/localAccounts";
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
@@ -87,11 +101,23 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
 }
 
-export async function getUserByOpenId(openId: string) {
+/** Full row, password hash included — only for verifying a login. */
+export async function getUserRowByOpenId(openId: string): Promise<UserRow | undefined> {
   const db = await getDb();
   if (!db) return undefined;
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-  return result.length > 0 ? result[0] : undefined;
+  return result[0];
+}
+
+/** Strip the password hash — everything that leaves the auth code uses this shape. */
+export function toSafeUser(row: UserRow): User {
+  const { passwordHash: _hidden, ...safe } = row;
+  return safe;
+}
+
+export async function getUserByOpenId(openId: string): Promise<User | undefined> {
+  const row = await getUserRowByOpenId(openId);
+  return row ? toSafeUser(row) : undefined;
 }
 
 // ---------------------------------------------------------------------------
@@ -101,10 +127,43 @@ export async function getUserByOpenId(openId: string) {
 export async function listUsers() {
   const db = await getDb();
   if (!db) return [];
-  return db.select().from(users).orderBy(asc(users.createdAt));
+  const rows = await db.select().from(users).orderBy(asc(users.createdAt));
+  return rows.map((row) => ({
+    ...toSafeUser(row),
+    /** Set for username/password accounts created in the admin panel. */
+    username: isLocalAccount(row.openId) ? row.openId.slice(LOCAL_PREFIX.length) : null,
+  }));
 }
 
-export async function setUserRole(openId: string, role: "user" | "admin") {
+/** New username + password staff account (admin / editor / viewer). */
+export async function createLocalAdmin(input: { username: string; name: string; password: string; role: StaffRole }): Promise<void> {
+  const db = await requireDb();
+  const openId = usernameToOpenId(input.username);
+  if (input.username.trim().toLowerCase() === (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase()) {
+    throw new Error("ชื่อผู้ใช้นี้สงวนไว้สำหรับบัญชีหลักใน .env — เลือกชื่ออื่น");
+  }
+  if (await getUserRowByOpenId(openId)) throw new Error("ชื่อผู้ใช้นี้มีอยู่แล้ว — เลือกชื่ออื่น");
+  await db.insert(users).values({
+    openId,
+    name: input.name,
+    loginMethod: "password",
+    role: input.role,
+    passwordHash: hashPassword(input.password),
+  });
+}
+
+export async function setLocalPassword(openId: string, password: string): Promise<void> {
+  const db = await requireDb();
+  if (!isLocalAccount(openId)) throw new Error("บัญชีนี้ไม่ได้ใช้รหัสผ่าน (เข้าสู่ระบบผ่าน OAuth)");
+  await db.update(users).set({ passwordHash: hashPassword(password) }).where(eq(users.openId, openId));
+}
+
+export async function deleteUser(openId: string): Promise<void> {
+  const db = await requireDb();
+  await db.delete(users).where(eq(users.openId, openId));
+}
+
+export async function setUserRole(openId: string, role: UserRole) {
   const db = await requireDb();
   await db.update(users).set({ role }).where(eq(users.openId, openId));
 }
@@ -113,7 +172,10 @@ export async function setUserRole(openId: string, role: "user" | "admin") {
 // Campus buildings
 // ---------------------------------------------------------------------------
 
+const DEMO_BUILDINGS_BY_ID = new Map(CAMPUS_BUILDINGS.map((b) => [b.id, b]));
+
 function rowToBuilding(row: CampusBuildingRow): CampusBuilding {
+  const demo = DEMO_BUILDINGS_BY_ID.get(row.id);
   return {
     id: row.id,
     name: row.name,
@@ -129,6 +191,9 @@ function rowToBuilding(row: CampusBuildingRow): CampusBuilding {
     latitude: row.latitude || undefined,
     longitude: row.longitude || undefined,
     floorsDetail: (row.floorDetails as FloorDetail[]) ?? [],
+    // NULL = never edited → reuse the built-in stub for known buildings.
+    departments: (row.departments as DepartmentProfile[] | null) ?? demo?.departments ?? [],
+    gallery: (row.gallery as GalleryImage[] | null) ?? demo?.gallery ?? [],
   };
 }
 
@@ -149,6 +214,9 @@ function buildingInputToValues(input: BuildingInput) {
     mapWidth: input.mapWidth,
     mapHeight: input.mapHeight,
     sortOrder: input.sortOrder,
+    // undefined = leave the stored value alone (old clients don't send these).
+    ...(input.departments !== undefined && { departments: input.departments }),
+    ...(input.gallery !== undefined && { gallery: input.gallery }),
   };
 }
 
@@ -174,6 +242,38 @@ export async function upsertCampusBuilding(input: BuildingInput): Promise<void> 
   const values = buildingInputToValues(input);
   const { id: _omit, ...updateSet } = values;
   await db.insert(campusBuildings).values(values).onDuplicateKeyUpdate({ set: updateSet });
+}
+
+/**
+ * Upsert buildings read from a Google My Maps export. Only the name, category,
+ * description and coordinates are overwritten on existing rows, so floors,
+ * departments and gallery entered in the admin panel survive a re-import.
+ */
+export async function importCampusBuildings(
+  items: ImportedBuildingInput[],
+): Promise<{ imported: number }> {
+  const db = await requireDb();
+  for (const item of items) {
+    const mapped = {
+      name: item.name,
+      shortName: item.shortName,
+      category: item.category,
+      description: item.description || "นำเข้าจาก Google My Maps",
+      latitude: String(item.latitude),
+      longitude: String(item.longitude),
+    };
+    await db
+      .insert(campusBuildings)
+      .values({
+        id: item.id,
+        ...mapped,
+        floors: 1,
+        floorDetails: [{ level: 1, label: "ชั้น 1", rooms: [] }],
+        sortOrder: 500,
+      })
+      .onDuplicateKeyUpdate({ set: mapped });
+  }
+  return { imported: items.length };
 }
 
 export async function deleteCampusBuilding(id: string): Promise<void> {
@@ -307,4 +407,38 @@ export async function updateCampusSettings(input: SettingsInput): Promise<void> 
       .values({ key, value })
       .onDuplicateKeyUpdate({ set: { value } });
   }
+}
+
+// ---------------------------------------------------------------------------
+// Campus walkway network (turn-by-turn routing)
+// ---------------------------------------------------------------------------
+
+const WALK_NETWORK_ID = "campus";
+
+/** The saved network, or the starter network built from OpenStreetMap. */
+export async function getWalkNetwork(): Promise<WalkNetwork & { source: "database" | "default" }> {
+  const db = await getDb();
+  if (db) {
+    try {
+      const rows = await db.select().from(walkNetworks).where(eq(walkNetworks.id, WALK_NETWORK_ID)).limit(1);
+      if (rows[0]) return { ...(rows[0].data as WalkNetwork), source: "database" };
+    } catch (error) {
+      console.warn("[Database] Could not load walk network, using default:", error);
+    }
+  }
+  return { ...(DEFAULT_WALK_NETWORK as WalkNetwork), source: "default" };
+}
+
+export async function saveWalkNetwork(network: WalkNetwork): Promise<void> {
+  const db = await requireDb();
+  await db
+    .insert(walkNetworks)
+    .values({ id: WALK_NETWORK_ID, data: network })
+    .onDuplicateKeyUpdate({ set: { data: network } });
+}
+
+/** Drop the saved network so the OpenStreetMap starter network is used again. */
+export async function resetWalkNetwork(): Promise<void> {
+  const db = await requireDb();
+  await db.delete(walkNetworks).where(eq(walkNetworks.id, WALK_NETWORK_ID));
 }

@@ -1,9 +1,11 @@
-import { CampusChat } from "@/components/CampusChat";
-import { CampusInteractiveMap } from "@/components/CampusInteractiveMap";
+import { CampusAIWidget } from "@/components/CampusAIWidget";
+import { CampusLeafletMap } from "@/components/CampusLeafletMap";
 import { useAuth } from "@/_core/hooks/useAuth";
-import { hasCoords, walkingDeepLink } from "@/lib/directions";
+import { buildingSearchText, hasCoords, walkingDeepLink } from "@/lib/directions";
+import { useCampusNavigation } from "@/hooks/useCampusNavigation";
+import { NavBanner, RoutePanel, navSummary } from "@/components/RoutePanel";
 import { trpc } from "@/lib/trpc";
-import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_OVERVIEW } from "@shared/campus";
+import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS, DEFAULT_GALLERY } from "@shared/campus";
 import type { CampusBuilding } from "@shared/campus";
 import {
   ArrowUpRight,
@@ -49,6 +51,8 @@ function FloorDetails({ building }: { building: CampusBuilding }) {
   const [activeFloor, setActiveFloor] = useState(1);
   useEffect(() => setActiveFloor(1), [building.id]);
   const floor = building.floorsDetail.find((item) => item.level === activeFloor) ?? building.floorsDetail[0];
+  const departments = (building.departments ?? DEFAULT_DEPARTMENTS).filter((department) => department.floor === activeFloor);
+  const gallery = building.gallery ?? DEFAULT_GALLERY;
 
   return (
     <div className="mt-5 border-t border-[var(--border)] pt-5">
@@ -76,6 +80,8 @@ function FloorDetails({ building }: { building: CampusBuilding }) {
           </div>
         ))}
       </div>
+      {departments.length > 0 && <div className="mt-5 rounded-2xl bg-[var(--background)] p-4"><p className="mb-3 text-xs font-extrabold text-[var(--ink)]">สาขาวิชาที่อยู่ชั้นนี้</p><div className="space-y-3">{departments.map((department) => <div key={department.id} className="rounded-xl border border-[var(--border)] bg-white p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-extrabold text-[var(--ink)]">{department.name}</p><p className="mt-1 text-[10px] font-bold text-[var(--muted-foreground)]">รหัสสาขา {department.code}</p></div><span className="rounded-full px-2 py-1 text-[10px] font-extrabold" style={{ color: department.accent, backgroundColor: `${department.accent}18` }}>{department.code}</span></div><p className="mt-2 text-xs leading-6 text-[var(--muted-foreground)]">{department.description}</p><div className="mt-2 flex flex-wrap gap-1.5">{department.skills.map((skill) => <span key={skill} className="rounded-full bg-[var(--muted)] px-2 py-1 text-[10px] font-bold text-[var(--muted-foreground)]">{skill}</span>)}</div><p className="mt-3 text-[10px] font-bold text-[var(--muted-foreground)]">เส้นทางอาชีพ: {department.careers.join(" · ")}</p></div>)}</div></div>}
+      {gallery.length > 0 && <div className="mt-5"><div className="mb-3 flex items-center justify-between"><p className="text-xs font-extrabold text-[var(--ink)]">Gallery บรรยากาศการเรียนรู้</p><span className="text-[10px] font-bold text-[var(--muted-foreground)]">{gallery.length} รูป</span></div><div className="grid grid-cols-3 gap-2">{gallery.slice(0, 3).map((image) => <figure key={image.id} className="group overflow-hidden rounded-xl bg-[var(--muted)]"><img src={image.url} alt={image.alt} className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105" /><figcaption className="truncate px-2 py-2 text-[10px] font-bold text-[var(--muted-foreground)]">{image.caption}</figcaption></figure>)}</div></div>}
     </div>
   );
 }
@@ -86,8 +92,6 @@ export default function Home() {
   const [selectedId, setSelectedId] = useState("");
   const [query, setQuery] = useState("");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [routeToId, setRouteToId] = useState<string | null>(null);
-  const [routeInfo, setRouteInfo] = useState<string | null>(null);
   const { data: buildingsData } = trpc.campus.buildings.useQuery(undefined, { staleTime: 1000 * 60 * 10 });
   const { data: newsData } = trpc.campus.news.useQuery(undefined, { staleTime: 1000 * 60 * 10 });
   const { data: settings } = trpc.campus.settings.useQuery(undefined, { staleTime: 1000 * 60 * 10 });
@@ -96,12 +100,13 @@ export default function Home() {
   const news = newsData?.length ? newsData : CAMPUS_NEWS;
   const campusAddress = settings?.address ?? CAMPUS_OVERVIEW.address;
   const selectedBuilding = buildings.find((item) => item.id === selectedId) ?? buildings[0];
+  const nav = useCampusNavigation(buildings);
 
   const filteredBuildings = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     return buildings.filter((building) => {
       const matchesCategory = activeCategory === "ทั้งหมด" || building.category === activeCategory;
-      const matchesQuery = !normalized || `${building.name} ${building.category} ${building.description}`.toLowerCase().includes(normalized);
+      const matchesQuery = !normalized || buildingSearchText(building).includes(normalized);
       return matchesCategory && matchesQuery;
     });
   }, [activeCategory, buildings, query]);
@@ -114,8 +119,7 @@ export default function Home() {
   // Pick a building (from the list or a map marker) — clears any drawn route.
   const selectBuilding = (id: string) => {
     setSelectedId(id);
-    setRouteToId(null);
-    setRouteInfo(null);
+    if (nav.targetId && nav.targetId !== id) nav.clear();
   };
 
   const focusBuilding = (building: CampusBuilding) => {
@@ -126,13 +130,8 @@ export default function Home() {
   // Show the walking route to a building on the main map (from panel or the bot).
   const showRoute = (id: string) => {
     setSelectedId(id);
-    setRouteToId(id);
     scrollToMap("center");
-  };
-
-  const clearRoute = () => {
-    setRouteToId(null);
-    setRouteInfo(null);
+    void nav.routeTo(id);
   };
 
   return (
@@ -142,7 +141,7 @@ export default function Home() {
           <button type="button" onClick={() => scrollToId("top")} className="flex items-center gap-3 text-left">
             <LogoMark />
             <div>
-              <p className="font-display text-[15px] font-bold leading-tight text-[var(--ink)]">น้องปลาทู</p>
+              <p className="font-display text-[15px] font-bold leading-tight text-[var(--ink)]">Nong Platoo Ontour</p>
               <p className="mt-0.5 text-[11px] font-medium text-[var(--muted-foreground)]">วิทยาลัยเทคนิคสมุทรสงคราม</p>
             </div>
           </button>
@@ -211,7 +210,7 @@ export default function Home() {
                   <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#a8d6c6]"><span className="h-1.5 w-1.5 rounded-full bg-[#72d5a9]" /> พร้อมใช้งาน</span>
                 </div>
                 <div className="map-surface relative isolate h-[390px] overflow-hidden sm:h-[470px]">
-                  <CampusInteractiveMap
+                  <CampusLeafletMap
                     buildings={buildings}
                     selectedId={selectedId}
                     onSelect={(id) => {
@@ -241,10 +240,10 @@ export default function Home() {
               </div>
               <div className="mt-auto border-t border-[var(--border)] bg-[var(--background)] p-4"><p className="text-[11px] leading-5 text-[var(--muted-foreground)]"><span className="font-bold text-[var(--ink)]">เคล็ดลับ:</span> ใช้หมุดสีต่าง ๆ เพื่อแยกประเภทอาคารและบริการภายในวิทยาลัย</p></div>
             </aside>
-            <div className="bg-[#deece7] p-3 sm:p-5"><div id="campus-map-view" className="relative isolate h-[620px] overflow-hidden rounded-[20px] bg-[#dcece4] scroll-mt-24"><CampusInteractiveMap buildings={filteredBuildings} selectedId={selectedId} onSelect={selectBuilding} center={settings?.mapCenter ?? CAMPUS_OVERVIEW.mapCenter} routeToId={routeToId} onRouteInfo={setRouteInfo} /><div className="pointer-events-none absolute left-4 top-4 z-[1000] rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg sm:left-5 sm:top-5">{filteredBuildings.length} จุดในวิทยาลัย</div>{routeToId ? <button type="button" onClick={clearRoute} className="absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg"><Navigation size={12} /> {routeInfo ?? "กำลังหาเส้นทาง…"} <X size={12} className="ml-0.5" /></button> : <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><MapPin size={13} className="text-[var(--coral)]" fill="currentColor" /> แตะหมุดเพื่อดูข้อมูล</div>}</div></div>
+            <div className="bg-[#deece7] p-3 sm:p-5"><div id="campus-map-view" className="relative isolate h-[620px] overflow-hidden rounded-[20px] bg-[#dcece4] scroll-mt-24"><CampusLeafletMap buildings={filteredBuildings} selectedId={selectedId} onSelect={selectBuilding} center={settings?.mapCenter ?? CAMPUS_OVERVIEW.mapCenter} route={nav.route} approachPath={nav.approachPath} userFix={nav.fix} followUser={nav.live} activeStep={nav.progress?.stepIndex} /><NavBanner nav={nav} /><div className="pointer-events-none absolute left-4 top-4 z-[1000] rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg sm:left-5 sm:top-5">{filteredBuildings.length} จุดในวิทยาลัย</div>{nav.status !== "idle" ? <button type="button" onClick={nav.clear} className="absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg"><Navigation size={12} /> {navSummary(nav)} <X size={12} className="ml-0.5" /></button> : <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><MapPin size={13} className="text-[var(--coral)]" fill="currentColor" /> แตะหมุดเพื่อดูข้อมูล</div>}</div></div>
           </div>
 
-          {selectedBuilding && <div className="mt-5 grid gap-5 rounded-[24px] border border-[var(--border)] bg-white p-5 shadow-[0_12px_35px_rgba(16,41,58,0.06)] sm:p-7 md:grid-cols-[1fr_1.3fr] md:items-start"><div><div className="mb-4 flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl text-white" style={{ backgroundColor: selectedBuilding.accent }}><Building2 size={19} /></span><div><div className="flex items-center gap-2"><h3 className="font-display text-xl font-bold tracking-[-0.04em] text-[var(--ink)]">{selectedBuilding.name}</h3><span className="rounded-full bg-[var(--muted)] px-2 py-1 text-[10px] font-bold text-[var(--muted-foreground)]">{selectedBuilding.category}</span></div><p className="mt-1 text-xs font-medium text-[var(--muted-foreground)]">ข้อมูลอาคารอัปเดตล่าสุด · {selectedBuilding.floors} ชั้น</p></div></div><p className="text-sm leading-7 text-[var(--muted-foreground)]">{selectedBuilding.description}</p><div className="mt-5 flex flex-wrap gap-2">{hasCoords(selectedBuilding) && <button type="button" onClick={() => showRoute(selectedBuilding.id)} className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-4 py-2.5 text-xs font-extrabold text-white transition-transform hover:-translate-y-0.5"><Navigation size={14} /> ดูเส้นทางในแอป</button>}<a href={walkingDeepLink(selectedBuilding)} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-extrabold transition-transform hover:-translate-y-0.5 ${hasCoords(selectedBuilding) ? "border border-[var(--border)] text-[var(--ink)]" : "bg-[var(--ink)] text-white"}`}><Navigation size={14} /> {hasCoords(selectedBuilding) ? "เปิดใน Google Maps" : "นำทางไปอาคารนี้ (เดิน)"}</a></div>{!selectedBuilding.latitude && <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">* อาคารนี้ยังไม่มีพิกัด GPS — จะเปิด Google Maps แบบค้นหาจากชื่อ</p>}</div><FloorDetails building={selectedBuilding} /></div>}
+          {selectedBuilding && <div className="mt-5 grid gap-5 rounded-[24px] border border-[var(--border)] bg-white p-5 shadow-[0_12px_35px_rgba(16,41,58,0.06)] sm:p-7 md:grid-cols-[1fr_1.3fr] md:items-start"><div><div className="mb-4 flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl text-white" style={{ backgroundColor: selectedBuilding.accent }}><Building2 size={19} /></span><div><div className="flex items-center gap-2"><h3 className="font-display text-xl font-bold tracking-[-0.04em] text-[var(--ink)]">{selectedBuilding.name}</h3><span className="rounded-full bg-[var(--muted)] px-2 py-1 text-[10px] font-bold text-[var(--muted-foreground)]">{selectedBuilding.category}</span></div><p className="mt-1 text-xs font-medium text-[var(--muted-foreground)]">ข้อมูลอาคารอัปเดตล่าสุด · {selectedBuilding.floors} ชั้น</p></div></div><p className="text-sm leading-7 text-[var(--muted-foreground)]">{selectedBuilding.description}</p><div className="mt-5 flex flex-wrap gap-2">{hasCoords(selectedBuilding) && <button type="button" onClick={() => showRoute(selectedBuilding.id)} className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-4 py-2.5 text-xs font-extrabold text-white transition-transform hover:-translate-y-0.5"><Navigation size={14} /> ดูเส้นทางในแอป</button>}<a href={walkingDeepLink(selectedBuilding)} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-extrabold transition-transform hover:-translate-y-0.5 ${hasCoords(selectedBuilding) ? "border border-[var(--border)] text-[var(--ink)]" : "bg-[var(--ink)] text-white"}`}><Navigation size={14} /> {hasCoords(selectedBuilding) ? "เปิดใน Google Maps" : "นำทางไปอาคารนี้ (เดิน)"}</a></div>{!selectedBuilding.latitude && <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">* อาคารนี้ยังไม่มีพิกัด GPS — จะเปิด Google Maps แบบค้นหาจากชื่อ</p>}</div><div><RoutePanel nav={nav} className="mb-4" /><FloorDetails building={selectedBuilding} /></div></div>}
         </section>
 
         <section id="news" className="scroll-mt-20 border-y border-[var(--border)] bg-[#edf3ef]">
@@ -255,7 +254,7 @@ export default function Home() {
       </main>
       <footer className="border-t border-[var(--border)] bg-white"><div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-3 px-5 py-6 text-[11px] font-medium text-[var(--muted-foreground)] sm:flex-row sm:px-8 lg:px-12"><span>© 2026 วิทยาลัยเทคนิคสมุทรสงคราม · น้องปลาทู</span><span className="flex items-center gap-3">{user?.role === "admin" && <a href="/admin" className="font-bold text-[#287c78]">ผู้ดูแลระบบ</a>}<span>ข้อมูลสาธิตสำหรับโครงงาน frontend และ backend</span></span></div></footer>
 
-      <CampusChat onShowRoute={showRoute} />
+      <CampusAIWidget onShowRoute={showRoute} />
     </div>
   );
 }

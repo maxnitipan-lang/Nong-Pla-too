@@ -1,4 +1,4 @@
-# Campus Guide — ขั้นตอนพัฒนาต่อ
+# Nong Platoo Ontour — ขั้นตอนพัฒนาต่อ
 
 ## ภาพรวมโครงสร้าง
 
@@ -61,6 +61,49 @@ VITE_GOOGLE_MAPS_API_KEY=ใส่คีย์ของโปรเจกต์�
 2. บันทึกพิกัดลงตาราง `campus_buildings`
 3. สร้าง `google.maps.marker.AdvancedMarkerElement` ใน callback `onMapReady`
 4. เรียก `map.panTo({ lat, lng })` เมื่อผู้ใช้เลือกอาคารจากรายการ
+
+## Step 5: ใช้งาน Admin Panel
+
+เปิดเส้นทาง `/admin` แล้วเข้าสู่ระบบด้วยบัญชีที่มี role เป็น `admin` ระบบจะแสดงสองแท็บ:
+
+- **อาคารและสาขา** — เพิ่ม แก้ไข และลบอาคาร พร้อมจำนวนชั้น รายละเอียดห้อง พิกัด GPS รายการสาขาวิชา และ JSON gallery
+- **ข่าวสาร** — เพิ่ม แก้ไข ลบ และเปิด/ปิดการเผยแพร่ข่าวสาร
+
+API ที่ใช้สำหรับหลังบ้านอยู่ใน `server/routers.ts` ใต้ `campus` และป้องกันด้วย `adminProcedure` ทุก mutation จะตรวจ role จาก session ฝั่ง server ไม่สามารถแก้ข้อมูลด้วยการซ่อนปุ่มบน frontend เพียงอย่างเดียว
+
+ถ้าต้องการเพิ่มผู้ดูแล ให้เปลี่ยนค่า `role` ของผู้ใช้ในตาราง `users` เป็น `admin` ผ่านระบบจัดการฐานข้อมูลของโปรเจกต์
+
+## Step 6: ค้นหาเส้นทางภายในวิทยาลัย
+
+เมื่อเลือกอาคารแล้ว ให้กด **นำทางไปอาคารนี้** ระบบจะ:
+
+1. ขอพิกัดปัจจุบันผ่าน browser geolocation
+2. เรียก `google.maps.DirectionsService` ด้วย `WALKING`
+3. วาดเส้นทางลงบนแผนที่ด้วย `DirectionsRenderer`
+4. ถ้าไม่ได้สิทธิ์ location หรือ Google Maps ใช้งานไม่ได้ จะเปิด Google Maps URL เป็น fallback
+
+อาคารแต่ละรายการเก็บ `latitude` และ `longitude` ในตาราง `campus_buildings` เพื่อให้ใช้พิกัดจริงได้ทันที
+
+## Step 7: สาขาวิชาและ gallery
+
+ใน editor ของอาคาร ให้แก้ข้อมูล JSON สองส่วนนี้:
+
+```json
+[
+  {
+    "id": "digital-business",
+    "floor": 3,
+    "name": "เทคโนโลยีธุรกิจดิจิทัล",
+    "code": "DBT",
+    "description": "รายละเอียดเชิงลึกของสาขา",
+    "skills": ["การวิเคราะห์ข้อมูล"],
+    "careers": ["Digital Marketer"],
+    "accent": "#3c8f8d"
+  }
+]
+```
+
+Gallery ใช้รูปแบบ `{ id, url, caption, alt }` โดย `url` รองรับทั้ง URL แบบ `https://` และไฟล์ใน `/manus-storage/` เมื่อเลือกชั้นในหน้า public ระบบจะแสดงห้อง สาขาวิชาที่อยู่ชั้นนั้น ทักษะ อาชีพ และภาพประกอบในแกลลอรี่
 
 ## คำสั่งพัฒนาและตรวจสอบ
 

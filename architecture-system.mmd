@@ -1,0 +1,45 @@
+flowchart TB
+    U[ผู้ใช้งาน\nนักเรียน ผู้ปกครอง ผู้มาติดต่อ]
+    subgraph K[ตู้ประชาสัมพันธ์อัจฉริยะ]
+      S[เซนเซอร์ตรวจจับคน\nPresence / Proximity]
+      T[หน้าจอสัมผัสแนวตั้ง\nTouch Display]
+      M[ไมโครโฟน\nThai Voice Input]
+      SP[ลำโพง\nThai Voice Output]
+      FACE[ตัวละครน้องปั้น\nปาก ตา ท่าทาง]
+      EDGE[Edge Controller\nMini PC / Raspberry Pi]
+    end
+    subgraph APP[ซอฟต์แวร์ PLato Guide]
+      UI[Touch Kiosk UI\nReact + PWA]
+      STT[Speech-to-Text\nThai Recognition]
+      ORCH[AI Orchestrator\nIntent + Safety + Context]
+      TTS[Text-to-Speech\nThai Voice]
+      MAP[Campus Map Service\nBuildings + Routes]
+      KB[Verified Knowledge Base\nข่าว อาคาร สาขา FAQ]
+      ADMIN[Admin Panel\nตรวจสอบและเผยแพร่ข้อมูล]
+    end
+    subgraph CLOUD[Backend / Cloud]
+      API[tRPC API Gateway]
+      DB[(MySQL / TiDB)]
+      LOG[Usage Analytics\nไม่เก็บเสียงหรือใบหน้าโดยค่าเริ่มต้น]
+    end
+    U --> S
+    U --> T
+    U --> M
+    S --> EDGE
+    T <--> UI
+    M --> STT
+    UI --> EDGE
+    EDGE --> API
+    STT --> ORCH
+    UI --> ORCH
+    ORCH --> KB
+    ORCH --> MAP
+    ORCH --> TTS
+    ORCH --> UI
+    TTS --> SP
+    UI --> FACE
+    API <--> DB
+    ADMIN --> API
+    API --> LOG
+    MAP --> UI
+    UI --> T

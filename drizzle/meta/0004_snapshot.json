@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "4f12343e-6c3f-420d-98c6-d7cd081b9d61",
-  "prevId": "06d9a4ff-4d27-4f38-8371-595abec00a0f",
+  "id": "bd9c0d81-1ff0-4bb1-bb6a-3c622ff3857b",
+  "prevId": "8a43a643-4563-44f8-b0fa-34262907abe9",
   "tables": {
     "campus_buildings": {
       "name": "campus_buildings",
@@ -68,6 +68,20 @@
           "type": "json",
           "primaryKey": false,
           "notNull": true,
+          "autoincrement": false
+        },
+        "departments": {
+          "name": "departments",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "gallery": {
+          "name": "gallery",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
           "autoincrement": false
         },
         "accent": {

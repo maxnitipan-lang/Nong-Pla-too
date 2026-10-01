@@ -42,6 +42,8 @@ async function main() {
       mapHeight: b.height,
       sortOrder: index,
       floorDetails: b.floorsDetail,
+      departments: b.departments,
+      gallery: b.gallery,
     });
     console.log(`  ✓ ${b.id}`);
   }

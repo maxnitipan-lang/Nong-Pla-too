@@ -8,6 +8,26 @@ import App from "./App";
 import { startLogin } from "./const";
 import "./index.css";
 
+if ("serviceWorker" in navigator && import.meta.env.PROD) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => undefined));
+  // A new service worker took over (e.g. after a deploy) → reload once so the page isn't a stale copy.
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  });
+}
+
+// Free hosting (Render) puts the server to sleep after 15 idle minutes, and waking
+// it takes ~50 s — a frozen kiosk. While a page is open, ping it every 10 minutes.
+if (import.meta.env.PROD) {
+  window.setInterval(() => {
+    fetch("/api/health", { cache: "no-store" }).catch(() => undefined);
+  }, 10 * 60 * 1000);
+}
+
 const queryClient = new QueryClient();
 
 const redirectToLoginIfUnauthorized = (error: unknown) => {

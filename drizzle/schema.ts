@@ -6,10 +6,13 @@ export const users = mysqlTable("users", {
   name: text("name"),
   email: varchar("email", { length: 320 }),
   loginMethod: varchar("loginMethod", { length: 64 }),
-  role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
+  /** See shared/roles.ts: user < viewer < editor < admin. */
+  role: mysqlEnum("role", ["user", "viewer", "editor", "admin"]).default("user").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
   lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  /** Local admin accounts only (openId "local:<username>"): scrypt hash. Never sent to clients. */
+  passwordHash: varchar("passwordHash", { length: 255 }),
 });
 
 export const campusBuildings = mysqlTable("campus_buildings", {
@@ -27,7 +30,10 @@ export const campusBuildings = mysqlTable("campus_buildings", {
   latitude: varchar("latitude", { length: 32 }).notNull(),
   longitude: varchar("longitude", { length: 32 }).notNull(),
   floorDetails: json("floorDetails").notNull(),
-  /** Marker / accent colour (hex) shown on the illustrated fallback map. */
+  /** Kiosk extras (not in the old API): departments per floor + photo gallery. NULL = none. */
+  departments: json("departments"),
+  gallery: json("gallery"),
+  /** Marker / accent colour (hex). */
   accent: varchar("accent", { length: 20 }).default("#123b52").notNull(),
   /** Marker position + footprint on the illustrated fallback map, 0–100 (%). */
   mapX: int("mapX").default(50).notNull(),
@@ -67,8 +73,17 @@ export const siteSettings = mysqlTable("site_settings", {
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
 
-export type User = typeof users.$inferSelect;
+export type UserRow = typeof users.$inferSelect;
+/** A user as the app sees it — the password hash is stripped everywhere. */
+export type User = Omit<UserRow, "passwordHash">;
 export type InsertUser = typeof users.$inferInsert;
 export type CampusBuildingRow = typeof campusBuildings.$inferSelect;
 export type CampusNewsRow = typeof campusNews.$inferSelect;
 export type SiteSettingRow = typeof siteSettings.$inferSelect;
+
+/** The campus walkway graph (see shared/walkNetwork.ts), one row per network id. */
+export const walkNetworks = mysqlTable("walk_networks", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  data: json("data").notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});

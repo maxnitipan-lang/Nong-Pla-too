@@ -9,22 +9,25 @@ services:
     region: singapore
     buildCommand: corepack enable && pnpm install --frozen-lockfile && pnpm build
     startCommand: pnpm start
-    healthCheckPath: /
+    healthCheckPath: /api/health
     autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
-      # --- ฐานข้อมูล TiDB (backend, runtime) ---
+      # --- ฐานข้อมูล TiDB (ตัวเดียวกับใน .env ของเครื่อง — ผ่าน migration 0000–0007 แล้ว) ---
       - key: DATABASE_URL
         sync: false
-      # --- แชตบอตน้องปลาทู (backend, runtime) ---
+      # --- แชตบอต + เสียงพูด/ฟังของน้องปลาทู (Gemini) ---
       - key: GEMINI_API_KEY
         sync: false
-      # --- รหัสผ่านเข้า /admin (backend, runtime) ---
+      # --- บัญชีหลักเข้า /admin: ชื่อผู้ใช้ ADMIN_USERNAME (ค่าเริ่มต้น admin) + ADMIN_PASSWORD ---
       - key: ADMIN_PASSWORD
         sync: false
-      # --- แผนที่ + เส้นทาง (frontend, ใส่ก่อน build) ---
-      - key: VITE_MYMAPS_EMBED_URL
-        sync: false
-      - key: VITE_ORS_API_KEY
+      - key: ADMIN_USERNAME
+        value: admin
+      # --- กุญแจเซ็น cookie ล็อกอิน (สุ่มให้อัตโนมัติ) ---
+      - key: JWT_SECRET
+        generateValue: true
+      # --- (ไม่บังคับ) เส้นทางเดินจากนอกวิทยาลัยถึงประตู — OpenRouteService ---
+      - key: ORS_API_KEY
         sync: false

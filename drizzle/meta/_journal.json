@@ -19,22 +19,43 @@
     {
       "idx": 2,
       "version": "5",
-      "when": 1788677355825,
-      "tag": "0002_admin_fields",
+      "when": 1788678033039,
+      "tag": "0002_rapid_magneto",
       "breakpoints": true
     },
     {
       "idx": 3,
       "version": "5",
-      "when": 1788887483675,
-      "tag": "0003_nasty_boom_boom",
+      "when": 1789535050691,
+      "tag": "0003_fresh_sumo",
       "breakpoints": true
     },
     {
       "idx": 4,
       "version": "5",
-      "when": 1788889460389,
-      "tag": "0004_slow_wiccan",
+      "when": 1790493430672,
+      "tag": "0004_old_api_compat",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1790495317011,
+      "tag": "0005_walk_networks",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1790499833510,
+      "tag": "0006_user_password",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1790500690994,
+      "tag": "0007_staff_roles",
       "breakpoints": true
     }
   ]

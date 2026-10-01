@@ -1,82 +1,112 @@
+// Walking-direction helpers shared by the map, the building pages and the chat.
+//
+// The walking route itself comes from the server (`campus.walkingRoute`, which
+// proxies OpenRouteService so the key stays secret). Everything here is local:
+// coordinates, distance maths, GPS and the Google Maps deep link.
+
 import type { CampusBuilding } from "@shared/campus";
 
-const COLLEGE = "วิทยาลัยเทคนิคสมุทรสงคราม";
+export type LatLng = { lat: number; lng: number };
+export type GpsFix = LatLng & { accuracy: number };
 
-// Free routing key from https://openrouteservice.org (email signup, no card).
-// Without it we fall back to a straight line + haversine distance.
-const ORS_KEY: string = import.meta.env.VITE_ORS_API_KEY || "";
-
-export type LngLat = { lat: number; lng: number };
-
-export const hasCoords = (b?: CampusBuilding | null): boolean =>
-  Boolean(b?.latitude && b?.longitude);
-
-/** Google Maps deep link — opens the Maps app with turn-by-turn from the user. */
-export function walkingDeepLink(b: CampusBuilding): string {
-  const destination = hasCoords(b)
-    ? `${b.latitude},${b.longitude}`
-    : `${b.name} ${COLLEGE}`;
-  const params = new URLSearchParams({
-    api: "1",
-    destination,
-    travelmode: "walking",
-  });
-  return `https://www.google.com/maps/dir/?${params.toString()}`;
+/** Building coordinates as numbers (the API sends them as strings), or null. */
+export function buildingLatLng(building: Pick<CampusBuilding, "latitude" | "longitude">): LatLng | null {
+  if (!building.latitude || !building.longitude) return null;
+  const lat = Number(building.latitude);
+  const lng = Number(building.longitude);
+  return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
 }
 
-export function haversineMeters(a: LngLat, b: LngLat): number {
-  const R = 6371000;
-  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
-  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+export const hasCoords = (building: Pick<CampusBuilding, "latitude" | "longitude">): boolean =>
+  buildingLatLng(building) !== null;
+
+/** Great-circle distance in metres. */
+export function haversineMeters(a: LatLng, b: LatLng): number {
+  const R = 6_371_000;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
   const h =
     Math.sin(dLat / 2) ** 2 +
-    Math.cos((a.lat * Math.PI) / 180) *
-      Math.cos((b.lat * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
-export type WalkRoute = {
-  /** [lat, lng] points for a Leaflet polyline. */
-  points: [number, number][];
-  distanceM: number;
-  durationS: number;
-};
+/** "350 เมตร" / "1.2 กม." */
+export function formatDistance(meters: number): string {
+  return meters < 1000 ? `${Math.round(meters)} เมตร` : `${(meters / 1000).toFixed(1)} กม.`;
+}
 
-/** ORS foot-walking route (via the HeiGIT API). Returns null on no key / failure. */
-export async function fetchWalkingRoute(
-  origin: LngLat,
-  dest: LngLat,
-): Promise<WalkRoute | null> {
-  if (!ORS_KEY) return null;
-  try {
-    const url =
-      `https://api.heigit.org/openrouteservice/v2/directions/foot-walking` +
-      `?api_key=${ORS_KEY}&start=${origin.lng},${origin.lat}` +
-      `&end=${dest.lng},${dest.lat}`;
-    const res = await fetch(url);
-    if (!res.ok) return null;
-    const data = await res.json();
-    const feature = data?.features?.[0];
-    const coords: [number, number][] = feature?.geometry?.coordinates ?? [];
-    if (coords.length < 2) return null;
-    return {
-      points: coords.map(([lng, lat]) => [lat, lng] as [number, number]),
-      distanceM: feature.properties.summary.distance,
-      durationS: feature.properties.summary.duration,
+/** "เดิน ~350 เมตร · ~5 นาที" */
+export function formatWalk(meters: number, seconds: number): string {
+  return `เดิน ~${formatDistance(meters)} · ~${Math.max(1, Math.round(seconds / 60))} นาที`;
+}
+
+/** Google Maps walking directions — by coordinates, or by name when a building has none. */
+export function walkingDeepLink(building: Pick<CampusBuilding, "name" | "latitude" | "longitude">): string {
+  const point = buildingLatLng(building);
+  const destination = point
+    ? `${point.lat},${point.lng}`
+    : `${building.name} วิทยาลัยเทคนิคสมุทรสงคราม`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=walking`;
+}
+
+const GPS_WINDOW_MS = 9000;
+const GPS_GOOD_ENOUGH_M = 40;
+
+/**
+ * Best GPS fix within ~9 s. Phones often report a coarse network fix first and
+ * sharpen it over a few seconds, so watch and keep the most accurate reading;
+ * stop early once it is within 40 m.
+ */
+export function getBestPosition(): Promise<GpsFix> {
+  return new Promise((resolve, reject) => {
+    if (typeof navigator === "undefined" || !navigator.geolocation) {
+      reject(new Error("อุปกรณ์นี้ไม่รองรับการระบุตำแหน่ง (GPS)"));
+      return;
+    }
+    let best: GpsFix | null = null;
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      navigator.geolocation.clearWatch(watchId);
+      window.clearTimeout(timer);
+      if (best) resolve(best);
+      else reject(new Error("หาตำแหน่งไม่สำเร็จ — ลองออกไปที่โล่งแล้วลองใหม่"));
     };
-  } catch {
-    return null;
-  }
+    const watchId = navigator.geolocation.watchPosition(
+      ({ coords }) => {
+        if (!best || coords.accuracy < best.accuracy) {
+          best = { lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy };
+        }
+        if (coords.accuracy <= GPS_GOOD_ENOUGH_M) finish();
+      },
+      (error) => {
+        if (error.code === error.PERMISSION_DENIED) {
+          done = true;
+          navigator.geolocation.clearWatch(watchId);
+          window.clearTimeout(timer);
+          reject(new Error("ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง — เปิดสิทธิ์ตำแหน่ง (GPS) ในเบราว์เซอร์แล้วลองใหม่"));
+        }
+        // Other errors (timeout / unavailable) — keep waiting for the window to close.
+      },
+      { enableHighAccuracy: true, timeout: GPS_WINDOW_MS, maximumAge: 0 },
+    );
+    const timer = window.setTimeout(finish, GPS_WINDOW_MS);
+  });
 }
 
-export function formatDistance(m: number): string {
-  return m >= 1000 ? `${(m / 1000).toFixed(1)} กม.` : `${Math.round(m)} เมตร`;
-}
-
-export function formatWalk(route: WalkRoute): string {
-  return `เดิน ~${formatDistance(route.distanceM)} · ~${Math.max(
-    1,
-    Math.round(route.durationS / 60),
-  )} นาที`;
+/** Lower-cased text a building is searchable by: names, category, rooms and departments ("บัญชี" finds its building). */
+export function buildingSearchText(building: CampusBuilding): string {
+  return [
+    building.name,
+    building.shortName,
+    building.category,
+    building.description,
+    ...building.floorsDetail.flatMap((floor) => floor.rooms),
+    ...(building.departments ?? []).flatMap((d) => [d.name, d.code]),
+  ]
+    .join(" ")
+    .toLowerCase();
 }

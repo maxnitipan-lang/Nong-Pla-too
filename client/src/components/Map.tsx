@@ -103,7 +103,7 @@ function loadMapScript() {
   mapScriptPromise = new Promise(resolve => {
     const script = document.createElement("script");
     const scriptBase = USE_MANUS_PROXY ? `${MAPS_PROXY_URL}/maps/api/js` : "https://maps.googleapis.com/maps/api/js";
-    script.src = `${scriptBase}?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry`;
+    script.src = `${scriptBase}?key=${API_KEY}&v=weekly&libraries=marker,places,geocoding,geometry,routes`;
     script.async = true;
     script.crossOrigin = "anonymous";
     script.onload = () => {
@@ -142,7 +142,7 @@ export function MapView({
       return;
     }
     if (!loaded || !window.google?.maps) {
-      console.warn("Google Maps is unavailable. The Campus Guide fallback map remains visible.");
+      console.warn("Google Maps is unavailable. The Nong Platoo Ontour fallback map remains visible.");
       return;
     }
     map.current = new window.google.maps.Map(mapContainer.current, {

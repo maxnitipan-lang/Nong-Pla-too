@@ -17,12 +17,13 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
-import type { CampusBuilding } from "@shared/campus";
+import type { CampusBuilding, DepartmentProfile, GalleryImage } from "@shared/campus";
+import { MyMapsImport } from "@/components/MyMapsImport";
 import { CAMPUS_CATEGORIES, buildingInputSchema } from "@shared/adminSchemas";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
-import { AdminShell, DbBanner } from "./AdminShell";
+import { AdminShell, DbBanner, useAdminAccess } from "./AdminShell";
 import {
   ColorField,
   NumberField,
@@ -49,6 +50,9 @@ type FormState = {
   mapHeight: number;
   sortOrder: number;
   floorRows: FloorRow[];
+  /** Kiosk extras, edited as JSON text. */
+  departmentsJson: string;
+  galleryJson: string;
 };
 
 const EMPTY: FormState = {
@@ -67,7 +71,23 @@ const EMPTY: FormState = {
   mapHeight: 17,
   sortOrder: 0,
   floorRows: [{ label: "ชั้น 1", rooms: "" }],
+  departmentsJson: "[]",
+  galleryJson: "[]",
 };
+
+const DEPARTMENTS_HINT = '[{"id":"auto-1","floor":1,"name":"สาขาวิชาช่างยนต์","code":"AUT","description":"","skills":[],"careers":[],"activities":["เยี่ยมชมโรงฝึก"],"accent":"#e8863f"}]';
+const GALLERY_HINT = '[{"id":"lab","url":"https://…/lab.jpg","caption":"ห้องปฏิบัติการ","alt":"ห้องปฏิบัติการ"}]';
+
+/** Parse a JSON array field; returns an error message instead of throwing. */
+function parseJsonArray<T>(text: string, label: string): { value?: T[]; error?: string } {
+  if (!text.trim()) return { value: [] };
+  try {
+    const parsed = JSON.parse(text);
+    return Array.isArray(parsed) ? { value: parsed as T[] } : { error: `${label} ต้องเป็น JSON array [ ... ]` };
+  } catch {
+    return { error: `${label}: JSON ไม่ถูกต้อง` };
+  }
+}
 
 function toForm(b: CampusBuilding, index: number): FormState {
   return {
@@ -88,11 +108,15 @@ function toForm(b: CampusBuilding, index: number): FormState {
     floorRows: (b.floorsDetail.length ? b.floorsDetail : [{ level: 1, label: "ชั้น 1", rooms: [] }]).map(
       (f) => ({ label: f.label, rooms: f.rooms.join(", ") }),
     ),
+    departmentsJson: JSON.stringify(b.departments ?? [], null, 2),
+    galleryJson: JSON.stringify(b.gallery ?? [], null, 2),
   };
 }
 
-function buildPayload(form: FormState) {
+function buildPayload(form: FormState, departments: DepartmentProfile[], gallery: GalleryImage[]) {
   return {
+    departments,
+    gallery,
     id: form.id.trim(),
     name: form.name,
     shortName: form.shortName,
@@ -119,6 +143,7 @@ function buildPayload(form: FormState) {
 }
 
 export default function BuildingsAdmin() {
+  const { canEdit } = useAdminAccess();
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.admin.buildings.list.useQuery();
   const [open, setOpen] = useState(false);
@@ -164,7 +189,14 @@ export default function BuildingsAdmin() {
   };
 
   const submit = () => {
-    const parsed = buildingInputSchema.safeParse(buildPayload(form));
+    const departments = parseJsonArray<DepartmentProfile>(form.departmentsJson, "สาขาวิชา");
+    const gallery = parseJsonArray<GalleryImage>(form.galleryJson, "Gallery");
+    const jsonError = departments.error ?? gallery.error;
+    if (jsonError) {
+      toast.error(jsonError);
+      return;
+    }
+    const parsed = buildingInputSchema.safeParse(buildPayload(form, departments.value!, gallery.value!));
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "ข้อมูลไม่ถูกต้อง");
       return;
@@ -180,11 +212,15 @@ export default function BuildingsAdmin() {
   return (
     <AdminShell section="buildings" title="จัดการอาคาร">
       <DbBanner />
+      {canEdit && <><details className="mb-4 rounded-2xl border border-[var(--border)] bg-card p-4">
+        <summary className="cursor-pointer text-sm font-bold text-[var(--ink)]">นำเข้าอาคารจาก Google My Maps (CSV / KML)</summary>
+        <div className="mt-4"><MyMapsImport onImported={invalidate} /></div>
+      </details>
       <div className="mb-4 flex justify-end">
         <Button onClick={openCreate}>
           <Plus size={16} /> เพิ่มอาคาร
         </Button>
-      </div>
+      </div></>}
 
       {isLoading ? (
         <p className="text-sm text-[var(--muted-foreground)]">กำลังโหลด…</p>
@@ -207,7 +243,7 @@ export default function BuildingsAdmin() {
                   {b.category} · {b.floors} ชั้น · <code>{b.id}</code>
                 </p>
               </div>
-              <button
+              {canEdit && <><button
                 type="button"
                 onClick={() => openEdit(b, index)}
                 className="rounded-lg p-2 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
@@ -222,7 +258,7 @@ export default function BuildingsAdmin() {
                 aria-label="ลบ"
               >
                 <Trash2 size={15} />
-              </button>
+              </button></>}
             </div>
           ))}
           {!data?.length && (
@@ -372,6 +408,34 @@ export default function BuildingsAdmin() {
                 value={form.longitude}
                 onChange={(v) => set("longitude", v)}
               />
+            </div>
+          </details>
+
+          <details className="rounded-xl border border-[var(--border)] p-3">
+            <summary className="cursor-pointer text-xs font-bold text-[var(--ink)]">
+              สาขาวิชา + Gallery ของอาคาร (หน้าตู้ Kiosk · JSON)
+            </summary>
+            <div className="mt-3 grid gap-4">
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-bold text-[var(--ink)]">สาขาวิชาในอาคาร</span>
+                <textarea
+                  rows={8}
+                  value={form.departmentsJson}
+                  onChange={(e) => set("departmentsJson", e.target.value)}
+                  className="w-full rounded-md border border-[var(--border)] bg-card px-2 py-1.5 font-mono text-[11px] leading-5"
+                />
+                <span className="mt-1 block break-all text-[10px] text-[var(--muted-foreground)]">ตัวอย่าง: {DEPARTMENTS_HINT}</span>
+              </label>
+              <label className="block">
+                <span className="mb-1.5 block text-xs font-bold text-[var(--ink)]">Gallery</span>
+                <textarea
+                  rows={5}
+                  value={form.galleryJson}
+                  onChange={(e) => set("galleryJson", e.target.value)}
+                  className="w-full rounded-md border border-[var(--border)] bg-card px-2 py-1.5 font-mono text-[11px] leading-5"
+                />
+                <span className="mt-1 block break-all text-[10px] text-[var(--muted-foreground)]">ตัวอย่าง: {GALLERY_HINT}</span>
+              </label>
             </div>
           </details>
 

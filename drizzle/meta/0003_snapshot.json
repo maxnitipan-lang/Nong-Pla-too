@@ -1,8 +1,8 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "06d9a4ff-4d27-4f38-8371-595abec00a0f",
-  "prevId": "b1e2c3d4-5a6b-47c8-9d0e-1f2a3b4c5d6e",
+  "id": "8a43a643-4563-44f8-b0fa-34262907abe9",
+  "prevId": "d36c9654-4965-48dd-a67f-3bb9baaead37",
   "tables": {
     "campus_buildings": {
       "name": "campus_buildings",
@@ -70,53 +70,19 @@
           "notNull": true,
           "autoincrement": false
         },
-        "accent": {
-          "name": "accent",
-          "type": "varchar(20)",
+        "departments": {
+          "name": "departments",
+          "type": "json",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": "'#123b52'"
+          "autoincrement": false
         },
-        "mapX": {
-          "name": "mapX",
-          "type": "int",
+        "gallery": {
+          "name": "gallery",
+          "type": "json",
           "primaryKey": false,
           "notNull": true,
-          "autoincrement": false,
-          "default": 50
-        },
-        "mapY": {
-          "name": "mapY",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 50
-        },
-        "mapWidth": {
-          "name": "mapWidth",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 18
-        },
-        "mapHeight": {
-          "name": "mapHeight",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 17
-        },
-        "sortOrder": {
-          "name": "sortOrder",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
+          "autoincrement": false
         },
         "createdAt": {
           "name": "createdAt",
@@ -209,14 +175,6 @@
           "autoincrement": false,
           "default": 1
         },
-        "sortOrder": {
-          "name": "sortOrder",
-          "type": "int",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "default": 0
-        },
         "createdAt": {
           "name": "createdAt",
           "type": "timestamp",
@@ -242,46 +200,6 @@
           "name": "campus_news_id",
           "columns": [
             "id"
-          ]
-        }
-      },
-      "uniqueConstraints": {},
-      "checkConstraint": {}
-    },
-    "site_settings": {
-      "name": "site_settings",
-      "columns": {
-        "key": {
-          "name": "key",
-          "type": "varchar(64)",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "value": {
-          "name": "value",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "updatedAt": {
-          "name": "updatedAt",
-          "type": "timestamp",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false,
-          "onUpdate": true,
-          "default": "(now())"
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {
-        "site_settings_key": {
-          "name": "site_settings_key",
-          "columns": [
-            "key"
           ]
         }
       },

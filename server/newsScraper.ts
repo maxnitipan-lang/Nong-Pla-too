@@ -99,3 +99,24 @@ export async function syncCollegeNews(): Promise<{ imported: number }> {
   }
   return { imported: items.length };
 }
+
+const AUTO_SYNC_EVERY_MS = 6 * 60 * 60 * 1000;
+
+/**
+ * Keep the college newsletter fresh without an admin pressing "sync": pull once
+ * shortly after start-up, then every 6 hours. Needs a database (writes go to
+ * `campus_news`); failures are logged and retried on the next tick.
+ */
+export function startNewsAutoSync(): void {
+  if (!process.env.DATABASE_URL || process.env.NEWS_AUTO_SYNC === "0") return;
+  const tick = async () => {
+    try {
+      const { imported } = await syncCollegeNews();
+      console.log(`[News] synced ${imported} items from sstc.ac.th`);
+    } catch (error) {
+      console.warn("[News] auto-sync failed:", error instanceof Error ? error.message : error);
+    }
+  };
+  setTimeout(tick, 15_000).unref();
+  setInterval(tick, AUTO_SYNC_EVERY_MS).unref();
+}

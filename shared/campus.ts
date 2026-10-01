@@ -1,54 +1,68 @@
-// Campus domain types + demo data shared between the frontend and backend.
+// Campus domain types + data shared between the frontend and backend.
 //
-// The demo data below is used as a fallback whenever the database is empty or
-// unreachable, so the UI can be previewed immediately. Replace it (and populate
-// the `campus_buildings` / `campus_news` tables) with real content before
-// launch. `x` / `y` are percentage positions on the illustrated campus map;
-// swap to real lat/lng when wiring `google.maps.marker.AdvancedMarkerElement`.
+// Real campus data (22 buildings/units + real GPS coordinates) ported from the
+// "น้องปลาทู" web app (D:\น้องปลาทู), sourced from the college's Google My Maps
+// export (KMZ, ก.ย. 2569). This is used as a fallback whenever the database is
+// empty or unreachable, so the UI can be previewed immediately, and is also the
+// seed content for `campus_buildings` / `campus_news`.
 
 // The four Google My Maps layers of the campus PR map.
-export type CampusCategory =
-  | "สายอุตสาหกรรม"
-  | "พาณิชยกรรม/คหกรรม/สามัญ"
-  | "บริหาร-สนับสนุน"
-  | "ส่วนกลาง-กิจกรรม";
+export const CAMPUS_CATEGORIES = [
+  "สายอุตสาหกรรม",
+  "พาณิชยกรรม/คหกรรม/สามัญ",
+  "บริหาร-สนับสนุน",
+  "ส่วนกลาง-กิจกรรม",
+] as const;
+export type BuildingCategory = (typeof CAMPUS_CATEGORIES)[number];
 
-export type FloorDetail = {
+export type Floor = {
   level: number;
   label: string;
   rooms: string[];
+};
+/** Old-API name for {@link Floor}. */
+export type FloorDetail = Floor;
+/** Old-API name for {@link BuildingCategory}. */
+export type CampusCategory = BuildingCategory;
+
+export type GalleryImage = {
+  id: string;
+  url: string;
+  caption: string;
+  alt: string;
+};
+
+export type DepartmentProfile = {
+  id: string;
+  floor: number;
+  name: string;
+  code: string;
+  description: string;
+  skills: string[];
+  careers: string[];
+  activities?: string[];
+  accent: string;
 };
 
 export type CampusBuilding = {
   id: string;
   name: string;
   shortName: string;
-  category: CampusCategory;
+  category: BuildingCategory;
   description: string;
   floors: number;
-  /** Horizontal position on the illustrated map, 0–100 (%). */
   x: number;
-  /** Vertical position on the illustrated map, 0–100 (%). */
   y: number;
-  /** Illustrated footprint size, 0–100 (%). */
   width: number;
   height: number;
-  /** Marker / accent colour (hex). */
   accent: string;
-  /** Real-world coordinates (optional — used when wiring a real map). */
+  floorsDetail: Floor[];
+  /** Real-world coordinates as strings, e.g. "13.4207317663681" (old API contract). Missing = undefined. */
   latitude?: string;
   longitude?: string;
-  floorsDetail: FloorDetail[];
-};
-
-/** Editable site-wide settings, managed from the admin panel. */
-export type CampusSettings = {
-  collegeName: string;
-  address: string;
-  contactEmail: string;
-  /** Google My Maps "embed on my site" URL, or "" to use the illustrated map. */
-  mapEmbedUrl: string;
-  mapCenter: { lat: number; lng: number };
+  /** Kiosk extras — not part of the old API, safe for old clients to ignore. */
+  departments?: DepartmentProfile[];
+  gallery?: GalleryImage[];
 };
 
 export type CampusNewsItem = {
@@ -66,14 +80,81 @@ export type CampusNewsItem = {
   /** "" = added by hand, "sstc.ac.th" = pulled from the college website. */
   source: string;
 };
+export type CampusNews = CampusNewsItem;
 
-export type CampusOverview = {
+/** Editable site-wide settings, managed from the admin panel. */
+export type CampusSettings = {
+  collegeName: string;
   address: string;
+  contactEmail: string;
+  /** Google My Maps "embed on my site" URL, or "" (kept for API compatibility; the site no longer shows it). */
+  mapEmbedUrl: string;
   mapCenter: { lat: number; lng: number };
-  stats: { label: string; value: string }[];
 };
 
-export const CAMPUS_BUILDINGS: CampusBuilding[] = [
+export const CAMPUS_OVERVIEW = {
+  name: "วิทยาลัยเทคนิคสมุทรสงคราม",
+  shortName: "SMTC",
+  address: "วิทยาลัยเทคนิคสมุทรสงคราม อำเภอเมืองสมุทรสงคราม จังหวัดสมุทรสงคราม",
+  mapCenter: { lat: 13.41967, lng: 100.01036 },
+  stats: [
+    { value: "22", label: "อาคาร/หน่วยงาน" },
+    { value: "4", label: "กลุ่มเลเยอร์" },
+    { value: "08:00–16:30", label: "เวลาทำการ" },
+  ],
+};
+
+export const DEFAULT_GALLERY: GalleryImage[] = [
+  { id: "workshop", url: "/manus-storage/workshop-class_7b9c890d.jpg", caption: "บรรยากาศการเรียนรู้แบบลงมือทำ", alt: "ห้องเรียนเชิงปฏิบัติการ" },
+  { id: "lab", url: "/manus-storage/modern-lab_369cb2fd.jpeg", caption: "ห้องปฏิบัติการพร้อมใช้งาน", alt: "ห้องปฏิบัติการสมัยใหม่" },
+  { id: "training", url: "/manus-storage/training-space_8dd5d5f6.jpg", caption: "พื้นที่ฝึกทักษะสายอาชีพ", alt: "นักเรียนในห้องฝึกทักษะ" },
+];
+
+/** Generic demo departments — only used as a placeholder for a freshly-created building that has no real department data yet. */
+export const DEFAULT_DEPARTMENTS: DepartmentProfile[] = [
+  {
+    id: "digital-business",
+    floor: 3,
+    name: "เทคโนโลยีธุรกิจดิจิทัล",
+    code: "DBT",
+    description: "เรียนรู้การใช้เทคโนโลยีเพื่อสร้างธุรกิจยุคใหม่ ตั้งแต่การจัดการข้อมูล สื่อดิจิทัล ไปจนถึงการวางแผนธุรกิจออนไลน์",
+    skills: ["การวิเคราะห์ข้อมูล", "การออกแบบสื่อดิจิทัล", "การจัดการธุรกิจออนไลน์"],
+    careers: ["Digital Marketer", "Content Creator", "เจ้าหน้าที่ธุรกิจดิจิทัล"],
+    activities: ["เวิร์กช็อปออกแบบสื่อ", "ฝึกทำธุรกิจจำลอง", "กิจกรรมสร้างแบรนด์ออนไลน์"],
+    accent: "#3c8f8d",
+  },
+  {
+    id: "automotive",
+    floor: 1,
+    name: "ช่างยนต์และยานยนต์ไฟฟ้า",
+    code: "AUT",
+    description: "ผสมผสานพื้นฐานเครื่องยนต์ ระบบไฟฟ้ารถยนต์ และเทคโนโลยียานยนต์ไฟฟ้า ผ่านการฝึกกับอุปกรณ์จริง",
+    skills: ["วิเคราะห์ระบบเครื่องยนต์", "บำรุงรักษารถ EV", "อ่านวงจรไฟฟ้ายานยนต์"],
+    careers: ["ช่างเทคนิคยานยนต์", "ช่างซ่อมรถ EV", "ที่ปรึกษาศูนย์บริการ"],
+    activities: ["ตรวจเช็กรถยนต์ไฟฟ้า", "แข่งขันทักษะงานเครื่องยนต์", "เปิดโรงฝึกให้เยี่ยมชม"],
+    accent: "#eb8b67",
+  },
+];
+
+/** One lightweight DepartmentProfile stub per unit/department actually housed in a building — derived from its floor-1 room list so the kiosk UI (pin logos, department panels) shows real content instead of the generic demo departments above. */
+function buildDepartments(building: { id: string; floorsDetail: Floor[]; accent: string }): DepartmentProfile[] {
+  const rooms = building.floorsDetail[0]?.rooms ?? [];
+  return rooms.map((room, index) => ({
+    id: `${building.id}-dept-${index + 1}`,
+    floor: 1,
+    name: room,
+    code: String(index + 1).padStart(2, "0"),
+    description: "",
+    skills: [],
+    careers: [],
+    accent: building.accent,
+  }));
+}
+
+type RawBuilding = Omit<CampusBuilding, "departments" | "gallery" | "latitude" | "longitude"> & { latitude: number; longitude: number };
+
+// อาคาร/หน่วยงาน 22 จุด + พิกัดจริง นำเข้าจาก Google My Maps ของวิทยาลัย (KMZ + สเปรดชีต, ก.ย. 2569)
+const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
   {
     id: "mech-auto",
     name: "สาขาวิชาช่างยนต์",
@@ -86,11 +167,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#e8863f",
-    latitude: "13.4207317663681",
-    longitude: "100.010368922857",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างยนต์"] },
-    ],
+    latitude: 13.4207317663681,
+    longitude: 100.010368922857,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างยนต์"] }],
   },
   {
     id: "electronics-it",
@@ -104,11 +183,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#e8863f",
-    latitude: "13.4204089013263",
-    longitude: "100.010475464028",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาอิเล็กทรอนิกส์ / เทคโนโลยีสารสนเทศ","สาขาวิชาเทคนิคคอมพิวเตอร์"] },
-    ],
+    latitude: 13.4204089013263,
+    longitude: 100.010475464028,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาอิเล็กทรอนิกส์ / เทคโนโลยีสารสนเทศ", "สาขาวิชาเทคนิคคอมพิวเตอร์"] }],
   },
   {
     id: "electrical-construction",
@@ -122,11 +199,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#e8863f",
-    latitude: "13.4200514503851",
-    longitude: "100.010592746633",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาไฟฟ้ากำลัง / ก่อสร้าง"] },
-    ],
+    latitude: 13.4200514503851,
+    longitude: 100.010592746633,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาไฟฟ้ากำลัง / ก่อสร้าง"] }],
   },
   {
     id: "ict-building",
@@ -140,11 +215,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#e8863f",
-    latitude: "13.4193720017185",
-    longitude: "100.011311702798",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างเชื่อมโลหะ","สาขาวิชาเมคคาทรอนิกส์และหุ่นยนต์","สาขาวิชาการจัดการสำนักงาน"] },
-    ],
+    latitude: 13.4193720017185,
+    longitude: 100.011311702798,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างเชื่อมโลหะ", "สาขาวิชาเมคคาทรอนิกส์และหุ่นยนต์", "สาขาวิชาการจัดการสำนักงาน"] }],
   },
   {
     id: "general-subjects",
@@ -158,11 +231,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#2f7fb5",
-    latitude: "13.4189665484955",
-    longitude: "100.010348443725",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["หมวดวิชาสามัญ ไทย คณิต วิทย์ อังกฤษ ภาษาจีน"] },
-    ],
+    latitude: 13.4189665484955,
+    longitude: 100.010348443725,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["หมวดวิชาสามัญ ไทย คณิต วิทย์ อังกฤษ ภาษาจีน"] }],
   },
   {
     id: "commerce",
@@ -176,11 +247,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#2f7fb5",
-    latitude: "13.4187456064652",
-    longitude: "100.010345639489",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาการตลาดและธุรกิจค้าปลีก","สาขาการบัญชี"] },
-    ],
+    latitude: 13.4187456064652,
+    longitude: 100.010345639489,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาการตลาดและธุรกิจค้าปลีก", "สาขาการบัญชี"] }],
   },
   {
     id: "home-economics",
@@ -194,11 +263,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#2f7fb5",
-    latitude: "13.4188110707917",
-    longitude: "100.01098780958",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาคหกรรมศาสตร์"] },
-    ],
+    latitude: 13.4188110707917,
+    longitude: 100.01098780958,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาคหกรรมศาสตร์"] }],
   },
   {
     id: "food-nutrition",
@@ -212,11 +279,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#2f7fb5",
-    latitude: "13.4191424870995",
-    longitude: "100.011380674762",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาอาหารและโภชนาการ"] },
-    ],
+    latitude: 13.4191424870995,
+    longitude: 100.011380674762,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาอาหารและโภชนาการ"] }],
   },
   {
     id: "student-development",
@@ -230,11 +295,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#6b7a86",
-    latitude: "13.4186010393477",
-    longitude: "100.01055876144",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายบริหาร / ธุรการวิทยาลัย"] },
-    ],
+    latitude: 13.4186010393477,
+    longitude: 100.01055876144,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายบริหาร / ธุรการวิทยาลัย"] }],
   },
   {
     id: "building-85",
@@ -248,11 +311,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#6b7a86",
-    latitude: "13.4191765796198",
-    longitude: "100.010118496356",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายบริหารทรัพยากร","ฝ่ายยุทธศาสตร์และแผนงาน","ฝ่ายกิจการนักเรียนนักศึกษา","ฝ่ายวิชาการ"] },
-    ],
+    latitude: 13.4191765796198,
+    longitude: 100.010118496356,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายบริหารทรัพยากร", "ฝ่ายยุทธศาสตร์และแผนงาน", "ฝ่ายกิจการนักเรียนนักศึกษา", "ฝ่ายวิชาการ"] }],
   },
   {
     id: "ivec-central-5",
@@ -266,11 +327,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#6b7a86",
-    latitude: "13.4196921080512",
-    longitude: "100.010664863585",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สถาบันการอาชีวศึกษาภาคกลาง 5"] },
-    ],
+    latitude: 13.4196921080512,
+    longitude: 100.010664863585,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สถาบันการอาชีวศึกษาภาคกลาง 5"] }],
   },
   {
     id: "auditorium",
@@ -284,11 +343,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#3f9d6d",
-    latitude: "13.419306679309",
-    longitude: "100.01088199252",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["พื้นที่ส่วนกลาง จัดกิจกรรมและรับประทานอาหาร"] },
-    ],
+    latitude: 13.419306679309,
+    longitude: 100.01088199252,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["พื้นที่ส่วนกลาง จัดกิจกรรมและรับประทานอาหาร"] }],
   },
   {
     id: "activity-building",
@@ -302,11 +359,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#3f9d6d",
-    latitude: "13.4201489200418",
-    longitude: "100.009332305166",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["พื้นที่จัดกิจกรรมนักเรียนนักศึกษาและชมรม"] },
-    ],
+    latitude: 13.4201489200418,
+    longitude: 100.009332305166,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["พื้นที่จัดกิจกรรมนักเรียนนักศึกษาและชมรม"] }],
   },
   {
     id: "building-1",
@@ -320,11 +375,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#e8863f",
-    latitude: "13.4195377575516",
-    longitude: "100.009980743218",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["อาคารเรียนสายอุตสาหกรรม"] },
-    ],
+    latitude: 13.4195377575516,
+    longitude: 100.009980743218,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["อาคารเรียนสายอุตสาหกรรม"] }],
   },
   {
     id: "parking-1",
@@ -338,11 +391,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#3f9d6d",
-    latitude: "13.421054806515",
-    longitude: "100.010319344651",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["โรงจอดรถ (หลังป้อมยาม / งานปกครอง)"] },
-    ],
+    latitude: 13.421054806515,
+    longitude: 100.010319344651,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["โรงจอดรถ (หลังป้อมยาม / งานปกครอง)"] }],
   },
   {
     id: "building-10",
@@ -356,11 +407,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#e8863f",
-    latitude: "13.419732967845",
-    longitude: "100.011070041427",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาเทคโนโลยีธุรกิจดิจิทัล","สาขาวิชาเขียนแบบเครื่องกล"] },
-    ],
+    latitude: 13.419732967845,
+    longitude: 100.011070041427,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาเทคโนโลยีธุรกิจดิจิทัล", "สาขาวิชาเขียนแบบเครื่องกล"] }],
   },
   {
     id: "construction-workshop",
@@ -374,11 +423,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#e8863f",
-    latitude: "13.4200930863698",
-    longitude: "100.010810547904",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างก่อสร้าง"] },
-    ],
+    latitude: 13.4200930863698,
+    longitude: 100.010810547904,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างก่อสร้าง"] }],
   },
   {
     id: "machine-shop",
@@ -392,11 +439,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#e8863f",
-    latitude: "13.4201707908708",
-    longitude: "100.010994527388",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างกลโรงงาน"] },
-    ],
+    latitude: 13.4201707908708,
+    longitude: 100.010994527388,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างกลโรงงาน"] }],
   },
   {
     id: "personnel-registration",
@@ -410,11 +455,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#6b7a86",
-    latitude: "13.4195566966376",
-    longitude: "100.01042470173",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["งานบุคคล","งานทะเบียน"] },
-    ],
+    latitude: 13.4195566966376,
+    longitude: 100.01042470173,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["งานบุคคล", "งานทะเบียน"] }],
   },
   {
     id: "supplies-dept",
@@ -428,11 +471,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#6b7a86",
-    latitude: "13.418765485825",
-    longitude: "100.011001664803",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายพัสดุ"] },
-    ],
+    latitude: 13.418765485825,
+    longitude: 100.011001664803,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายพัสดุ"] }],
   },
   {
     id: "discipline-dept",
@@ -446,11 +487,9 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#6b7a86",
-    latitude: "13.420930911335",
-    longitude: "100.010204731528",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายปกครอง"] },
-    ],
+    latitude: 13.420930911335,
+    longitude: 100.010204731528,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายปกครอง"] }],
   },
   {
     id: "director-office",
@@ -464,21 +503,26 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = [
     width: 18,
     height: 16,
     accent: "#6b7a86",
-    latitude: "13.4194815302292",
-    longitude: "100.009699233436",
-    floorsDetail: [
-      { level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ห้องผู้บริหาร","ห้องผู้อำนวยการ"] },
-    ],
+    latitude: 13.4194815302292,
+    longitude: 100.009699233436,
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ห้องผู้บริหาร", "ห้องผู้อำนวยการ"] }],
   },
 ];
 
-export const CAMPUS_NEWS: CampusNewsItem[] = [
+export const CAMPUS_BUILDINGS: CampusBuilding[] = RAW_CAMPUS_BUILDINGS.map((building) => ({
+  ...building,
+  latitude: String(building.latitude),
+  longitude: String(building.longitude),
+  departments: buildDepartments(building),
+  gallery: [],
+}));
+
+export const CAMPUS_NEWS: CampusNews[] = [
   {
     id: "open-house-2026",
     tag: "กิจกรรมเด่น",
     title: "เปิดบ้านช่างพันธุ์ใหม่ 2026",
-    excerpt:
-      "ชวนคุณครู นักเรียน และผู้ปกครองมาสัมผัสห้องปฏิบัติการจริง พร้อมเวิร์กช็อปจากทุกสาขา",
+    excerpt: "ชวนคุณครู นักเรียน และผู้ปกครองมาสัมผัสห้องปฏิบัติการจริง พร้อมเวิร์กช็อปจากทุกสาขา",
     date: "18 ก.ย. 2569",
     time: "09:00–15:30 น.",
     accent: "#eb8b67",
@@ -490,8 +534,7 @@ export const CAMPUS_NEWS: CampusNewsItem[] = [
     id: "enrollment-2026",
     tag: "รับสมัคร",
     title: "กำหนดการรับสมัครนักเรียนใหม่ รอบโควตา",
-    excerpt:
-      "เตรียมเอกสารให้พร้อม แล้วมาสมัครด้วยตัวเองที่อาคารอำนวยการ หรือดูรายละเอียดออนไลน์",
+    excerpt: "เตรียมเอกสารให้พร้อม แล้วมาสมัครด้วยตัวเองที่อาคารอำนวยการ หรือดูรายละเอียดออนไลน์",
     date: "วันนี้ – 30 ก.ย. 2569",
     time: "ประกาศล่าสุด",
     accent: "#3c8f8d",
@@ -503,8 +546,7 @@ export const CAMPUS_NEWS: CampusNewsItem[] = [
     id: "skills-competition",
     tag: "ข่าววิทยาลัย",
     title: "ทีมช่างยนต์คว้ารางวัลทักษะระดับจังหวัด",
-    excerpt:
-      "ขอแสดงความยินดีกับนักเรียนตัวแทนวิทยาลัยฯ ที่สร้างผลงานโดดเด่นในการแข่งขันทักษะวิชาชีพ",
+    excerpt: "ขอแสดงความยินดีกับนักเรียนตัวแทนวิทยาลัยฯ ที่สร้างผลงานโดดเด่นในการแข่งขันทักษะวิชาชีพ",
     date: "05 ก.ย. 2569",
     time: "อ่าน 128 ครั้ง",
     accent: "#bc7a3e",
@@ -514,20 +556,9 @@ export const CAMPUS_NEWS: CampusNewsItem[] = [
   },
 ];
 
-// อาคาร 13 หลัง + พิกัด นำเข้าจาก Google My Maps ของวิทยาลัย (KMZ, ก.ย. 2569)
-export const CAMPUS_OVERVIEW: CampusOverview = {
-  address: "วิทยาลัยเทคนิคสมุทรสงคราม อำเภอเมืองสมุทรสงคราม จังหวัดสมุทรสงคราม",
-  mapCenter: { lat: 13.41967, lng: 100.01036 },
-  stats: [
-    { label: "อาคาร/หน่วยงาน", value: `${CAMPUS_BUILDINGS.length} จุด` },
-    { label: "กลุ่มเลเยอร์", value: "4 กลุ่ม" },
-    { label: "ข่าวสารล่าสุด", value: `${CAMPUS_NEWS.length} เรื่อง` },
-  ],
-};
-
 /** Fallback settings used until the `site_settings` table has real values. */
 export const CAMPUS_SETTINGS_DEFAULTS: CampusSettings = {
-  collegeName: "วิทยาลัยเทคนิคสมุทรสงคราม",
+  collegeName: CAMPUS_OVERVIEW.name,
   address: CAMPUS_OVERVIEW.address,
   contactEmail: "info@smtc.ac.th",
   mapEmbedUrl: "",

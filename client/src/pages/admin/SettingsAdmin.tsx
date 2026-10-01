@@ -3,7 +3,7 @@ import { trpc } from "@/lib/trpc";
 import { settingsInputSchema } from "@shared/adminSchemas";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { AdminShell, DbBanner } from "./AdminShell";
+import { AdminShell, useAdminAccess, DbBanner } from "./AdminShell";
 import { NumberField, TextAreaField, TextField } from "./formKit";
 
 type FormState = {
@@ -16,6 +16,7 @@ type FormState = {
 };
 
 export default function SettingsAdmin() {
+  const { canEdit } = useAdminAccess();
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.admin.settings.get.useQuery();
   const [form, setForm] = useState<FormState | null>(null);
@@ -98,11 +99,11 @@ export default function SettingsAdmin() {
               onChange={(v) => set("mapCenterLng", v)}
             />
           </div>
-          <div className="flex justify-end">
+          {canEdit && <div className="flex justify-end">
             <Button onClick={submit} disabled={update.isPending}>
               {update.isPending ? "กำลังบันทึก…" : "บันทึกการตั้งค่า"}
             </Button>
-          </div>
+          </div>}
         </div>
       )}
     </AdminShell>
