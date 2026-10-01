@@ -30,12 +30,9 @@ const GET_USER_INFO_WITH_JWT_PATH = `/webdev.v1.WebDevAuthPublicService/GetUserI
 
 class OAuthService {
   constructor(private client: ReturnType<typeof axios.create>) {
-    console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
-    if (!ENV.oAuthServerUrl) {
-      console.error(
-        "[OAuth] ERROR: OAUTH_SERVER_URL is not configured! Set OAUTH_SERVER_URL environment variable."
-      );
-    }
+    // Manus OAuth is optional — sign-in normally uses username/password accounts.
+    if (ENV.oAuthServerUrl) console.log("[OAuth] Initialized with baseURL:", ENV.oAuthServerUrl);
+    else console.log("[OAuth] Manus OAuth not configured — using username/password sign-in only");
   }
 
   private decodeState(state: string): string {
@@ -199,10 +196,7 @@ class SDKServer {
   async verifySession(
     cookieValue: string | undefined | null
   ): Promise<{ openId: string; appId: string; name: string } | null> {
-    if (!cookieValue) {
-      console.warn("[Auth] Missing session cookie");
-      return null;
-    }
+    if (!cookieValue) return null; // normal for visitors and password sign-ins — not worth a log line
 
     try {
       const secretKey = this.getSessionSecret();

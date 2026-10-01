@@ -16,14 +16,29 @@ const DEFAULT_LIMIT = 6;
 
 /** Scrape (but do not save) the newest newsletter items. */
 export async function scrapeCollegeNews(limit = DEFAULT_LIMIT): Promise<NewsInput[]> {
-  const res = await fetch(NEWSLETTER_LIST_URL, {
-    headers: {
+  // The college site sits behind Cloudflare, which turns away many data-centre
+  // requests (Render gets 403). Ask like a normal browser first, then as our bot.
+  const attempts: Record<string, string>[] = [
+    {
       "User-Agent":
-        "Mozilla/5.0 (compatible; CampusGuideBot/1.0; +https://www.sstc.ac.th)",
+        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36",
+      Accept: "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+      "Accept-Language": "th-TH,th;q=0.9,en;q=0.8",
     },
-  });
-  if (!res.ok) {
-    throw new Error(`ดึงข่าวจากเว็บวิทยาลัยไม่สำเร็จ (HTTP ${res.status})`);
+    { "User-Agent": "Mozilla/5.0 (compatible; CampusGuideBot/1.0; +https://www.sstc.ac.th)" },
+  ];
+  let res: Response | null = null;
+  for (const headers of attempts) {
+    res = await fetch(NEWSLETTER_LIST_URL, { headers, signal: AbortSignal.timeout(20_000) });
+    if (res.ok) break;
+  }
+  if (!res || !res.ok) {
+    const status = res?.status ?? 0;
+    throw new Error(
+      status === 403
+        ? "เว็บวิทยาลัยปฏิเสธการดึงข่าวจากเซิร์ฟเวอร์ (HTTP 403 — Cloudflare บล็อก) — ดึงจากคอมพิวเตอร์ในวิทยาลัยแทนด้วยคำสั่ง pnpm news:sync"
+        : `ดึงข่าวจากเว็บวิทยาลัยไม่สำเร็จ (HTTP ${status})`,
+    );
   }
 
   const $ = cheerio.load(await res.text());
@@ -114,7 +129,7 @@ export function startNewsAutoSync(): void {
       const { imported } = await syncCollegeNews();
       console.log(`[News] synced ${imported} items from sstc.ac.th`);
     } catch (error) {
-      console.warn("[News] auto-sync failed:", error instanceof Error ? error.message : error);
+      console.log("[News] auto-sync skipped:", error instanceof Error ? error.message : error);
     }
   };
   setTimeout(tick, 15_000).unref();
