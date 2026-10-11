@@ -5,7 +5,7 @@ import { useIdle } from "@/hooks/useIdle";
 import { isMobileDevice } from "@/lib/voice";
 import { InstallPWAButton } from "@/components/InstallPWAButton";
 import { trpc } from "@/lib/trpc";
-import { DEPARTMENT_LOGOS, KIOSK_ASSETS } from "@/config/kioskAssets";
+import { BUILDING_MARKER_IMAGES, DEPARTMENT_LOGOS, KIOSK_ASSETS } from "@/config/kioskAssets";
 import { CAMPUS_BUILDINGS, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS } from "@shared/campus";
 import type { CampusBuilding, DepartmentProfile } from "@shared/campus";
 import { ArrowLeft, Building2, ChevronRight, CircleHelp, Compass, ExternalLink, Home, Layers3, MapPin, Mic, Moon, Navigation, Newspaper, Search, Sparkles, Sun, Volume2, X } from "lucide-react";
@@ -38,10 +38,11 @@ function deptMarkerHtml(building: CampusBuilding, departments: DepartmentProfile
   const dept = departments[0];
   const accent = dept?.accent ?? building.accent;
   const code = dept?.code ?? building.shortName.slice(0, 3);
-  const logo = dept ? DEPARTMENT_LOGOS[dept.code] : undefined;
+  const photo = BUILDING_MARKER_IMAGES[building.id];
+  const logo = photo ?? (dept ? DEPARTMENT_LOGOS[dept.code] : undefined);
   return `<div style="display:flex;flex-direction:column;align-items:center">
     <span class="relative flex h-14 w-14 items-center justify-center overflow-hidden rounded-[20px] border-4 border-white text-[10px] font-black text-white shadow-[0_8px_20px_rgba(16,41,58,0.28)] ${active ? "ring-4 ring-[#f6b89f]/60" : ""}" style="background-color:${accent}">
-      ${logo ? `<img src="${logo}" alt="" class="absolute inset-0 h-full w-full object-cover" onerror="this.style.display='none'" />` : ""}
+      ${logo ? `<img src="${logo}" alt="" class="absolute inset-0 z-10 h-full w-full object-cover" onerror="this.style.display='none'" />` : ""}
       <span class="relative">${code}</span>
     </span>
     <span class="pointer-events-none mt-2 whitespace-nowrap rounded-full bg-white px-2.5 py-1 text-[10px] font-black text-[var(--ink)] shadow-sm">${building.shortName}</span>
