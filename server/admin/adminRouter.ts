@@ -29,9 +29,9 @@ import {
   updateCampusSettings,
   upsertCampusBuilding,
   upsertCampusNews,
-} from "./db";
-import { syncCollegeNews } from "./newsScraper";
-import { adminProcedure, editorProcedure, router, staffProcedure } from "./_core/trpc";
+} from "../db";
+import { syncCollegeNews } from "../campus/newsScraper";
+import { adminProcedure, editorProcedure, router, staffProcedure } from "../_core/trpc";
 
 const idInput = z.object({ id: z.string().trim().min(1).max(64) });
 

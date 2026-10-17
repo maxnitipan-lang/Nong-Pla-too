@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import type { CampusBuilding, DepartmentProfile, GalleryImage } from "@shared/campus";
-import { MyMapsImport } from "@/components/MyMapsImport";
+import { MyMapsImport } from "@/components/admin/MyMapsImport";
 import { CAMPUS_CATEGORIES, buildingInputSchema } from "@shared/adminSchemas";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";

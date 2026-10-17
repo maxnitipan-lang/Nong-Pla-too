@@ -3,7 +3,7 @@ import type { Maneuver } from "@shared/walkNetwork";
 import type { CampusNavigation } from "@/hooks/useCampusNavigation";
 import { formatDistance } from "@/lib/directions";
 import { cn } from "@/lib/utils";
-import { QrCode, phoneRouteUrl } from "@/components/QrCode";
+import { QrCode, phoneRouteUrl } from "@/components/common/QrCode";
 
 const ICONS: Record<Maneuver, typeof ArrowUp> = {
   depart: Footprints,

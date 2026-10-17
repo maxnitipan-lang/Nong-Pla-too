@@ -8,7 +8,7 @@
 // production database, and the website shows the new items right away.
 
 import "dotenv/config";
-import { syncCollegeNews } from "../server/newsScraper";
+import { syncCollegeNews } from "../server/campus/newsScraper";
 
 if (!process.env.DATABASE_URL) {
   console.error("ไม่พบ DATABASE_URL ในไฟล์ .env");

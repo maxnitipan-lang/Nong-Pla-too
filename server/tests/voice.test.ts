@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { pcmToWav } from "./voice";
+import { pcmToWav } from "../assistant/voice";
 
 describe("voice helpers", () => {
   it("wraps PCM in a valid 24 kHz mono WAV header", () => {

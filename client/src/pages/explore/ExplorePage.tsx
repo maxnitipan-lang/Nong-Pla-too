@@ -1,9 +1,9 @@
-import { CampusAIWidget } from "@/components/CampusAIWidget";
-import { CampusLeafletMap } from "@/components/CampusLeafletMap";
+import { CampusAIWidget } from "@/components/assistant/CampusAIWidget";
+import { CampusLeafletMap } from "@/components/map/CampusLeafletMap";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { buildingSearchText, hasCoords, walkingDeepLink } from "@/lib/directions";
 import { useCampusNavigation } from "@/hooks/useCampusNavigation";
-import { NavBanner, RoutePanel, navSummary } from "@/components/RoutePanel";
+import { NavBanner, RoutePanel, navSummary } from "@/components/map/RoutePanel";
 import { trpc } from "@/lib/trpc";
 import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS, DEFAULT_GALLERY } from "@shared/campus";
 import type { CampusBuilding } from "@shared/campus";

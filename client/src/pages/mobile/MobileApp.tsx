@@ -1,6 +1,6 @@
-import { CampusAIWidget, openAssistant, openVoiceAssistant } from "@/components/CampusAIWidget";
-import { CampusLeafletMap } from "@/components/CampusLeafletMap";
-import { NavBanner, RoutePanel } from "@/components/RoutePanel";
+import { CampusAIWidget, openAssistant, openVoiceAssistant } from "@/components/assistant/CampusAIWidget";
+import { CampusLeafletMap } from "@/components/map/CampusLeafletMap";
+import { NavBanner, RoutePanel } from "@/components/map/RoutePanel";
 import { useCampusNavigation } from "@/hooks/useCampusNavigation";
 import { buildingLatLng, buildingSearchText, formatDistance, walkingDeepLink, type GpsFix } from "@/lib/directions";
 import { offlineData } from "@/lib/offlineData";

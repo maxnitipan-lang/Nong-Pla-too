@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
-import { adminRouter } from "./adminRouter";
-import { askCampusChat, isChatConfigured } from "./chat";
+import { adminRouter } from "./admin/adminRouter";
+import { askCampusChat, isChatConfigured } from "./assistant/chat";
 import { getCampusBuildings, getCampusNews, getCampusSettings, getUserRowByOpenId, getWalkNetwork, upsertUser } from "./db";
 import {
   USER_COOKIE_MAX_AGE_MS,
@@ -15,7 +15,7 @@ import {
   usernameToOpenId,
   verifyPassword,
 } from "./_core/localAccounts";
-import { getWalkingRoute } from "./walkingRoute";
+import { getWalkingRoute } from "./campus/walkingRoute";
 import {
   ADMIN_COOKIE_MAX_AGE_MS,
   ADMIN_COOKIE_NAME,

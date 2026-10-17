@@ -2,17 +2,17 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Redirect, Route, Switch } from "wouter";
-import MobileApp from "./pages/MobileApp";
-import ErrorBoundary from "./components/ErrorBoundary";
+import MobileApp from "./pages/mobile/MobileApp";
+import ErrorBoundary from "./components/common/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/Home";
+import Home from "./pages/explore/ExplorePage";
 import AdminOverview from "./pages/admin/AdminOverview";
 import BuildingsAdmin from "./pages/admin/BuildingsAdmin";
 import NewsAdmin from "./pages/admin/NewsAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import UsersAdmin from "./pages/admin/UsersAdmin";
 import WalkwaysAdmin from "./pages/admin/WalkwaysAdmin";
-import KioskHome from "./pages/KioskHome";
+import KioskHome from "./pages/kiosk/KioskHome";
 
 function Router() {
   return (

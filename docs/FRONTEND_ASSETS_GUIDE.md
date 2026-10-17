@@ -39,11 +39,11 @@ client/public/images/
 
 ## จุดที่ใช้แก้ข้อมูลการแสดงผล
 
-- เมนูหน้าแรก: `client/src/pages/KioskHome.tsx` ส่วน `menuItems`
+- เมนูหน้าแรก: `client/src/pages/kiosk/KioskHome.tsx` ส่วน `menuItems`
 - สีและตำแหน่งหมุด: ข้อมูล `CampusBuilding` ใน `shared/campus.ts`
 - โลโก้แผนก: `client/src/config/kioskAssets.ts`
 - ภาพตัวละครแต่ละสถานะ: `client/src/config/kioskAssets.ts`
-- ข้อความต้อนรับและคำอธิบาย: `client/src/pages/KioskHome.tsx`
+- ข้อความต้อนรับและคำอธิบาย: `client/src/pages/kiosk/KioskHome.tsx`
 
 ## หมายเหตุเรื่อง Backend
 

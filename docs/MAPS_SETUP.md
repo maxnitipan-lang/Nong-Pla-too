@@ -12,7 +12,7 @@
 ## Step 1: เริ่มต้น frontend
 
 1. แก้ข้อมูลสถานที่ อาคาร และชั้นใน `shared/campus.ts`
-2. แก้หน้าจอหลักใน `client/src/pages/Home.tsx`
+2. แก้หน้าจอหลักใน `client/src/pages/explore/ExplorePage.tsx`
 3. ปรับสี ฟอนต์ และ responsive layout ใน `client/src/index.css`
 4. ใช้ `trpc.campus.buildings.useQuery()` และ `trpc.campus.news.useQuery()` เพื่ออ่านข้อมูลจาก backend
 

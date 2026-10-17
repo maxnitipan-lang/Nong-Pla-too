@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell, useAdminAccess, DbBanner } from "./AdminShell";
 import { NumberField, TextAreaField, TextField } from "./formKit";
-import { PointPicker } from "@/components/PointPicker";
+import { PointPicker } from "@/components/map/PointPicker";
 
 type FormState = {
   collegeName: string;

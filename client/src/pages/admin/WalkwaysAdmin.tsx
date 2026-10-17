@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { ManeuverIcon } from "@/components/RoutePanel";
+import { ManeuverIcon } from "@/components/map/RoutePanel";
 import { trpc } from "@/lib/trpc";
 import { buildingLatLng, formatDistance } from "@/lib/directions";
 import { cn } from "@/lib/utils";

@@ -7,7 +7,7 @@
 
 import * as cheerio from "cheerio";
 import type { NewsInput } from "@shared/adminSchemas";
-import { upsertCampusNews } from "./db";
+import { upsertCampusNews } from "../db";
 
 const SITE_BASE = "https://www.sstc.ac.th/";
 const NEWSLETTER_LIST_URL = "https://www.sstc.ac.th/news_325_1";

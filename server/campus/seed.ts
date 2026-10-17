@@ -12,7 +12,7 @@ import {
   updateCampusSettings,
   upsertCampusBuilding,
   upsertCampusNews,
-} from "./db";
+} from "../db";
 
 async function main() {
   const db = await getDb();

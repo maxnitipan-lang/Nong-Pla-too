@@ -9,7 +9,7 @@
 //   CHAT_BASE_URL    (optional) default Gemini's OpenAI-compatible base
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
-import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db";
+import { getCampusBuildings, getCampusNews, getCampusSettings } from "../db";
 
 const CHAT_BASE_URL =
   process.env.CHAT_BASE_URL ||

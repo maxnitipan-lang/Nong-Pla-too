@@ -1,13 +1,13 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { appRouter } from "./routers";
-import type { TrpcContext } from "./_core/context";
+import { appRouter } from "../routers";
+import type { TrpcContext } from "../_core/context";
 
 beforeAll(() => {
   process.env.JWT_SECRET ||= "test-secret-for-vitest";
 });
 
 const { hashPassword, verifyPassword, mintUserToken, verifyUserToken, usernameToOpenId } = await import(
-  "./_core/localAccounts"
+  "../_core/localAccounts"
 );
 
 describe("local admin accounts", () => {
