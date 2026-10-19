@@ -24,9 +24,7 @@ type SpeechRecognitionLike = {
   continuous: boolean;
   interimResults: boolean;
   maxAlternatives: number;
-  onresult:
-    | ((event: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void)
-    | null;
+  onresult: ((event: { resultIndex: number; results: ArrayLike<{ isFinal: boolean; 0: { transcript: string } }> }) => void) | null;
   onerror: ((event: { error: string }) => void) | null;
   onend: (() => void) | null;
   onspeechstart: (() => void) | null;
@@ -46,8 +44,7 @@ export const hasBrowserRecognition = () => Boolean(recognitionCtor());
 const ua = () => (typeof navigator === "undefined" ? "" : navigator.userAgent);
 /** iPhone / iPad (iPadOS reports itself as a Mac with touch). */
 export const isIOS = () =>
-  /iPhone|iPad|iPod/i.test(ua()) ||
-  (typeof navigator !== "undefined" && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  /iPhone|iPad|iPod/i.test(ua()) || (typeof navigator !== "undefined" && navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
 export const isMobileDevice = () => /Android|iPhone|iPad|iPod/i.test(ua()) || isIOS();
 /** LINE / Facebook / Instagram in-app browsers usually can't use the microphone. */
 export const inAppBrowser = (): "line" | "other" | null =>
@@ -62,8 +59,7 @@ const SILENT_WAV = "data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEAQB8AAI
 
 function audioContext(): AudioContext {
   if (!sharedCtx || sharedCtx.state === "closed") {
-    const Ctx =
-      window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     sharedCtx = new Ctx();
   }
   if (sharedCtx.state === "suspended") void sharedCtx.resume().catch(() => undefined);
@@ -106,7 +102,7 @@ let aiVoiceStatus: Promise<boolean> | null = null;
 /** Whether the server can do AI voice (has a Gemini key). Cached for the page. */
 export function aiVoiceAvailable(): Promise<boolean> {
   aiVoiceStatus ??= fetch("/api/voice/status")
-    .then(r => (r.ok ? r.json() : { ai: false }))
+    .then((r) => (r.ok ? r.json() : { ai: false }))
     .then((j: { ai?: boolean }) => Boolean(j.ai))
     .catch(() => false);
   return aiVoiceStatus;
@@ -170,14 +166,14 @@ export function thaiDeviceVoices(): SpeechSynthesisVoice[] {
   };
   return window.speechSynthesis
     .getVoices()
-    .filter(v => v.lang.toLowerCase().replace("_", "-").startsWith("th"))
+    .filter((v) => v.lang.toLowerCase().replace("_", "-").startsWith("th"))
     .sort((a, b) => score(b) - score(a));
 }
 
 /** getVoices() is empty until the browser has loaded them — wait up to 1.5 s. */
 function voicesReady(): Promise<void> {
   if (!window.speechSynthesis || window.speechSynthesis.getVoices().length) return Promise.resolve();
-  return new Promise(resolve => {
+  return new Promise((resolve) => {
     const done = () => resolve();
     window.speechSynthesis.addEventListener("voiceschanged", done, { once: true });
     setTimeout(done, 1500);
@@ -208,7 +204,7 @@ function speakOnDevice(text: string, rate: number, onStart?: () => void): Speech
     let first = true;
     for (const piece of chunk(text)) {
       if (stopped) return;
-      await new Promise<void>(resolve => {
+      await new Promise<void>((resolve) => {
         const u = new SpeechSynthesisUtterance(piece);
         u.lang = "th-TH";
         if (voice) u.voice = voice;
@@ -323,12 +319,7 @@ const NO_MIC = "ไม่พบไมโครโฟนในอุปกรณ�
 const INSECURE = "เบราว์เซอร์อนุญาตให้ใช้ไมโครโฟนเฉพาะเว็บที่เป็น https (หรือ localhost)";
 
 /** Mic stream + analyser, for the level meter and for recording. */
-async function openMic(): Promise<{
-  stream: MediaStream;
-  ctx: AudioContext;
-  analyser: AnalyserNode;
-  source: MediaStreamAudioSourceNode;
-}> {
+async function openMic(): Promise<{ stream: MediaStream; ctx: AudioContext; analyser: AnalyserNode; source: MediaStreamAudioSourceNode }> {
   if (!isSecureForMic()) throw new Error(INSECURE);
   if (!hasMicrophone()) throw new Error(NO_MIC);
   let stream: MediaStream;
@@ -380,7 +371,7 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
   let mic: Awaited<ReturnType<typeof openMic>> | null = null;
 
   const result = new Promise<string>((resolve, reject) => {
-    rec.onresult = event => {
+    rec.onresult = (event) => {
       interimText = "";
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const r = event.results[i];
@@ -389,7 +380,7 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
       }
       cb.onInterim?.((finalText + interimText).trim());
     };
-    rec.onerror = event => {
+    rec.onerror = (event) => {
       if (event.error === "no-speech" || event.error === "aborted") return; // onend resolves with ""
       if (event.error === "not-allowed") reject(new Error(MIC_DENIED));
       else if (event.error === "audio-capture") reject(new Error(NO_MIC));
@@ -397,7 +388,7 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
     };
     rec.onend = () => {
       cleanupMeter();
-      mic?.stream.getTracks().forEach(t => t.stop());
+      mic?.stream.getTracks().forEach((t) => t.stop());
       mic?.source.disconnect();
       resolve(cancelled ? "" : (finalText || interimText).trim());
     };
@@ -405,13 +396,12 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
 
   // Level meter is optional. Phones hand the microphone to one user at a time, so
   // opening it a second time there would starve the recogniser — skip it.
-  if (!isMobileDevice())
-    void openMic()
-      .then(m => {
-        mic = m;
-        cleanupMeter = startLevelMeter(m.analyser, cb.onLevel);
-      })
-      .catch(() => undefined);
+  if (!isMobileDevice()) void openMic()
+    .then((m) => {
+      mic = m;
+      cleanupMeter = startLevelMeter(m.analyser, cb.onLevel);
+    })
+    .catch(() => undefined);
 
   try {
     rec.start();
@@ -449,9 +439,9 @@ function listenWithServer(cb: ListenCallbacks): Listening {
     let lastLoud = performance.now();
     const startedAt = performance.now();
 
-    await new Promise<void>(resolve => {
+    await new Promise<void>((resolve) => {
       stopNow = resolve;
-      processor.onaudioprocess = e => {
+      processor.onaudioprocess = (e) => {
         const input = e.inputBuffer.getChannelData(0);
         chunks.push(new Float32Array(input));
         const level = rms(input);
@@ -472,7 +462,7 @@ function listenWithServer(cb: ListenCallbacks): Listening {
     processor.disconnect();
     source.disconnect();
     cleanupMeter();
-    stream.getTracks().forEach(t => t.stop());
+    stream.getTracks().forEach((t) => t.stop());
     const sampleRate = ctx.sampleRate;
     if (cancelled || !heardSpeech) return "";
 
@@ -545,12 +535,7 @@ function encodeWav16k(chunks: Float32Array[], inRate: number): Blob {
 export function listen(cb: ListenCallbacks, prefer?: ListenEngine): Listening {
   // (Callers decide; see preferredListenEngine.)
   if (!isSecureForMic()) {
-    return {
-      engine: "browser",
-      result: Promise.reject(new Error(INSECURE)),
-      stop: () => undefined,
-      cancel: () => undefined,
-    };
+    return { engine: "browser", result: Promise.reject(new Error(INSECURE)), stop: () => undefined, cancel: () => undefined };
   }
   const engine: ListenEngine = prefer ?? (hasBrowserRecognition() ? "browser" : "server");
   return engine === "browser" && hasBrowserRecognition() ? listenWithBrowser(cb) : listenWithServer(cb);

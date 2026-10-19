@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { connectBuildingEntrance, distanceM, locateOnPath, planCampusRoute, type WalkNetwork } from "./walkNetwork";
+import {
+  connectBuildingEntrance,
+  distanceM,
+  locateOnPath,
+  planCampusRoute,
+  type WalkNetwork,
+} from "./walkNetwork";
 
 // ~1e-4 deg ≈ 11 m. An L-shaped walkway: west→east along the bottom, then north.
 //
@@ -38,7 +44,7 @@ describe("planCampusRoute", () => {
 
   it("gives turn-by-turn steps with landmarks and path names", () => {
     const route = planCampusRoute(L_SHAPE, at(0, 0.0001), target)!;
-    const text = route.steps.map(s => s.instruction);
+    const text = route.steps.map((s) => s.instruction);
     expect(route.steps[0].maneuver).toBe("depart");
     expect(text[0]).toContain("ทิศตะวันออก");
     // East then north = a left turn at the canteen, onto the named path.
@@ -61,34 +67,20 @@ describe("planCampusRoute", () => {
   it("returns null when the building is on an unconnected island", () => {
     const island: WalkNetwork = {
       ...L_SHAPE,
-      nodes: [
-        ...L_SHAPE.nodes,
-        { id: "X", ...at(0.005, 0.005) },
-        { id: "Y", ...at(0.005, 0.0052), buildingId: "island" },
-      ],
+      nodes: [...L_SHAPE.nodes, { id: "X", ...at(0.005, 0.005) }, { id: "Y", ...at(0.005, 0.0052), buildingId: "island" }],
       edges: [...L_SHAPE.edges, { a: "X", b: "Y" }],
     };
-    expect(
-      planCampusRoute(island, at(0, 0.0001), { ...at(0.005, 0.0052), buildingId: "island", name: "เกาะ" })
-    ).toBeNull();
+    expect(planCampusRoute(island, at(0, 0.0001), { ...at(0.005, 0.0052), buildingId: "island", name: "เกาะ" })).toBeNull();
   });
 });
 
 describe("connectBuildingEntrance", () => {
   it("links a building to the nearest walkway by splitting it", () => {
-    const { network, linkDistance } = connectBuildingEntrance(L_SHAPE, {
-      id: "south",
-      name: "อาคารใต้",
-      ...at(-0.0002, 0.001),
-    });
+    const { network, linkDistance } = connectBuildingEntrance(L_SHAPE, { id: "south", name: "อาคารใต้", ...at(-0.0002, 0.001) });
     expect(linkDistance).toBeGreaterThan(15);
     expect(linkDistance).toBeLessThan(30);
-    expect(network.nodes.find(n => n.buildingId === "south")).toBeTruthy();
-    const route = planCampusRoute(network, at(0, 0.0001), {
-      ...at(-0.0002, 0.001),
-      buildingId: "south",
-      name: "อาคารใต้",
-    });
+    expect(network.nodes.find((n) => n.buildingId === "south")).toBeTruthy();
+    const route = planCampusRoute(network, at(0, 0.0001), { ...at(-0.0002, 0.001), buildingId: "south", name: "อาคารใต้" });
     expect(route?.steps.at(-1)?.maneuver).toBe("arrive");
   });
 });

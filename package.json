@@ -11,7 +11,7 @@
     "format": "prettier --write .",
     "test": "vitest run",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
-    "db:seed": "tsx server/campus/seed.ts",
+    "db:seed": "tsx server/seed.ts",
     "news:sync": "tsx scripts/syncNews.ts"
   },
   "dependencies": {

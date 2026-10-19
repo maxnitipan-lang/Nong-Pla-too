@@ -107,24 +107,9 @@ export const CAMPUS_OVERVIEW = {
 };
 
 export const DEFAULT_GALLERY: GalleryImage[] = [
-  {
-    id: "workshop",
-    url: "/manus-storage/workshop-class_7b9c890d.jpg",
-    caption: "บรรยากาศการเรียนรู้แบบลงมือทำ",
-    alt: "ห้องเรียนเชิงปฏิบัติการ",
-  },
-  {
-    id: "lab",
-    url: "/manus-storage/modern-lab_369cb2fd.jpeg",
-    caption: "ห้องปฏิบัติการพร้อมใช้งาน",
-    alt: "ห้องปฏิบัติการสมัยใหม่",
-  },
-  {
-    id: "training",
-    url: "/manus-storage/training-space_8dd5d5f6.jpg",
-    caption: "พื้นที่ฝึกทักษะสายอาชีพ",
-    alt: "นักเรียนในห้องฝึกทักษะ",
-  },
+  { id: "workshop", url: "/manus-storage/workshop-class_7b9c890d.jpg", caption: "บรรยากาศการเรียนรู้แบบลงมือทำ", alt: "ห้องเรียนเชิงปฏิบัติการ" },
+  { id: "lab", url: "/manus-storage/modern-lab_369cb2fd.jpeg", caption: "ห้องปฏิบัติการพร้อมใช้งาน", alt: "ห้องปฏิบัติการสมัยใหม่" },
+  { id: "training", url: "/manus-storage/training-space_8dd5d5f6.jpg", caption: "พื้นที่ฝึกทักษะสายอาชีพ", alt: "นักเรียนในห้องฝึกทักษะ" },
 ];
 
 /** Generic demo departments — only used as a placeholder for a freshly-created building that has no real department data yet. */
@@ -134,8 +119,7 @@ export const DEFAULT_DEPARTMENTS: DepartmentProfile[] = [
     floor: 3,
     name: "เทคโนโลยีธุรกิจดิจิทัล",
     code: "DBT",
-    description:
-      "เรียนรู้การใช้เทคโนโลยีเพื่อสร้างธุรกิจยุคใหม่ ตั้งแต่การจัดการข้อมูล สื่อดิจิทัล ไปจนถึงการวางแผนธุรกิจออนไลน์",
+    description: "เรียนรู้การใช้เทคโนโลยีเพื่อสร้างธุรกิจยุคใหม่ ตั้งแต่การจัดการข้อมูล สื่อดิจิทัล ไปจนถึงการวางแผนธุรกิจออนไลน์",
     skills: ["การวิเคราะห์ข้อมูล", "การออกแบบสื่อดิจิทัล", "การจัดการธุรกิจออนไลน์"],
     careers: ["Digital Marketer", "Content Creator", "เจ้าหน้าที่ธุรกิจดิจิทัล"],
     activities: ["เวิร์กช็อปออกแบบสื่อ", "ฝึกทำธุรกิจจำลอง", "กิจกรรมสร้างแบรนด์ออนไลน์"],
@@ -169,10 +153,7 @@ function buildDepartments(building: { id: string; floorsDetail: Floor[]; accent:
   }));
 }
 
-type RawBuilding = Omit<CampusBuilding, "departments" | "gallery" | "latitude" | "longitude"> & {
-  latitude: number;
-  longitude: number;
-};
+type RawBuilding = Omit<CampusBuilding, "departments" | "gallery" | "latitude" | "longitude"> & { latitude: number; longitude: number };
 
 // อาคาร/หน่วยงาน 22 จุด + พิกัดจริง นำเข้าจาก Google My Maps ของวิทยาลัย (KMZ + สเปรดชีต, ก.ย. 2569)
 const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
@@ -206,13 +187,7 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
     accent: "#e8863f",
     latitude: 13.4204089013263,
     longitude: 100.010475464028,
-    floorsDetail: [
-      {
-        level: 1,
-        label: "แผนกวิชา / หน่วยงาน",
-        rooms: ["สาขาวิชาอิเล็กทรอนิกส์ / เทคโนโลยีสารสนเทศ", "สาขาวิชาเทคนิคคอมพิวเตอร์"],
-      },
-    ],
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาอิเล็กทรอนิกส์ / เทคโนโลยีสารสนเทศ", "สาขาวิชาเทคนิคคอมพิวเตอร์"] }],
   },
   {
     id: "electrical-construction",
@@ -244,13 +219,7 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
     accent: "#e8863f",
     latitude: 13.4193720017185,
     longitude: 100.011311702798,
-    floorsDetail: [
-      {
-        level: 1,
-        label: "แผนกวิชา / หน่วยงาน",
-        rooms: ["สาขาวิชาช่างเชื่อมโลหะ", "สาขาวิชาเมคคาทรอนิกส์และหุ่นยนต์", "สาขาวิชาการจัดการสำนักงาน"],
-      },
-    ],
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างเชื่อมโลหะ", "สาขาวิชาเมคคาทรอนิกส์และหุ่นยนต์", "สาขาวิชาการจัดการสำนักงาน"] }],
   },
   {
     id: "general-subjects",
@@ -346,13 +315,7 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
     accent: "#6b7a86",
     latitude: 13.4191765796198,
     longitude: 100.010118496356,
-    floorsDetail: [
-      {
-        level: 1,
-        label: "แผนกวิชา / หน่วยงาน",
-        rooms: ["ฝ่ายบริหารทรัพยากร", "ฝ่ายยุทธศาสตร์และแผนงาน", "ฝ่ายกิจการนักเรียนนักศึกษา", "ฝ่ายวิชาการ"],
-      },
-    ],
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายบริหารทรัพยากร", "ฝ่ายยุทธศาสตร์และแผนงาน", "ฝ่ายกิจการนักเรียนนักศึกษา", "ฝ่ายวิชาการ"] }],
   },
   {
     id: "ivec-central-5",
@@ -448,13 +411,7 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
     accent: "#e8863f",
     latitude: 13.419732967845,
     longitude: 100.011070041427,
-    floorsDetail: [
-      {
-        level: 1,
-        label: "แผนกวิชา / หน่วยงาน",
-        rooms: ["สาขาวิชาเทคโนโลยีธุรกิจดิจิทัล", "สาขาวิชาเขียนแบบเครื่องกล"],
-      },
-    ],
+    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาเทคโนโลยีธุรกิจดิจิทัล", "สาขาวิชาเขียนแบบเครื่องกล"] }],
   },
   {
     id: "construction-workshop",
@@ -554,7 +511,7 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
   },
 ];
 
-export const CAMPUS_BUILDINGS: CampusBuilding[] = RAW_CAMPUS_BUILDINGS.map(building => ({
+export const CAMPUS_BUILDINGS: CampusBuilding[] = RAW_CAMPUS_BUILDINGS.map((building) => ({
   ...building,
   latitude: String(building.latitude),
   longitude: String(building.longitude),

@@ -10,52 +10,30 @@
 
 import fs from "node:fs";
 import { CAMPUS_BUILDINGS } from "../shared/campus";
-import {
-  connectBuildingEntrance,
-  distanceM,
-  type WalkEdge,
-  type WalkNetwork,
-  type WalkNode,
-} from "../shared/walkNetwork";
+import { connectBuildingEntrance, distanceM, type WalkEdge, type WalkNetwork, type WalkNode } from "../shared/walkNetwork";
 
 type OsmWay = { id: number; nodes: number[]; geometry: { lat: number; lon: number }[]; tags: Record<string, string> };
 
-const WALKABLE = new Set([
-  "service",
-  "residential",
-  "path",
-  "footway",
-  "pedestrian",
-  "living_street",
-  "unclassified",
-  "track",
-  "steps",
-]);
+const WALKABLE = new Set(["service", "residential", "path", "footway", "pedestrian", "living_street", "unclassified", "track", "steps"]);
 const ROADS = new Set(["secondary", "secondary_link", "tertiary", "primary"]);
 const PAD_M = 50;
 
 const osm = JSON.parse(fs.readFileSync("scripts/data/campus-osm.json", "utf8")) as { elements: OsmWay[] };
-const ways = osm.elements.filter(w => w.tags?.highway);
+const ways = osm.elements.filter((w) => w.tags?.highway);
 
 // Campus box = all buildings + padding.
-const lats = CAMPUS_BUILDINGS.map(b => Number(b.latitude));
-const lngs = CAMPUS_BUILDINGS.map(b => Number(b.longitude));
+const lats = CAMPUS_BUILDINGS.map((b) => Number(b.latitude));
+const lngs = CAMPUS_BUILDINGS.map((b) => Number(b.longitude));
 const padLat = PAD_M / 110_574;
 const padLng = PAD_M / (111_320 * Math.cos((13.42 * Math.PI) / 180));
-const box = {
-  s: Math.min(...lats) - padLat,
-  n: Math.max(...lats) + padLat,
-  w: Math.min(...lngs) - padLng,
-  e: Math.max(...lngs) + padLng,
-};
-const inside = (p: { lat: number; lon: number }) =>
-  p.lat >= box.s && p.lat <= box.n && p.lon >= box.w && p.lon <= box.e;
+const box = { s: Math.min(...lats) - padLat, n: Math.max(...lats) + padLat, w: Math.min(...lngs) - padLng, e: Math.max(...lngs) + padLng };
+const inside = (p: { lat: number; lon: number }) => p.lat >= box.s && p.lat <= box.n && p.lon >= box.w && p.lon <= box.e;
 
 const nodes = new Map<string, WalkNode>();
 const edges: WalkEdge[] = [];
-const roadNodeIds = new Set(ways.filter(w => ROADS.has(w.tags.highway)).flatMap(w => w.nodes.map(String)));
+const roadNodeIds = new Set(ways.filter((w) => ROADS.has(w.tags.highway)).flatMap((w) => w.nodes.map(String)));
 
-for (const way of ways.filter(w => WALKABLE.has(w.tags.highway))) {
+for (const way of ways.filter((w) => WALKABLE.has(w.tags.highway))) {
   for (let i = 1; i < way.nodes.length; i++) {
     const pa = way.geometry[i - 1];
     const pb = way.geometry[i];
@@ -105,12 +83,7 @@ function components(net: WalkNetwork) {
 let net: WalkNetwork = network;
 let entranceCount = 0;
 for (const b of CAMPUS_BUILDINGS) {
-  const result = connectBuildingEntrance(net, {
-    id: b.id,
-    name: b.shortName,
-    lat: Number(b.latitude),
-    lng: Number(b.longitude),
-  });
+  const result = connectBuildingEntrance(net, { id: b.id, name: b.shortName, lat: Number(b.latitude), lng: Number(b.longitude) });
   if (!Number.isFinite(result.linkDistance)) continue;
   net = result.network;
   entranceCount++;
@@ -120,20 +93,18 @@ network.nodes = net.nodes;
 network.edges = net.edges;
 
 const comp = components(network);
-const useful = new Set(network.nodes.filter(n => n.buildingId).map(n => comp.get(n.id)));
-network.nodes = network.nodes.filter(n => useful.has(comp.get(n.id)));
-const kept = new Set(network.nodes.map(n => n.id));
-network.edges = network.edges.filter(e => kept.has(e.a) && kept.has(e.b));
+const useful = new Set(network.nodes.filter((n) => n.buildingId).map((n) => comp.get(n.id)));
+network.nodes = network.nodes.filter((n) => useful.has(comp.get(n.id)));
+const kept = new Set(network.nodes.map((n) => n.id));
+network.edges = network.edges.filter((e) => kept.has(e.a) && kept.has(e.b));
 
 // Round coordinates to ~1 cm to keep the file small.
-network.nodes = network.nodes.map(n => ({ ...n, lat: Number(n.lat.toFixed(7)), lng: Number(n.lng.toFixed(7)) }));
+network.nodes = network.nodes.map((n) => ({ ...n, lat: Number(n.lat.toFixed(7)), lng: Number(n.lng.toFixed(7)) }));
 
 fs.writeFileSync("shared/data/campusWalkNetwork.json", JSON.stringify(network, null, 1) + "\n");
 const total = network.edges.reduce((s, e) => {
-  const a = network.nodes.find(n => n.id === e.a)!;
-  const b = network.nodes.find(n => n.id === e.b)!;
+  const a = network.nodes.find((n) => n.id === e.a)!;
+  const b = network.nodes.find((n) => n.id === e.b)!;
   return s + distanceM(a, b);
 }, 0);
-console.log(
-  `\n${network.nodes.length} nodes, ${network.edges.length} edges, ${Math.round(total)} m of path, ${entranceCount} entrances, ${network.nodes.filter(n => n.gate).length} gates, ${new Set(comp.values()).size} components before pruning`
-);
+console.log(`\n${network.nodes.length} nodes, ${network.edges.length} edges, ${Math.round(total)} m of path, ${entranceCount} entrances, ${network.nodes.filter((n) => n.gate).length} gates, ${new Set(comp.values()).size} components before pruning`);

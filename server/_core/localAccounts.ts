@@ -55,9 +55,7 @@ export function mintUserToken(openId: string, passwordHash: string): string {
 }
 
 /** The openId a token claims (not yet verified — check with verifyUserToken). */
-export function readUserToken(
-  token: string | undefined | null
-): { openId: string; issued: string; sig: string } | null {
+export function readUserToken(token: string | undefined | null): { openId: string; issued: string; sig: string } | null {
   if (!token) return null;
   const [id, issued, sig] = token.split(".");
   if (!id || !issued || !sig) return null;

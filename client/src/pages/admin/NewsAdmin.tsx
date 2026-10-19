@@ -9,7 +9,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Switch } from "@/components/ui/switch";
 import { trpc } from "@/lib/trpc";
 import { newsInputSchema } from "@shared/adminSchemas";
@@ -85,7 +91,7 @@ export default function NewsAdmin() {
       toast.success("บันทึกข่าวแล้ว");
       setOpen(false);
     },
-    onError: e => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
   const remove = trpc.admin.news.delete.useMutation({
     onSuccess: () => {
@@ -93,17 +99,18 @@ export default function NewsAdmin() {
       toast.success("ลบข่าวแล้ว");
       setDeleteId(null);
     },
-    onError: e => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
   const sync = trpc.admin.news.syncFromWebsite.useMutation({
-    onSuccess: res => {
+    onSuccess: (res) => {
       invalidate();
       toast.success(`ดึงข่าวจากเว็บวิทยาลัยแล้ว ${res.imported} รายการ`);
     },
-    onError: e => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm(prev => ({ ...prev, [key]: value }));
+  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const openCreate = () => {
     setEditingId(null);
@@ -138,30 +145,37 @@ export default function NewsAdmin() {
     save.mutate(parsed.data);
   };
 
-  const deleteTitle = useMemo(() => data?.find(n => n.id === deleteId)?.title ?? "", [data, deleteId]);
+  const deleteTitle = useMemo(
+    () => data?.find((n) => n.id === deleteId)?.title ?? "",
+    [data, deleteId],
+  );
 
   return (
     <AdminShell section="news" title="จัดการข่าวสาร">
       <DbBanner />
-      {canEdit && (
-        <div className="mb-4 flex flex-wrap justify-end gap-2">
-          <Button variant="outline" onClick={() => sync.mutate()} disabled={sync.isPending}>
-            <RefreshCw size={16} className={sync.isPending ? "animate-spin" : ""} />
-            {sync.isPending ? "กำลังดึง…" : "ดึงข่าวจากเว็บวิทยาลัย"}
-          </Button>
-          <Button onClick={openCreate}>
-            <Plus size={16} /> เพิ่มข่าว
-          </Button>
-        </div>
-      )}
+      {canEdit && <div className="mb-4 flex flex-wrap justify-end gap-2">
+        <Button variant="outline" onClick={() => sync.mutate()} disabled={sync.isPending}>
+          <RefreshCw size={16} className={sync.isPending ? "animate-spin" : ""} />
+          {sync.isPending ? "กำลังดึง…" : "ดึงข่าวจากเว็บวิทยาลัย"}
+        </Button>
+        <Button onClick={openCreate}>
+          <Plus size={16} /> เพิ่มข่าว
+        </Button>
+      </div>}
 
       {isLoading ? (
         <p className="text-sm text-[var(--muted-foreground)]">กำลังโหลด…</p>
       ) : (
         <div className="space-y-2">
-          {data?.map(n => (
-            <div key={n.id} className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-card p-4">
-              <span className="h-10 w-1.5 shrink-0 rounded-full" style={{ backgroundColor: n.accent }} />
+          {data?.map((n) => (
+            <div
+              key={n.id}
+              className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-card p-4"
+            >
+              <span
+                className="h-10 w-1.5 shrink-0 rounded-full"
+                style={{ backgroundColor: n.accent }}
+              />
               <div className="min-w-0 flex-1">
                 <div className="flex items-center gap-2">
                   <p className="truncate text-sm font-bold text-[var(--ink)]">{n.title}</p>
@@ -180,26 +194,22 @@ export default function NewsAdmin() {
                   {n.tag} · {n.date}
                 </p>
               </div>
-              {canEdit && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => openEdit(n)}
-                    className="rounded-lg p-2 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-                    aria-label="แก้ไข"
-                  >
-                    <Pencil size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteId(n.id)}
-                    className="rounded-lg p-2 text-[var(--destructive)] hover:bg-[var(--muted)]"
-                    aria-label="ลบ"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </>
-              )}
+              {canEdit && <><button
+                type="button"
+                onClick={() => openEdit(n)}
+                className="rounded-lg p-2 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+                aria-label="แก้ไข"
+              >
+                <Pencil size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteId(n.id)}
+                className="rounded-lg p-2 text-[var(--destructive)] hover:bg-[var(--muted)]"
+                aria-label="ลบ"
+              >
+                <Trash2 size={15} />
+              </button></>}
             </div>
           ))}
           {!data?.length && (
@@ -221,25 +231,29 @@ export default function NewsAdmin() {
               label="รหัส (id)"
               hint="a-z, 0-9, - — เปลี่ยนภายหลังไม่ได้"
               value={form.id}
-              onChange={v => set("id", v)}
+              onChange={(v) => set("id", v)}
               disabled={!!editingId}
               placeholder="open-house-2026"
             />
-            <TextField label="ป้ายกำกับ" value={form.tag} onChange={v => set("tag", v)} />
+            <TextField label="ป้ายกำกับ" value={form.tag} onChange={(v) => set("tag", v)} />
           </div>
-          <TextField label="หัวข้อ" value={form.title} onChange={v => set("title", v)} />
-          <TextAreaField label="เนื้อหาย่อ" value={form.excerpt} onChange={v => set("excerpt", v)} />
+          <TextField label="หัวข้อ" value={form.title} onChange={(v) => set("title", v)} />
+          <TextAreaField
+            label="เนื้อหาย่อ"
+            value={form.excerpt}
+            onChange={(v) => set("excerpt", v)}
+          />
           <div className="grid gap-4 sm:grid-cols-2">
             <TextField
               label="วันที่ (ข้อความ)"
               value={form.dateLabel}
-              onChange={v => set("dateLabel", v)}
+              onChange={(v) => set("dateLabel", v)}
               placeholder="18 ก.ย. 2569"
             />
             <TextField
               label="เวลา / สถานะ"
               value={form.timeLabel}
-              onChange={v => set("timeLabel", v)}
+              onChange={(v) => set("timeLabel", v)}
               placeholder="09:00–15:30 น."
             />
           </div>
@@ -247,22 +261,27 @@ export default function NewsAdmin() {
             label="ลิงก์ข่าว (ไม่บังคับ)"
             hint="คลิกการ์ดข่าวแล้วเปิดหน้านี้"
             value={form.link}
-            onChange={v => set("link", v)}
+            onChange={(v) => set("link", v)}
             placeholder="https://www.sstc.ac.th/news-detail_325_..."
           />
           <TextField
             label="ลิงก์รูปภาพ (ไม่บังคับ)"
             value={form.imageUrl}
-            onChange={v => set("imageUrl", v)}
+            onChange={(v) => set("imageUrl", v)}
             placeholder="https://..."
           />
           <div className="grid gap-4 sm:grid-cols-2">
-            <ColorField label="สีเน้น" value={form.accent} onChange={v => set("accent", v)} />
-            <NumberField label="ลำดับการแสดง" value={form.sortOrder} onChange={v => set("sortOrder", v)} min={0} />
+            <ColorField label="สีเน้น" value={form.accent} onChange={(v) => set("accent", v)} />
+            <NumberField
+              label="ลำดับการแสดง"
+              value={form.sortOrder}
+              onChange={(v) => set("sortOrder", v)}
+              min={0}
+            />
           </div>
           <Field label="การเผยแพร่">
             <div className="flex items-center gap-2">
-              <Switch checked={form.published} onCheckedChange={v => set("published", v)} />
+              <Switch checked={form.published} onCheckedChange={(v) => set("published", v)} />
               <span className="text-sm text-[var(--muted-foreground)]">
                 {form.published ? "เผยแพร่บนหน้าเว็บ" : "เก็บเป็นฉบับร่าง"}
               </span>
@@ -280,7 +299,7 @@ export default function NewsAdmin() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteId} onOpenChange={v => !v && setDeleteId(null)}>
+      <AlertDialog open={!!deleteId} onOpenChange={(v) => !v && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>ลบข่าว “{deleteTitle}”?</AlertDialogTitle>

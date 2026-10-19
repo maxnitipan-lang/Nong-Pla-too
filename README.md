@@ -2,8 +2,6 @@
 
 ระบบประชาสัมพันธ์อัจฉริยะของวิทยาลัยเทคนิคสมุทรสงคราม — ผู้มาติดต่อถามทางหรือถามข้อมูลวิทยาลัยกับ "น้องปลาทู" ได้ด้วยการพิมพ์หรือพูดภาษาไทย แล้วดูเส้นทางเดินไปยังอาคารบนแผนที่ได้ทันที
 
-**มือใหม่อ่านก่อน:** [START_HERE.md](START_HERE.md) — แต่ละโฟลเดอร์ทำอะไร อยากแก้อะไรเปิดไฟล์ไหน
-
 **ลองใช้งาน:** https://nong-pla-too.onrender.com/
 (โฮสต์แบบฟรี ครั้งแรกที่เปิดอาจรอประมาณ 1 นาทีให้เซิร์ฟเวอร์ตื่น)
 
@@ -66,45 +64,16 @@ flowchart LR
 ## โครงสร้างโค้ด
 
 ```
-client/                     หน้าเว็บ (React)
-  public/                   ไฟล์ที่เปิดตรงๆ ได้: รูป, ไอคอน PWA, manifest, service worker
-    images/buildings/       รูปบนหมุดอาคาร
-    images/departments/     โลโก้สาขาวิชา
-    images/kiosk/           รูปตัวละครน้องปลาทู
-  src/
-    pages/
-      kiosk/                หน้าตู้ Kiosk  ( / )
-      mobile/               แอปมือถือ ใช้ GPS  ( /app )
-      explore/              หน้าสำรวจวิทยาลัย  ( /explore )
-      admin/                หน้าเจ้าหน้าที่  ( /admin/... )
-    components/
-      map/                  แผนที่ Leaflet, แผงนำทางทีละโค้ง, ตัวเลือกจุดบนแผนที่
-      assistant/            แชตบอตน้องปลาทู + โต้ตอบด้วยเสียง
-      common/               QR code, ปุ่มติดตั้งแอป, ตัวจับ error
-      admin/                ส่วนประกอบของหน้า admin (นำเข้าจาก Google My Maps)
-      ui/                   ปุ่ม/ฟอร์มพื้นฐาน (shadcn/ui)
-    hooks/                  useCampusNavigation (นำทาง), useIdle (รีเซ็ตตู้) ฯลฯ
-    lib/                    เสียง (voice.ts), ระยะทาง/GPS (directions.ts), tRPC
-    config/kioskAssets.ts   ตั้งค่ารูป: ตัวละคร, โลโก้สาขา, รูปบนหมุดอาคาร
-server/                     ระบบหลังบ้าน (Express + tRPC)
-  routers.ts                รวม API ทั้งหมด (ชื่อเดียวกับแอปเก่า)
-  db.ts                     คำสั่งฐานข้อมูล
-  assistant/chat.ts         แชตบอต: ส่งคำถามให้ Gemini พร้อมข้อมูลวิทยาลัย
-  assistant/voice.ts        เสียงพูด/ฟังภาษาไทย พร้อมจำกัดจำนวนคำขอและแคช
-  campus/walkingRoute.ts    เส้นทางเดินนอกวิทยาลัยจาก OpenRouteService
-  campus/newsScraper.ts     ดึงข่าวจากเว็บไซต์วิทยาลัย
-  campus/seed.ts            ใส่ข้อมูลตั้งต้นลงฐานข้อมูล
-  admin/adminRouter.ts      API สำหรับเจ้าหน้าที่ (อาคาร, ข่าว, ทางเดิน, ผู้ใช้)
-  _core/                    ระบบพื้นฐาน: เซิร์ฟเวอร์, ล็อกอิน, cookie, สิทธิ์
-  tests/                    ชุดทดสอบฝั่งเซิร์ฟเวอร์
-shared/                     ใช้ร่วมกันทั้งสองฝั่ง
-  campus.ts                 ข้อมูลอาคาร 22 จุด พิกัด ห้อง สาขา
-  walkNetwork.ts            คำนวณเส้นทางเดินจริง + คำบอกทางเลี้ยว
-  data/campusWalkNetwork.json  เส้นทางเดินในวิทยาลัย
-  roles.ts                  สิทธิ์ admin / editor / viewer
-drizzle/                    โครงสร้างตารางและ migration
-scripts/                    คำสั่งช่วย: ดึงข่าว (news:sync), สร้างเส้นทางเดินจาก OSM
-docs/                       เอกสารประกอบ และบันทึกการออกแบบ
+client/    หน้าเว็บ (React) — หน้า Kiosk, หน้ามือถือ, หน้า admin
+server/    ระบบหลังบ้าน (Express + tRPC)
+  chat.ts          แชตบอต: ส่งคำถามให้ Gemini พร้อมข้อมูลวิทยาลัย และเครื่องมือแสดงเส้นทาง
+  voice.ts         เสียงพูด/ฟังภาษาไทย พร้อมจำกัดจำนวนคำขอและแคชผลลัพธ์
+  walkingRoute.ts  ขอเส้นทางเดินจาก OpenRouteService
+  newsScraper.ts   ดึงข่าวจากเว็บไซต์วิทยาลัย
+  adminRouter.ts   API สำหรับเจ้าหน้าที่ และระบบล็อกอิน
+  db.ts            คำสั่งฐานข้อมูล
+drizzle/   โครงสร้างตารางและ migration
+shared/    ข้อมูลและชนิดข้อมูลที่ใช้ร่วมกันทั้งสองฝั่ง
 ```
 
 ## วิธีรันบนเครื่อง

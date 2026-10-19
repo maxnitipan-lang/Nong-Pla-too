@@ -45,7 +45,7 @@ export const galleryImageSchema = z.object({
     .string()
     .trim()
     .max(500)
-    .refine(v => /^https:\/\//.test(v) || v.startsWith("/"), "ต้องเป็นลิงก์ https:// หรือ path ในเว็บ (/...)"),
+    .refine((v) => /^https:\/\//.test(v) || v.startsWith("/"), "ต้องเป็นลิงก์ https:// หรือ path ในเว็บ (/...)"),
   caption: z.string().trim().max(200).default(""),
   alt: z.string().trim().max(200).default(""),
 });
@@ -96,13 +96,13 @@ export const newsInputSchema = z.object({
     .string()
     .trim()
     .max(500)
-    .refine(v => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์ http(s)")
+    .refine((v) => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์ http(s)")
     .default(""),
   imageUrl: z
     .string()
     .trim()
     .max(500)
-    .refine(v => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์รูปภาพ http(s)")
+    .refine((v) => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์รูปภาพ http(s)")
     .default(""),
   source: z.string().trim().max(80).default(""),
   published: z.boolean().default(true),
@@ -117,14 +117,17 @@ export const settingsInputSchema = z.object({
     .string()
     .trim()
     .max(320)
-    .refine(v => v === "" || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), "อีเมลไม่ถูกต้อง"),
+    .refine(
+      (v) => v === "" || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+      "อีเมลไม่ถูกต้อง",
+    ),
   mapEmbedUrl: z
     .string()
     .trim()
     .max(1000)
     .refine(
-      v => v === "" || /^https:\/\/(www\.)?google\.com\/maps\/d\/embed\?mid=/.test(v),
-      "ต้องเป็นลิงก์ฝัง Google My Maps (https://www.google.com/maps/d/embed?mid=...)"
+      (v) => v === "" || /^https:\/\/(www\.)?google\.com\/maps\/d\/embed\?mid=/.test(v),
+      "ต้องเป็นลิงก์ฝัง Google My Maps (https://www.google.com/maps/d/embed?mid=...)",
     ),
   mapCenterLat: z.number().min(-90).max(90),
   mapCenterLng: z.number().min(-180).max(180),
@@ -173,14 +176,14 @@ export const walkNetworkSchema = z
           name: z.string().trim().max(120).optional(),
           buildingId: z.string().trim().max(64).optional(),
           gate: z.boolean().optional(),
-        })
+        }),
       )
       .max(5000),
     edges: z
       .array(z.object({ a: walkIdSchema, b: walkIdSchema, name: z.string().trim().max(120).optional() }))
       .max(10000),
   })
-  .refine(net => {
-    const ids = new Set(net.nodes.map(n => n.id));
-    return ids.size === net.nodes.length && net.edges.every(e => ids.has(e.a) && ids.has(e.b) && e.a !== e.b);
+  .refine((net) => {
+    const ids = new Set(net.nodes.map((n) => n.id));
+    return ids.size === net.nodes.length && net.edges.every((e) => ids.has(e.a) && ids.has(e.b) && e.a !== e.b);
   }, "โครงข่ายทางเดินไม่ถูกต้อง: มีจุดซ้ำ หรือมีเส้นที่ต่อกับจุดที่ไม่มีอยู่");

@@ -60,7 +60,11 @@ const buildEndpoint = (rpc: string): string => {
   return new URL(`${SERVICE}/${rpc}`, normalizedBase).toString();
 };
 
-const callForge = async <T>(rpc: string, body: Record<string, unknown>, userSession: string): Promise<T> => {
+const callForge = async <T>(
+  rpc: string,
+  body: Record<string, unknown>,
+  userSession: string
+): Promise<T> => {
   const endpoint = buildEndpoint(rpc);
   const headers: Record<string, string> = {
     accept: "application/json",
@@ -95,7 +99,11 @@ const callForge = async <T>(rpc: string, body: Record<string, unknown>, userSess
   return (await response.json()) as T;
 };
 
-const mapForgeError = (response: Response, detail: string, rpc: string): TRPCError => {
+const mapForgeError = (
+  response: Response,
+  detail: string,
+  rpc: string
+): TRPCError => {
   const status = response.status;
   let code: TRPCError["code"] = "INTERNAL_SERVER_ERROR";
   if (status === 401) code = "UNAUTHORIZED";
@@ -167,11 +175,18 @@ export async function updateHeartbeatJob(
   }
   if (patch.description !== undefined) body.description = patch.description;
   if (patch.enable !== undefined) body.enable = patch.enable;
-  return callForge<{ nextExecutionAt?: string | null }>("UpdateHeartbeatJob", body, userSession);
+  return callForge<{ nextExecutionAt?: string | null }>(
+    "UpdateHeartbeatJob",
+    body,
+    userSession
+  );
 }
 
 /** Delete a cron located by `taskUid`. Idempotent on caller side. */
-export async function deleteHeartbeatJob(taskUid: string, userSession: string): Promise<void> {
+export async function deleteHeartbeatJob(
+  taskUid: string,
+  userSession: string
+): Promise<void> {
   await callForge("DeleteHeartbeatJob", { taskUid }, userSession);
 }
 

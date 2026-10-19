@@ -108,14 +108,10 @@ export function bearingDeg(a: LatLng, b: LatLng): number {
 /** Closest point to `p` on segment a–b, with t ∈ [0,1] and the distance in metres. */
 export function projectOnSegment(p: LatLng, a: LatLng, b: LatLng) {
   const k = mPerDegLng(p.lat);
-  const ax = a.lng * k,
-    ay = a.lat * M_PER_DEG_LAT;
-  const bx = b.lng * k,
-    by = b.lat * M_PER_DEG_LAT;
-  const px = p.lng * k,
-    py = p.lat * M_PER_DEG_LAT;
-  const dx = bx - ax,
-    dy = by - ay;
+  const ax = a.lng * k, ay = a.lat * M_PER_DEG_LAT;
+  const bx = b.lng * k, by = b.lat * M_PER_DEG_LAT;
+  const px = p.lng * k, py = p.lat * M_PER_DEG_LAT;
+  const dx = bx - ax, dy = by - ay;
   const len2 = dx * dx + dy * dy;
   const t = len2 === 0 ? 0 : Math.max(0, Math.min(1, ((px - ax) * dx + (py - ay) * dy) / len2));
   const point = { lat: a.lat + (b.lat - a.lat) * t, lng: a.lng + (b.lng - a.lng) * t };
@@ -153,7 +149,7 @@ export function locateOnPath(path: LatLngTuple[], p: LatLng): { along: number; o
 type Adjacent = { to: string; w: number; name?: string };
 
 function buildGraph(network: WalkNetwork) {
-  const nodes = new Map(network.nodes.map(n => [n.id, n]));
+  const nodes = new Map(network.nodes.map((n) => [n.id, n]));
   const adj = new Map<string, Adjacent[]>();
   const link = (a: string, b: string, w: number, name?: string) => {
     if (!adj.has(a)) adj.set(a, []);
@@ -174,15 +170,14 @@ type Snap = { a: WalkNode; b: WalkNode; t: number; point: LatLng; distance: numb
 
 /** Nearest point on any edge. */
 export function snapToNetwork(network: WalkNetwork, p: LatLng): Snap | null {
-  const nodes = new Map(network.nodes.map(n => [n.id, n]));
+  const nodes = new Map(network.nodes.map((n) => [n.id, n]));
   let best: Snap | null = null;
   for (const e of network.edges) {
     const a = nodes.get(e.a);
     const b = nodes.get(e.b);
     if (!a || !b) continue;
     const hit = projectOnSegment(p, a, b);
-    if (!best || hit.distance < best.distance)
-      best = { a, b, t: hit.t, point: hit.point, distance: hit.distance, name: e.name };
+    if (!best || hit.distance < best.distance) best = { a, b, t: hit.t, point: hit.point, distance: hit.distance, name: e.name };
   }
   return best;
 }
@@ -196,12 +191,9 @@ function shortestPath(adj: Map<string, Adjacent[]>, start: string, targets: Set<
   while (open.size) {
     let u = "";
     let du = Infinity;
-    open.forEach(id => {
+    open.forEach((id) => {
       const d = dist.get(id)!;
-      if (d < du) {
-        du = d;
-        u = id;
-      }
+      if (d < du) { du = d; u = id; }
     });
     open.delete(u);
     closed.add(u);
@@ -262,7 +254,7 @@ export function planCampusRoute(network: WalkNetwork, from: LatLng, target: Rout
   let offCampus: CampusRoute["offCampus"];
   let startId = START;
   if (startSnap.distance > OFF_CAMPUS_M) {
-    const gates = network.nodes.filter(n => n.gate);
+    const gates = network.nodes.filter((n) => n.gate);
     const gate = gates.sort((x, y) => distanceM(from, x) - distanceM(from, y))[0];
     if (gate) {
       startId = gate.id;
@@ -277,7 +269,7 @@ export function planCampusRoute(network: WalkNetwork, from: LatLng, target: Rout
 
   // --- end: the building's entrance nodes, else the building point snapped onto the network
   const entrances = target.buildingId
-    ? network.nodes.filter(n => n.buildingId === target.buildingId).map(n => n.id)
+    ? network.nodes.filter((n) => n.buildingId === target.buildingId).map((n) => n.id)
     : [];
   let targets: Set<string>;
   if (entrances.length) {
@@ -301,8 +293,8 @@ export function planCampusRoute(network: WalkNetwork, from: LatLng, target: Rout
   if (!found) return null;
 
   // --- polyline
-  const points: LatLng[] = found.ids.map(id => nodes.get(id)!);
-  const names: (string | undefined)[] = found.ids.map(id => nodes.get(id)?.name);
+  const points: LatLng[] = found.ids.map((id) => nodes.get(id)!);
+  const names: (string | undefined)[] = found.ids.map((id) => nodes.get(id)?.name);
   const edgeNames = [...found.edgeNames];
   if (!offCampus && startSnap.distance > 3) {
     points.unshift(from);
@@ -332,16 +324,7 @@ export function planCampusRoute(network: WalkNetwork, from: LatLng, target: Rout
 // Turn-by-turn
 // ---------------------------------------------------------------------------
 
-const COMPASS = [
-  "ทิศเหนือ",
-  "ทิศตะวันออกเฉียงเหนือ",
-  "ทิศตะวันออก",
-  "ทิศตะวันออกเฉียงใต้",
-  "ทิศใต้",
-  "ทิศตะวันตกเฉียงใต้",
-  "ทิศตะวันตก",
-  "ทิศตะวันตกเฉียงเหนือ",
-];
+const COMPASS = ["ทิศเหนือ", "ทิศตะวันออกเฉียงเหนือ", "ทิศตะวันออก", "ทิศตะวันออกเฉียงใต้", "ทิศใต้", "ทิศตะวันตกเฉียงใต้", "ทิศตะวันตก", "ทิศตะวันตกเฉียงเหนือ"];
 const compassName = (deg: number) => COMPASS[Math.round(deg / 45) % 8];
 
 function classifyTurn(delta: number): Maneuver {
@@ -377,7 +360,7 @@ function buildSteps(
   points: LatLng[],
   nodeNames: (string | undefined)[],
   edgeNames: (string | undefined)[],
-  target: RouteTarget
+  target: RouteTarget,
 ): RouteStep[] {
   // Keep endpoints + vertices whose incoming segment is not tiny.
   const keep: number[] = [0];
@@ -385,10 +368,10 @@ function buildSteps(
     if (distanceM(points[keep[keep.length - 1]], points[i]) >= TINY_SEGMENT_M || nodeNames[i]) keep.push(i);
   }
   if (points.length > 1) keep.push(points.length - 1);
-  const pts = keep.map(i => points[i]);
-  const names = keep.map(i => nodeNames[i]);
+  const pts = keep.map((i) => points[i]);
+  const names = keep.map((i) => nodeNames[i]);
   // Name of the edge leaving each kept vertex = name of the first original edge after it.
-  const leaving = keep.map(i => edgeNames[i]);
+  const leaving = keep.map((i) => edgeNames[i]);
 
   const cumulative = [0];
   for (let i = 1; i < pts.length; i++) cumulative.push(cumulative[i - 1] + distanceM(pts[i - 1], pts[i]));
@@ -396,9 +379,7 @@ function buildSteps(
 
   const steps: RouteStep[] = [];
   if (pts.length < 2) {
-    return [
-      { maneuver: "arrive", instruction: `ถึง${target.name}แล้ว`, distance: 0, at: toTuple(target), startAlong: 0 },
-    ];
+    return [{ maneuver: "arrive", instruction: `ถึง${target.name}แล้ว`, distance: 0, at: toTuple(target), startAlong: 0 }];
   }
 
   const firstBearing = bearingDeg(pts[0], pts[1]);
@@ -417,10 +398,7 @@ function buildSteps(
       if (cumulative[i] >= along) {
         const seg = cumulative[i] - cumulative[i - 1];
         const t = seg === 0 ? 0 : (along - cumulative[i - 1]) / seg;
-        return {
-          lat: pts[i - 1].lat + (pts[i].lat - pts[i - 1].lat) * t,
-          lng: pts[i - 1].lng + (pts[i].lng - pts[i - 1].lng) * t,
-        };
+        return { lat: pts[i - 1].lat + (pts[i].lat - pts[i - 1].lat) * t, lng: pts[i - 1].lng + (pts[i].lng - pts[i - 1].lng) * t };
       }
     }
     return pts[pts.length - 1];
@@ -450,13 +428,7 @@ function buildSteps(
       }
       continue;
     }
-    steps.push({
-      maneuver,
-      instruction: `${MANEUVER_TEXT[maneuver]}${onto}${where}`,
-      distance: 0,
-      at: toTuple(pts[i]),
-      startAlong: cumulative[i],
-    });
+    steps.push({ maneuver, instruction: `${MANEUVER_TEXT[maneuver]}${onto}${where}`, distance: 0, at: toTuple(pts[i]), startAlong: cumulative[i] });
     lastTurn = { stepIndex: steps.length - 1, vertex: i };
   }
 
@@ -467,16 +439,9 @@ function buildSteps(
     const heading = bearingDeg(pts[n - 2], pts[n - 1]);
     const toBuilding = bearingDeg(pts[n - 2], target);
     const rel = ((toBuilding - heading + 540) % 360) - 180;
-    if (distanceM(pts[n - 1], target) > 8 && Math.abs(rel) > 20)
-      side = rel > 0 ? " (อยู่ทางขวามือ)" : " (อยู่ทางซ้ายมือ)";
+    if (distanceM(pts[n - 1], target) > 8 && Math.abs(rel) > 20) side = rel > 0 ? " (อยู่ทางขวามือ)" : " (อยู่ทางซ้ายมือ)";
   }
-  steps.push({
-    maneuver: "arrive",
-    instruction: `ถึง${target.name}${side}`,
-    distance: 0,
-    at: toTuple(pts[n - 1]),
-    startAlong: total,
-  });
+  steps.push({ maneuver: "arrive", instruction: `ถึง${target.name}${side}`, distance: 0, at: toTuple(pts[n - 1]), startAlong: total });
 
   for (let i = 0; i < steps.length - 1; i++) steps[i].distance = steps[i + 1].startAlong - steps[i].startAlong;
   return steps;
@@ -499,14 +464,8 @@ export const EMPTY_WALK_NETWORK: WalkNetwork = { version: 1, nodes: [], edges: [
  * Split edge a–b at `point` with a new node (returns the new node id), keeping
  * the edge name on both halves. Returns null if there is no such edge.
  */
-export function splitEdge(
-  network: WalkNetwork,
-  a: string,
-  b: string,
-  point: LatLng,
-  newId: string
-): WalkNetwork | null {
-  const idx = network.edges.findIndex(e => (e.a === a && e.b === b) || (e.a === b && e.b === a));
+export function splitEdge(network: WalkNetwork, a: string, b: string, point: LatLng, newId: string): WalkNetwork | null {
+  const idx = network.edges.findIndex((e) => (e.a === a && e.b === b) || (e.a === b && e.b === a));
   if (idx < 0) return null;
   const { name } = network.edges[idx];
   const edges = [...network.edges];
@@ -521,9 +480,9 @@ export function splitEdge(
  */
 export function connectBuildingEntrance(
   network: WalkNetwork,
-  building: { id: string; name: string; lat: number; lng: number }
+  building: { id: string; name: string; lat: number; lng: number },
 ): { network: WalkNetwork; linkDistance: number } {
-  if (network.nodes.some(n => n.buildingId === building.id)) return { network, linkDistance: 0 };
+  if (network.nodes.some((n) => n.buildingId === building.id)) return { network, linkDistance: 0 };
   const snap = snapToNetwork(network, building);
   if (!snap) return { network, linkDistance: Infinity };
   let next = network;
@@ -537,10 +496,7 @@ export function connectBuildingEntrance(
   const entranceId = `entrance-${building.id}`;
   next = {
     ...next,
-    nodes: [
-      ...next.nodes,
-      { id: entranceId, lat: building.lat, lng: building.lng, buildingId: building.id, name: building.name },
-    ],
+    nodes: [...next.nodes, { id: entranceId, lat: building.lat, lng: building.lng, buildingId: building.id, name: building.name }],
     edges: [...next.edges, { a: joinId, b: entranceId }],
   };
   return { network: next, linkDistance: snap.distance };
@@ -572,7 +528,7 @@ export function networkComponents(network: WalkNetwork): Map<string, number> {
 }
 
 export function networkLength(network: WalkNetwork): number {
-  const byId = new Map(network.nodes.map(n => [n.id, n]));
+  const byId = new Map(network.nodes.map((n) => [n.id, n]));
   return network.edges.reduce((sum, e) => {
     const a = byId.get(e.a);
     const b = byId.get(e.b);

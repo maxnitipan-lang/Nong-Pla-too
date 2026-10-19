@@ -9,16 +9,28 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import type { CampusBuilding, DepartmentProfile, GalleryImage } from "@shared/campus";
-import { MyMapsImport } from "@/components/admin/MyMapsImport";
+import { MyMapsImport } from "@/components/MyMapsImport";
 import { CAMPUS_CATEGORIES, buildingInputSchema } from "@shared/adminSchemas";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import { AdminShell, DbBanner, useAdminAccess } from "./AdminShell";
-import { ColorField, NumberField, SelectField, TextAreaField, TextField } from "./formKit";
+import {
+  ColorField,
+  NumberField,
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "./formKit";
 
 type FloorRow = { label: string; rooms: string };
 
@@ -63,8 +75,7 @@ const EMPTY: FormState = {
   galleryJson: "[]",
 };
 
-const DEPARTMENTS_HINT =
-  '[{"id":"auto-1","floor":1,"name":"สาขาวิชาช่างยนต์","code":"AUT","description":"","skills":[],"careers":[],"activities":["เยี่ยมชมโรงฝึก"],"accent":"#e8863f"}]';
+const DEPARTMENTS_HINT = '[{"id":"auto-1","floor":1,"name":"สาขาวิชาช่างยนต์","code":"AUT","description":"","skills":[],"careers":[],"activities":["เยี่ยมชมโรงฝึก"],"accent":"#e8863f"}]';
 const GALLERY_HINT = '[{"id":"lab","url":"https://…/lab.jpg","caption":"ห้องปฏิบัติการ","alt":"ห้องปฏิบัติการ"}]';
 
 /** Parse a JSON array field; returns an error message instead of throwing. */
@@ -94,10 +105,9 @@ function toForm(b: CampusBuilding, index: number): FormState {
     mapWidth: b.width,
     mapHeight: b.height,
     sortOrder: index,
-    floorRows: (b.floorsDetail.length ? b.floorsDetail : [{ level: 1, label: "ชั้น 1", rooms: [] }]).map(f => ({
-      label: f.label,
-      rooms: f.rooms.join(", "),
-    })),
+    floorRows: (b.floorsDetail.length ? b.floorsDetail : [{ level: 1, label: "ชั้น 1", rooms: [] }]).map(
+      (f) => ({ label: f.label, rooms: f.rooms.join(", ") }),
+    ),
     departmentsJson: JSON.stringify(b.departments ?? [], null, 2),
     galleryJson: JSON.stringify(b.gallery ?? [], null, 2),
   };
@@ -126,7 +136,7 @@ function buildPayload(form: FormState, departments: DepartmentProfile[], gallery
       label: row.label.trim() || `ชั้น ${i + 1}`,
       rooms: row.rooms
         .split(/[,\n]/)
-        .map(r => r.trim())
+        .map((r) => r.trim())
         .filter(Boolean),
     })),
   };
@@ -153,7 +163,7 @@ export default function BuildingsAdmin() {
       toast.success("บันทึกอาคารแล้ว");
       setOpen(false);
     },
-    onError: e => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
   const remove = trpc.admin.buildings.delete.useMutation({
     onSuccess: () => {
@@ -161,10 +171,11 @@ export default function BuildingsAdmin() {
       toast.success("ลบอาคารแล้ว");
       setDeleteId(null);
     },
-    onError: e => toast.error(e.message),
+    onError: (e) => toast.error(e.message),
   });
 
-  const set = <K extends keyof FormState>(key: K, value: FormState[K]) => setForm(prev => ({ ...prev, [key]: value }));
+  const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
 
   const openCreate = () => {
     setEditingId(null);
@@ -193,35 +204,33 @@ export default function BuildingsAdmin() {
     save.mutate(parsed.data);
   };
 
-  const deleteName = useMemo(() => data?.find(b => b.id === deleteId)?.name ?? "", [data, deleteId]);
+  const deleteName = useMemo(
+    () => data?.find((b) => b.id === deleteId)?.name ?? "",
+    [data, deleteId],
+  );
 
   return (
     <AdminShell section="buildings" title="จัดการอาคาร">
       <DbBanner />
-      {canEdit && (
-        <>
-          <details className="mb-4 rounded-2xl border border-[var(--border)] bg-card p-4">
-            <summary className="cursor-pointer text-sm font-bold text-[var(--ink)]">
-              นำเข้าอาคารจาก Google My Maps (CSV / KML)
-            </summary>
-            <div className="mt-4">
-              <MyMapsImport onImported={invalidate} />
-            </div>
-          </details>
-          <div className="mb-4 flex justify-end">
-            <Button onClick={openCreate}>
-              <Plus size={16} /> เพิ่มอาคาร
-            </Button>
-          </div>
-        </>
-      )}
+      {canEdit && <><details className="mb-4 rounded-2xl border border-[var(--border)] bg-card p-4">
+        <summary className="cursor-pointer text-sm font-bold text-[var(--ink)]">นำเข้าอาคารจาก Google My Maps (CSV / KML)</summary>
+        <div className="mt-4"><MyMapsImport onImported={invalidate} /></div>
+      </details>
+      <div className="mb-4 flex justify-end">
+        <Button onClick={openCreate}>
+          <Plus size={16} /> เพิ่มอาคาร
+        </Button>
+      </div></>}
 
       {isLoading ? (
         <p className="text-sm text-[var(--muted-foreground)]">กำลังโหลด…</p>
       ) : (
         <div className="space-y-2">
           {data?.map((b, index) => (
-            <div key={b.id} className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-card p-4">
+            <div
+              key={b.id}
+              className="flex items-center gap-3 rounded-2xl border border-[var(--border)] bg-card p-4"
+            >
               <span
                 className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white"
                 style={{ backgroundColor: b.accent }}
@@ -234,26 +243,22 @@ export default function BuildingsAdmin() {
                   {b.category} · {b.floors} ชั้น · <code>{b.id}</code>
                 </p>
               </div>
-              {canEdit && (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => openEdit(b, index)}
-                    className="rounded-lg p-2 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
-                    aria-label="แก้ไข"
-                  >
-                    <Pencil size={15} />
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setDeleteId(b.id)}
-                    className="rounded-lg p-2 text-[var(--destructive)] hover:bg-[var(--muted)]"
-                    aria-label="ลบ"
-                  >
-                    <Trash2 size={15} />
-                  </button>
-                </>
-              )}
+              {canEdit && <><button
+                type="button"
+                onClick={() => openEdit(b, index)}
+                className="rounded-lg p-2 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
+                aria-label="แก้ไข"
+              >
+                <Pencil size={15} />
+              </button>
+              <button
+                type="button"
+                onClick={() => setDeleteId(b.id)}
+                className="rounded-lg p-2 text-[var(--destructive)] hover:bg-[var(--muted)]"
+                aria-label="ลบ"
+              >
+                <Trash2 size={15} />
+              </button></>}
             </div>
           ))}
           {!data?.length && (
@@ -275,26 +280,44 @@ export default function BuildingsAdmin() {
               label="รหัส (id)"
               hint="ใช้ a-z, 0-9, - เท่านั้น — เปลี่ยนภายหลังไม่ได้"
               value={form.id}
-              onChange={v => set("id", v)}
+              onChange={(v) => set("id", v)}
               disabled={!!editingId}
               placeholder="library"
             />
             <SelectField
               label="ประเภท"
               value={form.category}
-              onChange={v => set("category", v)}
+              onChange={(v) => set("category", v)}
               options={CAMPUS_CATEGORIES}
             />
-            <TextField label="ชื่ออาคาร" value={form.name} onChange={v => set("name", v)} />
-            <TextField label="ชื่อย่อ" value={form.shortName} onChange={v => set("shortName", v)} />
+            <TextField label="ชื่ออาคาร" value={form.name} onChange={(v) => set("name", v)} />
+            <TextField
+              label="ชื่อย่อ"
+              value={form.shortName}
+              onChange={(v) => set("shortName", v)}
+            />
           </div>
 
-          <TextAreaField label="คำอธิบาย" value={form.description} onChange={v => set("description", v)} />
+          <TextAreaField
+            label="คำอธิบาย"
+            value={form.description}
+            onChange={(v) => set("description", v)}
+          />
 
           <div className="grid gap-4 sm:grid-cols-3">
-            <NumberField label="จำนวนชั้น" value={form.floors} onChange={v => set("floors", v)} min={1} />
-            <NumberField label="ลำดับการแสดง" value={form.sortOrder} onChange={v => set("sortOrder", v)} min={0} />
-            <ColorField label="สีหมุด" value={form.accent} onChange={v => set("accent", v)} />
+            <NumberField
+              label="จำนวนชั้น"
+              value={form.floors}
+              onChange={(v) => set("floors", v)}
+              min={1}
+            />
+            <NumberField
+              label="ลำดับการแสดง"
+              value={form.sortOrder}
+              onChange={(v) => set("sortOrder", v)}
+              min={0}
+            />
+            <ColorField label="สีหมุด" value={form.accent} onChange={(v) => set("accent", v)} />
           </div>
 
           <div>
@@ -303,7 +326,10 @@ export default function BuildingsAdmin() {
               <button
                 type="button"
                 onClick={() =>
-                  set("floorRows", [...form.floorRows, { label: `ชั้น ${form.floorRows.length + 1}`, rooms: "" }])
+                  set("floorRows", [
+                    ...form.floorRows,
+                    { label: `ชั้น ${form.floorRows.length + 1}`, rooms: "" },
+                  ])
                 }
                 className="text-xs font-bold text-[#287c78]"
               >
@@ -316,7 +342,7 @@ export default function BuildingsAdmin() {
                   <div className="mb-2 flex items-center gap-2">
                     <input
                       value={row.label}
-                      onChange={e => {
+                      onChange={(e) => {
                         const next = [...form.floorRows];
                         next[i] = { ...row, label: e.target.value };
                         set("floorRows", next);
@@ -330,7 +356,7 @@ export default function BuildingsAdmin() {
                         onClick={() =>
                           set(
                             "floorRows",
-                            form.floorRows.filter((_, j) => j !== i)
+                            form.floorRows.filter((_, j) => j !== i),
                           )
                         }
                         className="rounded-md p-1.5 text-[var(--destructive)] hover:bg-[var(--muted)]"
@@ -342,7 +368,7 @@ export default function BuildingsAdmin() {
                   </div>
                   <input
                     value={row.rooms}
-                    onChange={e => {
+                    onChange={(e) => {
                       const next = [...form.floorRows];
                       next[i] = { ...row, rooms: e.target.value };
                       set("floorRows", next);
@@ -360,12 +386,28 @@ export default function BuildingsAdmin() {
               ตำแหน่งบนแผนที่วาด + พิกัดจริง (ไม่บังคับ)
             </summary>
             <div className="mt-3 grid gap-4 sm:grid-cols-2">
-              <NumberField label="ตำแหน่ง X (%)" value={form.mapX} onChange={v => set("mapX", v)} />
-              <NumberField label="ตำแหน่ง Y (%)" value={form.mapY} onChange={v => set("mapY", v)} />
-              <NumberField label="กว้าง (%)" value={form.mapWidth} onChange={v => set("mapWidth", v)} />
-              <NumberField label="สูง (%)" value={form.mapHeight} onChange={v => set("mapHeight", v)} />
-              <TextField label="ละติจูด" value={form.latitude} onChange={v => set("latitude", v)} />
-              <TextField label="ลองจิจูด" value={form.longitude} onChange={v => set("longitude", v)} />
+              <NumberField label="ตำแหน่ง X (%)" value={form.mapX} onChange={(v) => set("mapX", v)} />
+              <NumberField label="ตำแหน่ง Y (%)" value={form.mapY} onChange={(v) => set("mapY", v)} />
+              <NumberField
+                label="กว้าง (%)"
+                value={form.mapWidth}
+                onChange={(v) => set("mapWidth", v)}
+              />
+              <NumberField
+                label="สูง (%)"
+                value={form.mapHeight}
+                onChange={(v) => set("mapHeight", v)}
+              />
+              <TextField
+                label="ละติจูด"
+                value={form.latitude}
+                onChange={(v) => set("latitude", v)}
+              />
+              <TextField
+                label="ลองจิจูด"
+                value={form.longitude}
+                onChange={(v) => set("longitude", v)}
+              />
             </div>
           </details>
 
@@ -379,24 +421,20 @@ export default function BuildingsAdmin() {
                 <textarea
                   rows={8}
                   value={form.departmentsJson}
-                  onChange={e => set("departmentsJson", e.target.value)}
+                  onChange={(e) => set("departmentsJson", e.target.value)}
                   className="w-full rounded-md border border-[var(--border)] bg-card px-2 py-1.5 font-mono text-[11px] leading-5"
                 />
-                <span className="mt-1 block break-all text-[10px] text-[var(--muted-foreground)]">
-                  ตัวอย่าง: {DEPARTMENTS_HINT}
-                </span>
+                <span className="mt-1 block break-all text-[10px] text-[var(--muted-foreground)]">ตัวอย่าง: {DEPARTMENTS_HINT}</span>
               </label>
               <label className="block">
                 <span className="mb-1.5 block text-xs font-bold text-[var(--ink)]">Gallery</span>
                 <textarea
                   rows={5}
                   value={form.galleryJson}
-                  onChange={e => set("galleryJson", e.target.value)}
+                  onChange={(e) => set("galleryJson", e.target.value)}
                   className="w-full rounded-md border border-[var(--border)] bg-card px-2 py-1.5 font-mono text-[11px] leading-5"
                 />
-                <span className="mt-1 block break-all text-[10px] text-[var(--muted-foreground)]">
-                  ตัวอย่าง: {GALLERY_HINT}
-                </span>
+                <span className="mt-1 block break-all text-[10px] text-[var(--muted-foreground)]">ตัวอย่าง: {GALLERY_HINT}</span>
               </label>
             </div>
           </details>
@@ -412,7 +450,7 @@ export default function BuildingsAdmin() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteId} onOpenChange={v => !v && setDeleteId(null)}>
+      <AlertDialog open={!!deleteId} onOpenChange={(v) => !v && setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>ลบอาคาร “{deleteName}”?</AlertDialogTitle>

@@ -2,17 +2,17 @@ import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import NotFound from "@/pages/NotFound";
 import { Redirect, Route, Switch } from "wouter";
-import MobileApp from "./pages/mobile/MobileApp";
-import ErrorBoundary from "./components/common/ErrorBoundary";
+import MobileApp from "./pages/MobileApp";
+import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
-import Home from "./pages/explore/ExplorePage";
+import Home from "./pages/Home";
 import AdminOverview from "./pages/admin/AdminOverview";
 import BuildingsAdmin from "./pages/admin/BuildingsAdmin";
 import NewsAdmin from "./pages/admin/NewsAdmin";
 import SettingsAdmin from "./pages/admin/SettingsAdmin";
 import UsersAdmin from "./pages/admin/UsersAdmin";
 import WalkwaysAdmin from "./pages/admin/WalkwaysAdmin";
-import KioskHome from "./pages/kiosk/KioskHome";
+import KioskHome from "./pages/KioskHome";
 
 function Router() {
   return (
@@ -20,9 +20,7 @@ function Router() {
       <Route path="/" component={KioskHome} />
       <Route path="/app" component={MobileApp} />
       {/* Old QR codes / shared links → the phone app with that place open. */}
-      <Route path="/building/:id">
-        {params => <Redirect to={`/app?place=${encodeURIComponent(params.id)}`} replace />}
-      </Route>
+      <Route path="/building/:id">{(params) => <Redirect to={`/app?place=${encodeURIComponent(params.id)}`} replace />}</Route>
       <Route path="/explore" component={Home} />
       <Route path="/admin" component={AdminOverview} />
       <Route path="/admin/buildings" component={BuildingsAdmin} />

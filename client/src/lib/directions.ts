@@ -26,7 +26,9 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);
   const dLng = toRad(b.lng - a.lng);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  const h =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
@@ -43,7 +45,9 @@ export function formatWalk(meters: number, seconds: number): string {
 /** Google Maps walking directions — by coordinates, or by name when a building has none. */
 export function walkingDeepLink(building: Pick<CampusBuilding, "name" | "latitude" | "longitude">): string {
   const point = buildingLatLng(building);
-  const destination = point ? `${point.lat},${point.lng}` : `${building.name} วิทยาลัยเทคนิคสมุทรสงคราม`;
+  const destination = point
+    ? `${point.lat},${point.lng}`
+    : `${building.name} วิทยาลัยเทคนิคสมุทรสงคราม`;
   return `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(destination)}&travelmode=walking`;
 }
 
@@ -78,7 +82,7 @@ export function getBestPosition(): Promise<GpsFix> {
         }
         if (coords.accuracy <= GPS_GOOD_ENOUGH_M) finish();
       },
-      error => {
+      (error) => {
         if (error.code === error.PERMISSION_DENIED) {
           done = true;
           navigator.geolocation.clearWatch(watchId);
@@ -87,7 +91,7 @@ export function getBestPosition(): Promise<GpsFix> {
         }
         // Other errors (timeout / unavailable) — keep waiting for the window to close.
       },
-      { enableHighAccuracy: true, timeout: GPS_WINDOW_MS, maximumAge: 0 }
+      { enableHighAccuracy: true, timeout: GPS_WINDOW_MS, maximumAge: 0 },
     );
     const timer = window.setTimeout(finish, GPS_WINDOW_MS);
   });
@@ -100,8 +104,8 @@ export function buildingSearchText(building: CampusBuilding): string {
     building.shortName,
     building.category,
     building.description,
-    ...building.floorsDetail.flatMap(floor => floor.rooms),
-    ...(building.departments ?? []).flatMap(d => [d.name, d.code]),
+    ...building.floorsDetail.flatMap((floor) => floor.rooms),
+    ...(building.departments ?? []).flatMap((d) => [d.name, d.code]),
   ]
     .join(" ")
     .toLowerCase();
