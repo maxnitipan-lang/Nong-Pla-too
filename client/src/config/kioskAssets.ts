@@ -35,6 +35,7 @@ export const DEPARTMENT_LOGOS_BY_NAME: Record<string, string> = {
   "ช่างยนต์": "/images/departments/automotive.png",
   "ช่างก่อสร้าง": "/images/departments/construction.png",
   "ไฟฟ้ากำลัง": "/images/departments/electrical-power.png",
+  "ธุรกิจดิจิทัล": "/images/departments/digital-business.png",
 };
 
 /** Logo for a department: matched by name first, then by its code. */
