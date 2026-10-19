@@ -103,7 +103,7 @@ export function useCampusNavigation(buildings: CampusBuilding[], options: Naviga
   const stateRef = useRef({ route, targetId, voice, network, buildings });
   stateRef.current = { route, targetId, voice, network, buildings };
 
-  const target = useMemo(() => buildings.find((b) => b.id === targetId) ?? null, [buildings, targetId]);
+  const target = useMemo(() => buildings.find(b => b.id === targetId) ?? null, [buildings, targetId]);
 
   const stopWatch = useCallback(() => {
     if (watchRef.current !== null) navigator.geolocation?.clearWatch(watchRef.current);
@@ -114,7 +114,7 @@ export function useCampusNavigation(buildings: CampusBuilding[], options: Naviga
   const plan = useCallback(
     async (from: GpsFix, buildingId: string, requestId: number) => {
       const { network: net, buildings: list } = stateRef.current;
-      const building = list.find((b) => b.id === buildingId);
+      const building = list.find(b => b.id === buildingId);
       const point = building ? buildingLatLng(building) : null;
       if (!building || !point) {
         setStatus("error");
@@ -133,7 +133,10 @@ export function useCampusNavigation(buildings: CampusBuilding[], options: Naviga
 
       if (planned.offCampus) {
         const entry = planned.offCampus.entry;
-        const straight: LatLngTuple[] = [[from.lat, from.lng], [entry.lat, entry.lng]];
+        const straight: LatLngTuple[] = [
+          [from.lat, from.lng],
+          [entry.lat, entry.lng],
+        ];
         setApproachPath(straight);
         setApproachDistance(planned.offCampus.straightDistance);
         // Street route to the gate (server-side ORS); keep the straight line if unavailable.
@@ -153,7 +156,7 @@ export function useCampusNavigation(buildings: CampusBuilding[], options: Naviga
       setMessage(null);
       return planned;
     },
-    [utils],
+    [utils]
   );
 
   const routeTo = useCallback(
@@ -187,7 +190,7 @@ export function useCampusNavigation(buildings: CampusBuilding[], options: Naviga
       setMessage("กำลังคำนวณเส้นทาง…");
       await plan(here, buildingId, requestId);
     },
-    [plan, stopWatch],
+    [plan, stopWatch]
   );
 
   const clear = useCallback(() => {
@@ -230,14 +233,18 @@ export function useCampusNavigation(buildings: CampusBuilding[], options: Naviga
       if (talk && stepIndex !== spokenStepRef.current) {
         spokenStepRef.current = stepIndex;
         const step = current.steps[stepIndex];
-        speak(step.maneuver === "arrive" ? step.instruction : `${step.instruction} แล้วเดินต่อ ${Math.round(step.distance)} เมตร`);
+        speak(
+          step.maneuver === "arrive"
+            ? step.instruction
+            : `${step.instruction} แล้วเดินต่อ ${Math.round(step.distance)} เมตร`
+        );
       }
       if (arrived) {
         stopWatch();
         setLive(false);
       }
     },
-    [plan, stopWatch],
+    [plan, stopWatch]
   );
 
   const startLive = useCallback(() => {
@@ -247,14 +254,14 @@ export function useCampusNavigation(buildings: CampusBuilding[], options: Naviga
     spokenStepRef.current = -1;
     watchRef.current = navigator.geolocation.watchPosition(
       ({ coords }) => onLiveFix({ lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy }),
-      (error) => {
+      error => {
         if (error.code === error.PERMISSION_DENIED) {
           stopWatch();
           setLive(false);
           setMessage("ไม่ได้รับอนุญาตให้ใช้ตำแหน่ง — เปิดสิทธิ์ตำแหน่ง (GPS) แล้วลองใหม่");
         }
       },
-      { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 },
+      { enableHighAccuracy: true, maximumAge: 1000, timeout: 15000 }
     );
   }, [onLiveFix, stopWatch]);
 

@@ -50,18 +50,24 @@ function LogoMark() {
 function FloorDetails({ building }: { building: CampusBuilding }) {
   const [activeFloor, setActiveFloor] = useState(1);
   useEffect(() => setActiveFloor(1), [building.id]);
-  const floor = building.floorsDetail.find((item) => item.level === activeFloor) ?? building.floorsDetail[0];
-  const departments = (building.departments ?? DEFAULT_DEPARTMENTS).filter((department) => department.floor === activeFloor);
+  const floor = building.floorsDetail.find(item => item.level === activeFloor) ?? building.floorsDetail[0];
+  const departments = (building.departments ?? DEFAULT_DEPARTMENTS).filter(
+    department => department.floor === activeFloor
+  );
   const gallery = building.gallery ?? DEFAULT_GALLERY;
 
   return (
     <div className="mt-5 border-t border-[var(--border)] pt-5">
       <div className="mb-3 flex items-center justify-between">
-        <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[var(--muted-foreground)]">รายละเอียดภายใน</p>
-        <span className="rounded-full bg-[var(--secondary)] px-2.5 py-1 text-[11px] font-bold text-[var(--secondary-foreground)]">{building.floors} ชั้น</span>
+        <p className="text-xs font-extrabold uppercase tracking-[0.13em] text-[var(--muted-foreground)]">
+          รายละเอียดภายใน
+        </p>
+        <span className="rounded-full bg-[var(--secondary)] px-2.5 py-1 text-[11px] font-bold text-[var(--secondary-foreground)]">
+          {building.floors} ชั้น
+        </span>
       </div>
       <div className="mb-3 flex gap-1.5 overflow-x-auto pb-1">
-        {building.floorsDetail.map((item) => (
+        {building.floorsDetail.map(item => (
           <button
             key={item.level}
             type="button"
@@ -73,15 +79,74 @@ function FloorDetails({ building }: { building: CampusBuilding }) {
         ))}
       </div>
       <div className="space-y-2">
-        {floor?.rooms.map((room) => (
+        {floor?.rooms.map(room => (
           <div key={room} className="flex items-center gap-2.5 text-sm text-[var(--foreground)]">
             <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: building.accent }} />
             {room}
           </div>
         ))}
       </div>
-      {departments.length > 0 && <div className="mt-5 rounded-2xl bg-[var(--background)] p-4"><p className="mb-3 text-xs font-extrabold text-[var(--ink)]">สาขาวิชาที่อยู่ชั้นนี้</p><div className="space-y-3">{departments.map((department) => <div key={department.id} className="rounded-xl border border-[var(--border)] bg-white p-3"><div className="flex items-start justify-between gap-3"><div><p className="text-sm font-extrabold text-[var(--ink)]">{department.name}</p><p className="mt-1 text-[10px] font-bold text-[var(--muted-foreground)]">รหัสสาขา {department.code}</p></div><span className="rounded-full px-2 py-1 text-[10px] font-extrabold" style={{ color: department.accent, backgroundColor: `${department.accent}18` }}>{department.code}</span></div><p className="mt-2 text-xs leading-6 text-[var(--muted-foreground)]">{department.description}</p><div className="mt-2 flex flex-wrap gap-1.5">{department.skills.map((skill) => <span key={skill} className="rounded-full bg-[var(--muted)] px-2 py-1 text-[10px] font-bold text-[var(--muted-foreground)]">{skill}</span>)}</div><p className="mt-3 text-[10px] font-bold text-[var(--muted-foreground)]">เส้นทางอาชีพ: {department.careers.join(" · ")}</p></div>)}</div></div>}
-      {gallery.length > 0 && <div className="mt-5"><div className="mb-3 flex items-center justify-between"><p className="text-xs font-extrabold text-[var(--ink)]">Gallery บรรยากาศการเรียนรู้</p><span className="text-[10px] font-bold text-[var(--muted-foreground)]">{gallery.length} รูป</span></div><div className="grid grid-cols-3 gap-2">{gallery.slice(0, 3).map((image) => <figure key={image.id} className="group overflow-hidden rounded-xl bg-[var(--muted)]"><img src={image.url} alt={image.alt} className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105" /><figcaption className="truncate px-2 py-2 text-[10px] font-bold text-[var(--muted-foreground)]">{image.caption}</figcaption></figure>)}</div></div>}
+      {departments.length > 0 && (
+        <div className="mt-5 rounded-2xl bg-[var(--background)] p-4">
+          <p className="mb-3 text-xs font-extrabold text-[var(--ink)]">สาขาวิชาที่อยู่ชั้นนี้</p>
+          <div className="space-y-3">
+            {departments.map(department => (
+              <div key={department.id} className="rounded-xl border border-[var(--border)] bg-white p-3">
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="text-sm font-extrabold text-[var(--ink)]">{department.name}</p>
+                    <p className="mt-1 text-[10px] font-bold text-[var(--muted-foreground)]">
+                      รหัสสาขา {department.code}
+                    </p>
+                  </div>
+                  <span
+                    className="rounded-full px-2 py-1 text-[10px] font-extrabold"
+                    style={{ color: department.accent, backgroundColor: `${department.accent}18` }}
+                  >
+                    {department.code}
+                  </span>
+                </div>
+                <p className="mt-2 text-xs leading-6 text-[var(--muted-foreground)]">{department.description}</p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {department.skills.map(skill => (
+                    <span
+                      key={skill}
+                      className="rounded-full bg-[var(--muted)] px-2 py-1 text-[10px] font-bold text-[var(--muted-foreground)]"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+                <p className="mt-3 text-[10px] font-bold text-[var(--muted-foreground)]">
+                  เส้นทางอาชีพ: {department.careers.join(" · ")}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      {gallery.length > 0 && (
+        <div className="mt-5">
+          <div className="mb-3 flex items-center justify-between">
+            <p className="text-xs font-extrabold text-[var(--ink)]">Gallery บรรยากาศการเรียนรู้</p>
+            <span className="text-[10px] font-bold text-[var(--muted-foreground)]">{gallery.length} รูป</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            {gallery.slice(0, 3).map(image => (
+              <figure key={image.id} className="group overflow-hidden rounded-xl bg-[var(--muted)]">
+                <img
+                  src={image.url}
+                  alt={image.alt}
+                  className="aspect-[4/3] w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                />
+                <figcaption className="truncate px-2 py-2 text-[10px] font-bold text-[var(--muted-foreground)]">
+                  {image.caption}
+                </figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -99,12 +164,12 @@ export default function Home() {
   const buildings = buildingsData?.length ? buildingsData : CAMPUS_BUILDINGS;
   const news = newsData?.length ? newsData : CAMPUS_NEWS;
   const campusAddress = settings?.address ?? CAMPUS_OVERVIEW.address;
-  const selectedBuilding = buildings.find((item) => item.id === selectedId) ?? buildings[0];
+  const selectedBuilding = buildings.find(item => item.id === selectedId) ?? buildings[0];
   const nav = useCampusNavigation(buildings);
 
   const filteredBuildings = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return buildings.filter((building) => {
+    return buildings.filter(building => {
       const matchesCategory = activeCategory === "ทั้งหมด" || building.category === activeCategory;
       const matchesQuery = !normalized || buildingSearchText(building).includes(normalized);
       return matchesCategory && matchesQuery;
@@ -112,9 +177,7 @@ export default function Home() {
   }, [activeCategory, buildings, query]);
 
   const scrollToMap = (block: ScrollLogicalPosition = "nearest") =>
-    document
-      .getElementById("campus-map-view")
-      ?.scrollIntoView({ behavior: "smooth", block });
+    document.getElementById("campus-map-view")?.scrollIntoView({ behavior: "smooth", block });
 
   // Pick a building (from the list or a map marker) — clears any drawn route.
   const selectBuilding = (id: string) => {
@@ -147,16 +210,48 @@ export default function Home() {
           </button>
 
           <nav className="hidden items-center gap-8 md:flex">
-            <button type="button" onClick={() => { setActiveSection("map"); scrollToId("campus-map"); }} className={`text-sm font-bold transition-colors ${activeSection === "map" ? "text-[var(--ink)]" : "text-[var(--muted-foreground)] hover:text-[var(--ink)]"}`}>แผนที่วิทยาลัย</button>
-            <button type="button" onClick={() => { setActiveSection("news"); scrollToId("news"); }} className={`text-sm font-bold transition-colors ${activeSection === "news" ? "text-[var(--ink)]" : "text-[var(--muted-foreground)] hover:text-[var(--ink)]"}`}>ข่าวสาร</button>
-            <a href="#about" className="text-sm font-bold text-[var(--muted-foreground)] transition-colors hover:text-[var(--ink)]">เกี่ยวกับวิทยาลัย</a>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveSection("map");
+                scrollToId("campus-map");
+              }}
+              className={`text-sm font-bold transition-colors ${activeSection === "map" ? "text-[var(--ink)]" : "text-[var(--muted-foreground)] hover:text-[var(--ink)]"}`}
+            >
+              แผนที่วิทยาลัย
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setActiveSection("news");
+                scrollToId("news");
+              }}
+              className={`text-sm font-bold transition-colors ${activeSection === "news" ? "text-[var(--ink)]" : "text-[var(--muted-foreground)] hover:text-[var(--ink)]"}`}
+            >
+              ข่าวสาร
+            </button>
+            <a
+              href="#about"
+              className="text-sm font-bold text-[var(--muted-foreground)] transition-colors hover:text-[var(--ink)]"
+            >
+              เกี่ยวกับวิทยาลัย
+            </a>
           </nav>
 
           <div className="flex items-center gap-2">
-            <button type="button" onClick={() => scrollToId("news")} className="hidden h-10 items-center gap-2 rounded-full bg-[var(--ink)] px-4 text-xs font-bold text-white transition-transform hover:-translate-y-0.5 sm:flex">
+            <button
+              type="button"
+              onClick={() => scrollToId("news")}
+              className="hidden h-10 items-center gap-2 rounded-full bg-[var(--ink)] px-4 text-xs font-bold text-white transition-transform hover:-translate-y-0.5 sm:flex"
+            >
               <Bell size={15} /> อัปเดตล่าสุด
             </button>
-            <button type="button" onClick={() => setMobileMenuOpen((open) => !open)} className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--ink)] shadow-sm ring-1 ring-[var(--border)] md:hidden" aria-label="เปิดเมนู">
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(open => !open)}
+              className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[var(--ink)] shadow-sm ring-1 ring-[var(--border)] md:hidden"
+              aria-label="เปิดเมนู"
+            >
               {mobileMenuOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
           </div>
@@ -164,9 +259,31 @@ export default function Home() {
         {mobileMenuOpen && (
           <div className="border-t border-[var(--border)] bg-white px-5 py-4 md:hidden">
             <div className="flex flex-col gap-3 text-sm font-bold">
-              <button type="button" onClick={() => { setActiveSection("map"); setMobileMenuOpen(false); scrollToId("campus-map"); }} className="text-left">แผนที่วิทยาลัย</button>
-              <button type="button" onClick={() => { setActiveSection("news"); setMobileMenuOpen(false); scrollToId("news"); }} className="text-left">ข่าวสาร</button>
-              <a href="#about" onClick={() => setMobileMenuOpen(false)}>เกี่ยวกับวิทยาลัย</a>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveSection("map");
+                  setMobileMenuOpen(false);
+                  scrollToId("campus-map");
+                }}
+                className="text-left"
+              >
+                แผนที่วิทยาลัย
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveSection("news");
+                  setMobileMenuOpen(false);
+                  scrollToId("news");
+                }}
+                className="text-left"
+              >
+                ข่าวสาร
+              </button>
+              <a href="#about" onClick={() => setMobileMenuOpen(false)}>
+                เกี่ยวกับวิทยาลัย
+              </a>
             </div>
           </div>
         )}
@@ -180,19 +297,34 @@ export default function Home() {
                 <Sparkles size={13} /> YOUR CAMPUS, AT A GLANCE
               </div>
               <h1 className="text-balance text-[clamp(2.6rem,6vw,5.5rem)] font-extrabold leading-[1.04] tracking-[-0.065em] text-[var(--ink)]">
-                ทุกมุมของ<br /><span className="text-[#398e89]">วิทยาลัยฯ</span><br />อยู่ใกล้กว่าที่คิด
+                ทุกมุมของ
+                <br />
+                <span className="text-[#398e89]">วิทยาลัยฯ</span>
+                <br />
+                อยู่ใกล้กว่าที่คิด
               </h1>
-              <p className="mt-6 max-w-[500px] text-[15px] leading-8 text-[var(--muted-foreground)] sm:text-base">สำรวจอาคาร สาขาวิชา และข่าวสารสำคัญของวิทยาลัยเทคนิคสมุทรสงครามในที่เดียว วางแผนการเดินทางครั้งต่อไปของคุณได้ง่ายขึ้น</p>
+              <p className="mt-6 max-w-[500px] text-[15px] leading-8 text-[var(--muted-foreground)] sm:text-base">
+                สำรวจอาคาร สาขาวิชา และข่าวสารสำคัญของวิทยาลัยเทคนิคสมุทรสงครามในที่เดียว
+                วางแผนการเดินทางครั้งต่อไปของคุณได้ง่ายขึ้น
+              </p>
               <div className="mt-8 flex flex-wrap gap-3">
-                <button type="button" onClick={() => scrollToId("campus-map")} className="flex h-12 items-center gap-2 rounded-full bg-[var(--ink)] px-5 text-sm font-bold text-white shadow-[0_10px_25px_rgba(16,41,58,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#1b5069]">
+                <button
+                  type="button"
+                  onClick={() => scrollToId("campus-map")}
+                  className="flex h-12 items-center gap-2 rounded-full bg-[var(--ink)] px-5 text-sm font-bold text-white shadow-[0_10px_25px_rgba(16,41,58,0.18)] transition-all hover:-translate-y-0.5 hover:bg-[#1b5069]"
+                >
                   สำรวจแผนที่ <ArrowUpRight size={17} />
                 </button>
-                <button type="button" onClick={() => scrollToId("news")} className="flex h-12 items-center gap-2 rounded-full border border-[var(--border)] bg-white/70 px-5 text-sm font-bold text-[var(--ink)] transition-all hover:-translate-y-0.5 hover:border-[var(--aqua)] hover:bg-white">
+                <button
+                  type="button"
+                  onClick={() => scrollToId("news")}
+                  className="flex h-12 items-center gap-2 rounded-full border border-[var(--border)] bg-white/70 px-5 text-sm font-bold text-[var(--ink)] transition-all hover:-translate-y-0.5 hover:border-[var(--aqua)] hover:bg-white"
+                >
                   ดูข่าวสาร <ChevronRight size={17} />
                 </button>
               </div>
               <div className="mt-10 flex flex-wrap gap-x-7 gap-y-4 border-t border-[rgba(16,41,58,0.12)] pt-6">
-                {CAMPUS_OVERVIEW.stats.map((stat) => (
+                {CAMPUS_OVERVIEW.stats.map(stat => (
                   <div key={stat.label}>
                     <p className="font-display text-xl font-bold text-[var(--ink)]">{stat.value}</p>
                     <p className="mt-1 text-[11px] font-medium text-[var(--muted-foreground)]">{stat.label}</p>
@@ -206,22 +338,41 @@ export default function Home() {
               <div className="absolute -bottom-6 -left-7 hidden h-12 w-12 rounded-full bg-[var(--coral)]/70 lg:block" />
               <div className="relative overflow-hidden rounded-[28px] border-[10px] border-white/80 bg-[var(--ink)] shadow-[0_25px_70px_rgba(16,41,58,0.18)]">
                 <div className="flex items-center justify-between bg-[var(--ink)] px-4 py-3 text-white sm:px-5">
-                  <div className="flex items-center gap-2.5"><Compass size={17} className="text-[var(--aqua)]" /><span className="text-xs font-bold">CAMPUS LIVE MAP</span></div>
-                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#a8d6c6]"><span className="h-1.5 w-1.5 rounded-full bg-[#72d5a9]" /> พร้อมใช้งาน</span>
+                  <div className="flex items-center gap-2.5">
+                    <Compass size={17} className="text-[var(--aqua)]" />
+                    <span className="text-xs font-bold">CAMPUS LIVE MAP</span>
+                  </div>
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold text-[#a8d6c6]">
+                    <span className="h-1.5 w-1.5 rounded-full bg-[#72d5a9]" /> พร้อมใช้งาน
+                  </span>
                 </div>
                 <div className="map-surface relative isolate h-[390px] overflow-hidden sm:h-[470px]">
                   <CampusLeafletMap
                     buildings={buildings}
                     selectedId={selectedId}
-                    onSelect={(id) => {
+                    onSelect={id => {
                       selectBuilding(id);
                       scrollToMap();
                     }}
                     center={settings?.mapCenter ?? CAMPUS_OVERVIEW.mapCenter}
                   />
-                  <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><Layers3 size={13} className="text-[var(--aqua)]" /> แผนผังวิทยาลัย</div>
+                  <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur">
+                    <Layers3 size={13} className="text-[var(--aqua)]" /> แผนผังวิทยาลัย
+                  </div>
                 </div>
-                <div className="flex items-center justify-between gap-4 bg-white px-4 py-3.5 sm:px-5"><div><p className="text-xs font-extrabold text-[var(--ink)]">วิทยาลัยเทคนิคสมุทรสงคราม</p><p className="mt-1 text-[10px] text-[var(--muted-foreground)]">{campusAddress}</p></div><button type="button" onClick={() => scrollToId("campus-map")} className="flex shrink-0 items-center gap-1.5 text-xs font-extrabold text-[#287c78]">เปิดแผนที่เต็ม <ArrowUpRight size={14} /></button></div>
+                <div className="flex items-center justify-between gap-4 bg-white px-4 py-3.5 sm:px-5">
+                  <div>
+                    <p className="text-xs font-extrabold text-[var(--ink)]">วิทยาลัยเทคนิคสมุทรสงคราม</p>
+                    <p className="mt-1 text-[10px] text-[var(--muted-foreground)]">{campusAddress}</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => scrollToId("campus-map")}
+                    className="flex shrink-0 items-center gap-1.5 text-xs font-extrabold text-[#287c78]"
+                  >
+                    เปิดแผนที่เต็ม <ArrowUpRight size={14} />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -229,30 +380,313 @@ export default function Home() {
 
         <section id="campus-map" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
           <div className="mb-8 flex flex-col justify-between gap-5 lg:flex-row lg:items-end">
-            <div><p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[#398e89]">01 / EXPLORE THE CAMPUS</p><h2 className="font-display text-3xl font-bold tracking-[-0.05em] text-[var(--ink)] sm:text-4xl">เลือกดูอาคารที่คุณต้องการ</h2><p className="mt-3 max-w-[560px] text-sm leading-7 text-[var(--muted-foreground)]">คลิกหมุดบนแผนที่ หรือค้นหาจากรายชื่ออาคาร เพื่อดูข้อมูลสาขา จำนวนชั้น และห้องภายในอาคาร</p></div>
-            <div className="flex items-center gap-2 text-xs font-bold text-[var(--muted-foreground)]"><span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)]"><Navigation size={14} /></span> ศูนย์กลางแผนที่พร้อมใช้งาน</div>
+            <div>
+              <p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[#398e89]">01 / EXPLORE THE CAMPUS</p>
+              <h2 className="font-display text-3xl font-bold tracking-[-0.05em] text-[var(--ink)] sm:text-4xl">
+                เลือกดูอาคารที่คุณต้องการ
+              </h2>
+              <p className="mt-3 max-w-[560px] text-sm leading-7 text-[var(--muted-foreground)]">
+                คลิกหมุดบนแผนที่ หรือค้นหาจากรายชื่ออาคาร เพื่อดูข้อมูลสาขา จำนวนชั้น และห้องภายในอาคาร
+              </p>
+            </div>
+            <div className="flex items-center gap-2 text-xs font-bold text-[var(--muted-foreground)]">
+              <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[var(--secondary)] text-[var(--secondary-foreground)]">
+                <Navigation size={14} />
+              </span>{" "}
+              ศูนย์กลางแผนที่พร้อมใช้งาน
+            </div>
           </div>
           <div className="grid overflow-hidden rounded-[24px] border border-[var(--border)] bg-white shadow-[0_18px_55px_rgba(16,41,58,0.08)] lg:grid-cols-[350px_1fr]">
             <aside className="flex max-h-[650px] flex-col border-b border-[var(--border)] lg:border-b-0 lg:border-r">
-              <div className="border-b border-[var(--border)] p-5"><div className="relative"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]" /><input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="ค้นหาอาคารหรือสาขา..." className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] pl-10 pr-3 text-sm outline-none transition-colors placeholder:text-[var(--muted-foreground)] focus:border-[var(--aqua)]" /></div><div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">{categoryFilters.map((category) => <button key={category} type="button" onClick={() => setActiveCategory(category)} className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${activeCategory === category ? "bg-[var(--ink)] text-white" : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--secondary)]"}`}>{category}</button>)}</div></div>
-              <div className="overflow-y-auto p-3">
-                {filteredBuildings.length ? filteredBuildings.map((building) => <button key={building.id} type="button" onClick={() => focusBuilding(building)} className={`group mb-1 flex w-full items-start gap-3 rounded-2xl p-3 text-left transition-all ${selectedBuilding?.id === building.id ? "bg-[var(--secondary)]" : "hover:bg-[var(--background)]"}`}><span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white" style={{ backgroundColor: building.accent }}><Building2 size={16} /></span><span className="min-w-0 flex-1"><span className="flex items-center justify-between gap-2"><span className="truncate text-sm font-extrabold text-[var(--ink)]">{building.name}</span><ChevronRight size={15} className="shrink-0 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-0.5" /></span><span className="mt-1 block text-[11px] font-medium text-[var(--muted-foreground)]">{building.category} · {building.floors} ชั้น</span></span></button>) : <div className="px-3 py-10 text-center text-sm text-[var(--muted-foreground)]">ไม่พบอาคารที่ค้นหา</div>}
+              <div className="border-b border-[var(--border)] p-5">
+                <div className="relative">
+                  <Search
+                    size={16}
+                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[var(--muted-foreground)]"
+                  />
+                  <input
+                    value={query}
+                    onChange={event => setQuery(event.target.value)}
+                    placeholder="ค้นหาอาคารหรือสาขา..."
+                    className="h-11 w-full rounded-xl border border-[var(--border)] bg-[var(--background)] pl-10 pr-3 text-sm outline-none transition-colors placeholder:text-[var(--muted-foreground)] focus:border-[var(--aqua)]"
+                  />
+                </div>
+                <div className="mt-4 flex gap-1.5 overflow-x-auto pb-1">
+                  {categoryFilters.map(category => (
+                    <button
+                      key={category}
+                      type="button"
+                      onClick={() => setActiveCategory(category)}
+                      className={`shrink-0 rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${activeCategory === category ? "bg-[var(--ink)] text-white" : "bg-[var(--muted)] text-[var(--muted-foreground)] hover:bg-[var(--secondary)]"}`}
+                    >
+                      {category}
+                    </button>
+                  ))}
+                </div>
               </div>
-              <div className="mt-auto border-t border-[var(--border)] bg-[var(--background)] p-4"><p className="text-[11px] leading-5 text-[var(--muted-foreground)]"><span className="font-bold text-[var(--ink)]">เคล็ดลับ:</span> ใช้หมุดสีต่าง ๆ เพื่อแยกประเภทอาคารและบริการภายในวิทยาลัย</p></div>
+              <div className="overflow-y-auto p-3">
+                {filteredBuildings.length ? (
+                  filteredBuildings.map(building => (
+                    <button
+                      key={building.id}
+                      type="button"
+                      onClick={() => focusBuilding(building)}
+                      className={`group mb-1 flex w-full items-start gap-3 rounded-2xl p-3 text-left transition-all ${selectedBuilding?.id === building.id ? "bg-[var(--secondary)]" : "hover:bg-[var(--background)]"}`}
+                    >
+                      <span
+                        className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white"
+                        style={{ backgroundColor: building.accent }}
+                      >
+                        <Building2 size={16} />
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-center justify-between gap-2">
+                          <span className="truncate text-sm font-extrabold text-[var(--ink)]">{building.name}</span>
+                          <ChevronRight
+                            size={15}
+                            className="shrink-0 text-[var(--muted-foreground)] transition-transform group-hover:translate-x-0.5"
+                          />
+                        </span>
+                        <span className="mt-1 block text-[11px] font-medium text-[var(--muted-foreground)]">
+                          {building.category} · {building.floors} ชั้น
+                        </span>
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div className="px-3 py-10 text-center text-sm text-[var(--muted-foreground)]">
+                    ไม่พบอาคารที่ค้นหา
+                  </div>
+                )}
+              </div>
+              <div className="mt-auto border-t border-[var(--border)] bg-[var(--background)] p-4">
+                <p className="text-[11px] leading-5 text-[var(--muted-foreground)]">
+                  <span className="font-bold text-[var(--ink)]">เคล็ดลับ:</span> ใช้หมุดสีต่าง ๆ
+                  เพื่อแยกประเภทอาคารและบริการภายในวิทยาลัย
+                </p>
+              </div>
             </aside>
-            <div className="bg-[#deece7] p-3 sm:p-5"><div id="campus-map-view" className="relative isolate h-[620px] overflow-hidden rounded-[20px] bg-[#dcece4] scroll-mt-24"><CampusLeafletMap buildings={filteredBuildings} selectedId={selectedId} onSelect={selectBuilding} center={settings?.mapCenter ?? CAMPUS_OVERVIEW.mapCenter} route={nav.route} approachPath={nav.approachPath} userFix={nav.fix} followUser={nav.live} activeStep={nav.progress?.stepIndex} /><NavBanner nav={nav} /><div className="pointer-events-none absolute left-4 top-4 z-[1000] rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg sm:left-5 sm:top-5">{filteredBuildings.length} จุดในวิทยาลัย</div>{nav.status !== "idle" ? <button type="button" onClick={nav.clear} className="absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg"><Navigation size={12} /> {navSummary(nav)} <X size={12} className="ml-0.5" /></button> : <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur"><MapPin size={13} className="text-[var(--coral)]" fill="currentColor" /> แตะหมุดเพื่อดูข้อมูล</div>}</div></div>
+            <div className="bg-[#deece7] p-3 sm:p-5">
+              <div
+                id="campus-map-view"
+                className="relative isolate h-[620px] overflow-hidden rounded-[20px] bg-[#dcece4] scroll-mt-24"
+              >
+                <CampusLeafletMap
+                  buildings={filteredBuildings}
+                  selectedId={selectedId}
+                  onSelect={selectBuilding}
+                  center={settings?.mapCenter ?? CAMPUS_OVERVIEW.mapCenter}
+                  route={nav.route}
+                  approachPath={nav.approachPath}
+                  userFix={nav.fix}
+                  followUser={nav.live}
+                  activeStep={nav.progress?.stepIndex}
+                />
+                <NavBanner nav={nav} />
+                <div className="pointer-events-none absolute left-4 top-4 z-[1000] rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg sm:left-5 sm:top-5">
+                  {filteredBuildings.length} จุดในวิทยาลัย
+                </div>
+                {nav.status !== "idle" ? (
+                  <button
+                    type="button"
+                    onClick={nav.clear}
+                    className="absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-[var(--ink)] px-3 py-2 text-[10px] font-bold text-white shadow-lg"
+                  >
+                    <Navigation size={12} /> {navSummary(nav)} <X size={12} className="ml-0.5" />
+                  </button>
+                ) : (
+                  <div className="pointer-events-none absolute bottom-4 left-4 z-[1000] flex items-center gap-2 rounded-full bg-white/90 px-3 py-2 text-[10px] font-bold text-[var(--ink)] shadow-sm backdrop-blur">
+                    <MapPin size={13} className="text-[var(--coral)]" fill="currentColor" /> แตะหมุดเพื่อดูข้อมูล
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {selectedBuilding && <div className="mt-5 grid gap-5 rounded-[24px] border border-[var(--border)] bg-white p-5 shadow-[0_12px_35px_rgba(16,41,58,0.06)] sm:p-7 md:grid-cols-[1fr_1.3fr] md:items-start"><div><div className="mb-4 flex items-center gap-3"><span className="flex h-11 w-11 items-center justify-center rounded-2xl text-white" style={{ backgroundColor: selectedBuilding.accent }}><Building2 size={19} /></span><div><div className="flex items-center gap-2"><h3 className="font-display text-xl font-bold tracking-[-0.04em] text-[var(--ink)]">{selectedBuilding.name}</h3><span className="rounded-full bg-[var(--muted)] px-2 py-1 text-[10px] font-bold text-[var(--muted-foreground)]">{selectedBuilding.category}</span></div><p className="mt-1 text-xs font-medium text-[var(--muted-foreground)]">ข้อมูลอาคารอัปเดตล่าสุด · {selectedBuilding.floors} ชั้น</p></div></div><p className="text-sm leading-7 text-[var(--muted-foreground)]">{selectedBuilding.description}</p><div className="mt-5 flex flex-wrap gap-2">{hasCoords(selectedBuilding) && <button type="button" onClick={() => showRoute(selectedBuilding.id)} className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-4 py-2.5 text-xs font-extrabold text-white transition-transform hover:-translate-y-0.5"><Navigation size={14} /> ดูเส้นทางในแอป</button>}<a href={walkingDeepLink(selectedBuilding)} target="_blank" rel="noreferrer" className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-extrabold transition-transform hover:-translate-y-0.5 ${hasCoords(selectedBuilding) ? "border border-[var(--border)] text-[var(--ink)]" : "bg-[var(--ink)] text-white"}`}><Navigation size={14} /> {hasCoords(selectedBuilding) ? "เปิดใน Google Maps" : "นำทางไปอาคารนี้ (เดิน)"}</a></div>{!selectedBuilding.latitude && <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">* อาคารนี้ยังไม่มีพิกัด GPS — จะเปิด Google Maps แบบค้นหาจากชื่อ</p>}</div><div><RoutePanel nav={nav} className="mb-4" /><FloorDetails building={selectedBuilding} /></div></div>}
+          {selectedBuilding && (
+            <div className="mt-5 grid gap-5 rounded-[24px] border border-[var(--border)] bg-white p-5 shadow-[0_12px_35px_rgba(16,41,58,0.06)] sm:p-7 md:grid-cols-[1fr_1.3fr] md:items-start">
+              <div>
+                <div className="mb-4 flex items-center gap-3">
+                  <span
+                    className="flex h-11 w-11 items-center justify-center rounded-2xl text-white"
+                    style={{ backgroundColor: selectedBuilding.accent }}
+                  >
+                    <Building2 size={19} />
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h3 className="font-display text-xl font-bold tracking-[-0.04em] text-[var(--ink)]">
+                        {selectedBuilding.name}
+                      </h3>
+                      <span className="rounded-full bg-[var(--muted)] px-2 py-1 text-[10px] font-bold text-[var(--muted-foreground)]">
+                        {selectedBuilding.category}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs font-medium text-[var(--muted-foreground)]">
+                      ข้อมูลอาคารอัปเดตล่าสุด · {selectedBuilding.floors} ชั้น
+                    </p>
+                  </div>
+                </div>
+                <p className="text-sm leading-7 text-[var(--muted-foreground)]">{selectedBuilding.description}</p>
+                <div className="mt-5 flex flex-wrap gap-2">
+                  {hasCoords(selectedBuilding) && (
+                    <button
+                      type="button"
+                      onClick={() => showRoute(selectedBuilding.id)}
+                      className="inline-flex items-center gap-2 rounded-full bg-[var(--ink)] px-4 py-2.5 text-xs font-extrabold text-white transition-transform hover:-translate-y-0.5"
+                    >
+                      <Navigation size={14} /> ดูเส้นทางในแอป
+                    </button>
+                  )}
+                  <a
+                    href={walkingDeepLink(selectedBuilding)}
+                    target="_blank"
+                    rel="noreferrer"
+                    className={`inline-flex items-center gap-2 rounded-full px-4 py-2.5 text-xs font-extrabold transition-transform hover:-translate-y-0.5 ${hasCoords(selectedBuilding) ? "border border-[var(--border)] text-[var(--ink)]" : "bg-[var(--ink)] text-white"}`}
+                  >
+                    <Navigation size={14} />{" "}
+                    {hasCoords(selectedBuilding) ? "เปิดใน Google Maps" : "นำทางไปอาคารนี้ (เดิน)"}
+                  </a>
+                </div>
+                {!selectedBuilding.latitude && (
+                  <p className="mt-2 text-[10px] text-[var(--muted-foreground)]">
+                    * อาคารนี้ยังไม่มีพิกัด GPS — จะเปิด Google Maps แบบค้นหาจากชื่อ
+                  </p>
+                )}
+              </div>
+              <div>
+                <RoutePanel nav={nav} className="mb-4" />
+                <FloorDetails building={selectedBuilding} />
+              </div>
+            </div>
+          )}
         </section>
 
         <section id="news" className="scroll-mt-20 border-y border-[var(--border)] bg-[#edf3ef]">
-          <div className="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24"><div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end"><div><p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[#398e89]">02 / CAMPUS NEWS</p><h2 className="font-display text-3xl font-bold tracking-[-0.05em] text-[var(--ink)] sm:text-4xl">ข่าวสารจากวิทยาลัยฯ</h2></div><a href="https://www.sstc.ac.th/news_325_1" target="_blank" rel="noreferrer" className="flex items-center gap-1 text-sm font-extrabold text-[#287c78]">ดูทั้งหมด <ArrowUpRight size={15} /></a></div><div className="grid items-start gap-4 lg:grid-cols-3">{news.map((item) => <article key={item.id} className="group relative flex flex-col overflow-hidden rounded-[22px] border border-white/80 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(16,41,58,0.1)]">{item.link && <a href={item.link} target="_blank" rel="noreferrer" className="absolute inset-0 z-10" aria-label={`อ่านข่าว ${item.title}`} />}{item.image && <div className="aspect-[16/9] w-full overflow-hidden bg-[var(--muted)]"><img src={item.image} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" /></div>}<div className="relative flex flex-1 flex-col p-5">{!item.image && <div className="absolute right-[-25px] top-[-30px] h-24 w-24 rounded-full opacity-25" style={{ backgroundColor: item.accent }} />}<div className="relative flex items-center justify-between gap-2"><span className="rounded-full px-2.5 py-1 text-[10px] font-extrabold" style={{ color: item.accent, backgroundColor: `${item.accent}18` }}>{item.tag}</span><span className="shrink-0 text-[11px] font-medium text-[var(--muted-foreground)]">{item.date}</span></div><h3 className="relative mt-4 text-lg font-extrabold leading-snug tracking-[-0.03em] text-[var(--ink)]">{item.title}</h3>{item.excerpt && <p className="relative mt-3 flex-1 text-sm leading-7 text-[var(--muted-foreground)]">{item.excerpt}</p>}<div className="relative mt-6 flex items-center justify-between border-t border-[var(--border)] pt-4"><span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--muted-foreground)]"><Clock3 size={13} /> {item.time || (item.source ? "ข่าวจากเว็บวิทยาลัย" : "")}</span><span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--muted)] text-[var(--ink)] transition-colors group-hover:bg-[var(--ink)] group-hover:text-white"><ArrowUpRight size={14} /></span></div></div></article>)}</div></div>
+          <div className="mx-auto max-w-[1440px] px-5 py-16 sm:px-8 lg:px-12 lg:py-24">
+            <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[#398e89]">02 / CAMPUS NEWS</p>
+                <h2 className="font-display text-3xl font-bold tracking-[-0.05em] text-[var(--ink)] sm:text-4xl">
+                  ข่าวสารจากวิทยาลัยฯ
+                </h2>
+              </div>
+              <a
+                href="https://www.sstc.ac.th/news_325_1"
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1 text-sm font-extrabold text-[#287c78]"
+              >
+                ดูทั้งหมด <ArrowUpRight size={15} />
+              </a>
+            </div>
+            <div className="grid items-start gap-4 lg:grid-cols-3">
+              {news.map(item => (
+                <article
+                  key={item.id}
+                  className="group relative flex flex-col overflow-hidden rounded-[22px] border border-white/80 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_18px_40px_rgba(16,41,58,0.1)]"
+                >
+                  {item.link && (
+                    <a
+                      href={item.link}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="absolute inset-0 z-10"
+                      aria-label={`อ่านข่าว ${item.title}`}
+                    />
+                  )}
+                  {item.image && (
+                    <div className="aspect-[16/9] w-full overflow-hidden bg-[var(--muted)]">
+                      <img
+                        src={item.image}
+                        alt=""
+                        loading="lazy"
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      />
+                    </div>
+                  )}
+                  <div className="relative flex flex-1 flex-col p-5">
+                    {!item.image && (
+                      <div
+                        className="absolute right-[-25px] top-[-30px] h-24 w-24 rounded-full opacity-25"
+                        style={{ backgroundColor: item.accent }}
+                      />
+                    )}
+                    <div className="relative flex items-center justify-between gap-2">
+                      <span
+                        className="rounded-full px-2.5 py-1 text-[10px] font-extrabold"
+                        style={{ color: item.accent, backgroundColor: `${item.accent}18` }}
+                      >
+                        {item.tag}
+                      </span>
+                      <span className="shrink-0 text-[11px] font-medium text-[var(--muted-foreground)]">
+                        {item.date}
+                      </span>
+                    </div>
+                    <h3 className="relative mt-4 text-lg font-extrabold leading-snug tracking-[-0.03em] text-[var(--ink)]">
+                      {item.title}
+                    </h3>
+                    {item.excerpt && (
+                      <p className="relative mt-3 flex-1 text-sm leading-7 text-[var(--muted-foreground)]">
+                        {item.excerpt}
+                      </p>
+                    )}
+                    <div className="relative mt-6 flex items-center justify-between border-t border-[var(--border)] pt-4">
+                      <span className="flex items-center gap-1.5 text-[11px] font-bold text-[var(--muted-foreground)]">
+                        <Clock3 size={13} /> {item.time || (item.source ? "ข่าวจากเว็บวิทยาลัย" : "")}
+                      </span>
+                      <span className="flex h-8 w-8 items-center justify-center rounded-full bg-[var(--muted)] text-[var(--ink)] transition-colors group-hover:bg-[var(--ink)] group-hover:text-white">
+                        <ArrowUpRight size={14} />
+                      </span>
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </div>
         </section>
 
-        <section id="about" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 py-16 sm:px-8 lg:px-12 lg:py-20"><div className="grid gap-8 rounded-[28px] bg-[var(--ink)] px-6 py-9 text-white sm:px-10 lg:grid-cols-[1.3fr_0.7fr] lg:items-end lg:px-14 lg:py-12"><div><p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[var(--aqua)]">ABOUT THE CAMPUS</p><h2 className="max-w-[680px] text-3xl font-extrabold leading-tight tracking-[-0.05em] sm:text-4xl">พื้นที่เล็ก ๆ ที่เต็มไปด้วย<br /><span className="text-[#9edbd1]">โอกาสการเรียนรู้</span></h2><p className="mt-4 max-w-[630px] text-sm leading-7 text-white/65">วิทยาลัยเทคนิคสมุทรสงครามมุ่งพัฒนากำลังคนสายอาชีพให้พร้อมสำหรับโลกการทำงาน ด้วยการเรียนรู้จากสถานที่จริง เทคโนโลยีจริง และความร่วมมือจากชุมชน</p></div><div className="flex flex-col gap-3 lg:items-end"><div className="flex items-center gap-2 text-sm font-bold text-white/80"><MapPin size={17} className="text-[var(--coral)]" /> {campusAddress}</div><a href={`mailto:${settings?.contactEmail || "info@smtc.ac.th"}`} className="flex items-center gap-2 text-sm font-bold text-[var(--aqua)] transition-colors hover:text-white">ติดต่อวิทยาลัย <ArrowUpRight size={15} /></a></div></div></section>
+        <section id="about" className="mx-auto max-w-[1440px] scroll-mt-20 px-5 py-16 sm:px-8 lg:px-12 lg:py-20">
+          <div className="grid gap-8 rounded-[28px] bg-[var(--ink)] px-6 py-9 text-white sm:px-10 lg:grid-cols-[1.3fr_0.7fr] lg:items-end lg:px-14 lg:py-12">
+            <div>
+              <p className="mb-3 text-xs font-extrabold tracking-[0.16em] text-[var(--aqua)]">ABOUT THE CAMPUS</p>
+              <h2 className="max-w-[680px] text-3xl font-extrabold leading-tight tracking-[-0.05em] sm:text-4xl">
+                พื้นที่เล็ก ๆ ที่เต็มไปด้วย
+                <br />
+                <span className="text-[#9edbd1]">โอกาสการเรียนรู้</span>
+              </h2>
+              <p className="mt-4 max-w-[630px] text-sm leading-7 text-white/65">
+                วิทยาลัยเทคนิคสมุทรสงครามมุ่งพัฒนากำลังคนสายอาชีพให้พร้อมสำหรับโลกการทำงาน ด้วยการเรียนรู้จากสถานที่จริง
+                เทคโนโลยีจริง และความร่วมมือจากชุมชน
+              </p>
+            </div>
+            <div className="flex flex-col gap-3 lg:items-end">
+              <div className="flex items-center gap-2 text-sm font-bold text-white/80">
+                <MapPin size={17} className="text-[var(--coral)]" /> {campusAddress}
+              </div>
+              <a
+                href={`mailto:${settings?.contactEmail || "info@smtc.ac.th"}`}
+                className="flex items-center gap-2 text-sm font-bold text-[var(--aqua)] transition-colors hover:text-white"
+              >
+                ติดต่อวิทยาลัย <ArrowUpRight size={15} />
+              </a>
+            </div>
+          </div>
+        </section>
       </main>
-      <footer className="border-t border-[var(--border)] bg-white"><div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-3 px-5 py-6 text-[11px] font-medium text-[var(--muted-foreground)] sm:flex-row sm:px-8 lg:px-12"><span>© 2026 วิทยาลัยเทคนิคสมุทรสงคราม · น้องปลาทู</span><span className="flex items-center gap-3">{user?.role === "admin" && <a href="/admin" className="font-bold text-[#287c78]">ผู้ดูแลระบบ</a>}<span>ข้อมูลสาธิตสำหรับโครงงาน frontend และ backend</span></span></div></footer>
+      <footer className="border-t border-[var(--border)] bg-white">
+        <div className="mx-auto flex max-w-[1440px] flex-col justify-between gap-3 px-5 py-6 text-[11px] font-medium text-[var(--muted-foreground)] sm:flex-row sm:px-8 lg:px-12">
+          <span>© 2026 วิทยาลัยเทคนิคสมุทรสงคราม · น้องปลาทู</span>
+          <span className="flex items-center gap-3">
+            {user?.role === "admin" && (
+              <a href="/admin" className="font-bold text-[#287c78]">
+                ผู้ดูแลระบบ
+              </a>
+            )}
+            <span>ข้อมูลสาธิตสำหรับโครงงาน frontend และ backend</span>
+          </span>
+        </div>
+      </footer>
 
       <CampusAIWidget onShowRoute={showRoute} />
     </div>

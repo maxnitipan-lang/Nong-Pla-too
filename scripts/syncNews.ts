@@ -19,7 +19,7 @@ syncCollegeNews()
     console.log(`ดึงข่าวสำเร็จ ${imported} รายการ — หน้าเว็บอัปเดตแล้ว`);
     process.exit(0);
   })
-  .catch((error) => {
+  .catch(error => {
     console.error(error instanceof Error ? error.message : error);
     process.exit(1);
   });

@@ -67,9 +67,7 @@ async function devAdminUser(): Promise<User | null> {
   }
 }
 
-export async function createContext(
-  opts: CreateExpressContextOptions
-): Promise<TrpcContext> {
+export async function createContext(opts: CreateExpressContextOptions): Promise<TrpcContext> {
   let user: User | null = null;
 
   try {

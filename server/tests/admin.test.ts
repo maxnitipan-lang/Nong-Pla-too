@@ -46,9 +46,7 @@ describe("admin API access control", () => {
 
   it("stops an admin from removing their own admin role", async () => {
     const caller = appRouter.createCaller(contextFor("admin"));
-    await expect(
-      caller.admin.users.setRole({ openId: "owner-1", role: "user" }),
-    ).rejects.toThrow(/ตัวเอง/);
+    await expect(caller.admin.users.setRole({ openId: "owner-1", role: "user" })).rejects.toThrow(/ตัวเอง/);
   });
 
   it("surfaces a helpful error when writing without a database", async () => {
@@ -70,7 +68,7 @@ describe("admin API access control", () => {
         mapHeight: 17,
         sortOrder: 0,
         floorDetails: [{ level: 1, label: "ชั้น 1", rooms: ["ห้องทดสอบ"] }],
-      }),
+      })
     ).rejects.toThrow(/DATABASE_URL/);
   });
 });

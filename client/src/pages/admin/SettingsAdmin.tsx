@@ -47,11 +47,11 @@ export default function SettingsAdmin() {
       utils.campus.settings.invalidate();
       toast.success("บันทึกการตั้งค่าแล้ว");
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
 
   const set = <K extends keyof FormState>(key: K, value: FormState[K]) =>
-    setForm((prev) => (prev ? { ...prev, [key]: value } : prev));
+    setForm(prev => (prev ? { ...prev, [key]: value } : prev));
 
   const submit = () => {
     if (!form) return;
@@ -70,73 +70,71 @@ export default function SettingsAdmin() {
         <p className="text-sm text-[var(--muted-foreground)]">กำลังโหลด…</p>
       ) : (
         <div className="space-y-5 rounded-2xl border border-[var(--border)] bg-card p-5 sm:p-6">
-          <TextField
-            label="ชื่อวิทยาลัย"
-            value={form.collegeName}
-            onChange={(v) => set("collegeName", v)}
-          />
-          <TextAreaField
-            label="ที่อยู่"
-            value={form.address}
-            onChange={(v) => set("address", v)}
-            rows={2}
-          />
+          <TextField label="ชื่อวิทยาลัย" value={form.collegeName} onChange={v => set("collegeName", v)} />
+          <TextAreaField label="ที่อยู่" value={form.address} onChange={v => set("address", v)} rows={2} />
           <TextField
             label="อีเมลติดต่อ"
             value={form.contactEmail}
-            onChange={(v) => set("contactEmail", v)}
+            onChange={v => set("contactEmail", v)}
             placeholder="info@smtc.ac.th"
           />
           <TextAreaField
             label="ลิงก์ฝัง Google My Maps"
-            hint='Share → Embed → คัดลอกเฉพาะ src ของ <iframe> (ขึ้นต้นด้วย https://www.google.com/maps/d/embed?mid=) — เว้นว่างเพื่อใช้แผนที่วาด'
+            hint="Share → Embed → คัดลอกเฉพาะ src ของ <iframe> (ขึ้นต้นด้วย https://www.google.com/maps/d/embed?mid=) — เว้นว่างเพื่อใช้แผนที่วาด"
             value={form.mapEmbedUrl}
-            onChange={(v) => set("mapEmbedUrl", v)}
+            onChange={v => set("mapEmbedUrl", v)}
             rows={2}
           />
           <div className="grid gap-4 sm:grid-cols-2">
-            <NumberField
-              label="ละติจูดจุดกึ่งกลาง"
-              value={form.mapCenterLat}
-              onChange={(v) => set("mapCenterLat", v)}
-            />
-            <NumberField
-              label="ลองจิจูดจุดกึ่งกลาง"
-              value={form.mapCenterLng}
-              onChange={(v) => set("mapCenterLng", v)}
-            />
+            <NumberField label="ละติจูดจุดกึ่งกลาง" value={form.mapCenterLat} onChange={v => set("mapCenterLat", v)} />
+            <NumberField label="ลองจิจูดจุดกึ่งกลาง" value={form.mapCenterLng} onChange={v => set("mapCenterLng", v)} />
           </div>
           <div className="rounded-2xl border border-[var(--border)] p-4">
             <p className="text-sm font-bold text-[var(--ink)]">ตำแหน่งตู้ประชาสัมพันธ์ (Kiosk)</p>
             <p className="mt-1 text-xs leading-5 text-[var(--muted-foreground)]">
-              แตะบนแผนที่ตรงจุดที่ตั้งตู้ (ลากหมุดเพื่อปรับ) — เส้นทางที่แสดงบนตู้จะเริ่มจากจุดนี้ และแผนที่บนตู้ขึ้น "คุณอยู่ที่นี่"
-              ถ้าไม่ตั้ง ตู้จะใช้ตำแหน่ง GPS ของเครื่องแทน (คอมพิวเตอร์ตั้งโต๊ะมักคลาดเคลื่อนมาก)
+              แตะบนแผนที่ตรงจุดที่ตั้งตู้ (ลากหมุดเพื่อปรับ) — เส้นทางที่แสดงบนตู้จะเริ่มจากจุดนี้ และแผนที่บนตู้ขึ้น
+              "คุณอยู่ที่นี่" ถ้าไม่ตั้ง ตู้จะใช้ตำแหน่ง GPS ของเครื่องแทน (คอมพิวเตอร์ตั้งโต๊ะมักคลาดเคลื่อนมาก)
             </p>
             <div className="mt-3 grid gap-3 sm:grid-cols-[1fr_auto] sm:items-end">
-              <TextField label="ชื่อจุดตั้งตู้" value={form.kioskName} onChange={(v) => set("kioskName", v)} placeholder="เช่น ตู้ประชาสัมพันธ์ หน้าอาคารอำนวยการ" />
+              <TextField
+                label="ชื่อจุดตั้งตู้"
+                value={form.kioskName}
+                onChange={v => set("kioskName", v)}
+                placeholder="เช่น ตู้ประชาสัมพันธ์ หน้าอาคารอำนวยการ"
+              />
               {canEdit && form.kioskLat !== null && (
-                <Button variant="outline" onClick={() => setForm((f) => (f ? { ...f, kioskLat: null, kioskLng: null } : f))}>
+                <Button
+                  variant="outline"
+                  onClick={() => setForm(f => (f ? { ...f, kioskLat: null, kioskLng: null } : f))}
+                >
                   ล้างตำแหน่งตู้
                 </Button>
               )}
             </div>
             <div className="mt-3">
               <PointPicker
-                value={form.kioskLat !== null && form.kioskLng !== null ? { lat: form.kioskLat, lng: form.kioskLng } : null}
-                onChange={(p) => setForm((f) => (f ? { ...f, kioskLat: p.lat, kioskLng: p.lng } : f))}
+                value={
+                  form.kioskLat !== null && form.kioskLng !== null ? { lat: form.kioskLat, lng: form.kioskLng } : null
+                }
+                onChange={p => setForm(f => (f ? { ...f, kioskLat: p.lat, kioskLng: p.lng } : f))}
                 disabled={!canEdit}
               />
             </div>
             <p className="mt-2 text-[11px] text-[var(--muted-foreground)]">
-              {form.kioskLat !== null ? `ตำแหน่ง: ${form.kioskLat.toFixed(6)}, ${form.kioskLng?.toFixed(6)}` : "ยังไม่ได้ตั้งตำแหน่งตู้"}
-              {" · "}เปิดหน้าตู้ที่ <code className="rounded bg-black/5 px-1">/</code> แอปมือถืออยู่ที่ <code className="rounded bg-black/5 px-1">/app</code>
+              {form.kioskLat !== null
+                ? `ตำแหน่ง: ${form.kioskLat.toFixed(6)}, ${form.kioskLng?.toFixed(6)}`
+                : "ยังไม่ได้ตั้งตำแหน่งตู้"}
+              {" · "}เปิดหน้าตู้ที่ <code className="rounded bg-black/5 px-1">/</code> แอปมือถืออยู่ที่{" "}
+              <code className="rounded bg-black/5 px-1">/app</code>
             </p>
           </div>
-          {canEdit && <div className="flex justify-end">
-            <Button onClick={submit} disabled={update.isPending}>
-              {update.isPending ? "กำลังบันทึก…" : "บันทึกการตั้งค่า"}
-            </Button>
-          </div>}
+          {canEdit && (
+            <div className="flex justify-end">
+              <Button onClick={submit} disabled={update.isPending}>
+                {update.isPending ? "กำลังบันทึก…" : "บันทึกการตั้งค่า"}
+              </Button>
+            </div>
+          )}
         </div>
       )}
     </AdminShell>

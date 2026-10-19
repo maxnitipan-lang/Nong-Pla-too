@@ -34,10 +34,11 @@ export const isVoiceConfigured = (): boolean => API_KEY.length > 0;
 const hits = new Map<string, number[]>();
 function allow(req: Request, bucket: string, perMinute: number): boolean {
   const forwarded = req.headers["x-forwarded-for"];
-  const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim() || req.socket.remoteAddress || "?";
+  const ip =
+    (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim() || req.socket.remoteAddress || "?";
   const key = `${bucket}:${ip}`;
   const now = Date.now();
-  const recent = (hits.get(key) ?? []).filter((t) => now - t < 60_000);
+  const recent = (hits.get(key) ?? []).filter(t => now - t < 60_000);
   if (recent.length >= perMinute) return false;
   recent.push(now);
   hits.set(key, recent);
@@ -79,14 +80,24 @@ function toWav(data: Buffer, mimeType = ""): Buffer {
 // Text to speech
 // ---------------------------------------------------------------------------
 
-type AudioPart = { data?: string; mime_type?: string; mimeType?: string; inlineData?: { data?: string; mimeType?: string }; inline_data?: { data?: string; mime_type?: string } };
+type AudioPart = {
+  data?: string;
+  mime_type?: string;
+  mimeType?: string;
+  inlineData?: { data?: string; mimeType?: string };
+  inline_data?: { data?: string; mime_type?: string };
+};
 
 /** Find the first base64 audio blob anywhere in a response (both API shapes). */
 function findAudio(node: unknown): { data: string; mimeType: string } | null {
   if (!node || typeof node !== "object") return null;
   const part = node as AudioPart;
   const inline = part.inlineData ?? part.inline_data;
-  if (inline?.data) return { data: inline.data, mimeType: (inline as { mimeType?: string }).mimeType ?? (inline as { mime_type?: string }).mime_type ?? "" };
+  if (inline?.data)
+    return {
+      data: inline.data,
+      mimeType: (inline as { mimeType?: string }).mimeType ?? (inline as { mime_type?: string }).mime_type ?? "",
+    };
   const mime = part.mime_type ?? part.mimeType ?? "";
   if (typeof part.data === "string" && part.data.length > 100 && (mime.startsWith("audio") || !mime)) {
     return { data: part.data, mimeType: mime };
@@ -125,11 +136,16 @@ export async function synthesizeSpeech(text: string): Promise<Buffer> {
         `${API_BASE}/interactions`,
         {
           model: TTS_MODEL,
-          input: [{ type: "user_input", content: [{ type: "text", text, annotations: [{ type: "speech_metadata", style: TTS_STYLE }] }] }],
+          input: [
+            {
+              type: "user_input",
+              content: [{ type: "text", text, annotations: [{ type: "speech_metadata", style: TTS_STYLE }] }],
+            },
+          ],
           response_format: { type: "audio" },
           generation_config: { speech_config: [{ voice: TTS_VOICE }] },
         },
-        25_000,
+        25_000
       ),
     () =>
       postJson(
@@ -141,7 +157,7 @@ export async function synthesizeSpeech(text: string): Promise<Buffer> {
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TTS_VOICE } } },
           },
         },
-        25_000,
+        25_000
       ),
   ];
   for (const attempt of attempts) {
@@ -182,9 +198,9 @@ export async function transcribeSpeech(wav: Buffer): Promise<string> {
       ],
       generationConfig: { temperature: 0 },
     },
-    30_000,
+    30_000
   )) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
-  const text = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
+  const text = json.candidates?.[0]?.content?.parts?.map(p => p.text ?? "").join("") ?? "";
   return text.replace(/^["'“”\s]+|["'“”\s]+$/g, "").trim();
 }
 
@@ -229,6 +245,6 @@ export function registerVoiceRoutes(app: Express): void {
         console.warn("[Voice] STT failed:", error instanceof Error ? error.message : error);
         res.status(502).json({ error: "ฟังเสียงไม่สำเร็จ" });
       }
-    },
+    }
   );
 }

@@ -43,7 +43,7 @@ describe("staff roles", () => {
     await expect(caller.admin.news.save(newsItem as never)).rejects.toThrow(/DATABASE_URL/); // passed the guard
     await expect(caller.admin.users.list()).rejects.toThrow(/10002/);
     await expect(
-      caller.admin.users.create({ username: "someone", name: "x", password: "12345678", role: "viewer" }),
+      caller.admin.users.create({ username: "someone", name: "x", password: "12345678", role: "viewer" })
     ).rejects.toThrow(/10002/);
   });
 

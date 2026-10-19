@@ -11,12 +11,7 @@ import {
   type FloorDetail,
   type GalleryImage,
 } from "@shared/campus";
-import type {
-  BuildingInput,
-  ImportedBuildingInput,
-  NewsInput,
-  SettingsInput,
-} from "@shared/adminSchemas";
+import type { BuildingInput, ImportedBuildingInput, NewsInput, SettingsInput } from "@shared/adminSchemas";
 import {
   campusBuildings,
   campusNews,
@@ -59,7 +54,7 @@ async function requireDb() {
   const db = await getDb();
   if (!db) {
     throw new Error(
-      "ยังไม่ได้ตั้งค่า DATABASE_URL — เชื่อมต่อฐานข้อมูล MySQL แล้วรัน `pnpm db:push` ก่อนใช้งานส่วนผู้ดูแล",
+      "ยังไม่ได้ตั้งค่า DATABASE_URL — เชื่อมต่อฐานข้อมูล MySQL แล้วรัน `pnpm db:push` ก่อนใช้งานส่วนผู้ดูแล"
     );
   }
   return db;
@@ -128,7 +123,7 @@ export async function listUsers() {
   const db = await getDb();
   if (!db) return [];
   const rows = await db.select().from(users).orderBy(asc(users.createdAt));
-  return rows.map((row) => ({
+  return rows.map(row => ({
     ...toSafeUser(row),
     /** Set for username/password accounts created in the admin panel. */
     username: isLocalAccount(row.openId) ? row.openId.slice(LOCAL_PREFIX.length) : null,
@@ -136,7 +131,12 @@ export async function listUsers() {
 }
 
 /** New username + password staff account (admin / editor / viewer). */
-export async function createLocalAdmin(input: { username: string; name: string; password: string; role: StaffRole }): Promise<void> {
+export async function createLocalAdmin(input: {
+  username: string;
+  name: string;
+  password: string;
+  role: StaffRole;
+}): Promise<void> {
   const db = await requireDb();
   const openId = usernameToOpenId(input.username);
   if (input.username.trim().toLowerCase() === (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase()) {
@@ -155,7 +155,10 @@ export async function createLocalAdmin(input: { username: string; name: string; 
 export async function setLocalPassword(openId: string, password: string): Promise<void> {
   const db = await requireDb();
   if (!isLocalAccount(openId)) throw new Error("บัญชีนี้ไม่ได้ใช้รหัสผ่าน (เข้าสู่ระบบผ่าน OAuth)");
-  await db.update(users).set({ passwordHash: hashPassword(password) }).where(eq(users.openId, openId));
+  await db
+    .update(users)
+    .set({ passwordHash: hashPassword(password) })
+    .where(eq(users.openId, openId));
 }
 
 export async function deleteUser(openId: string): Promise<void> {
@@ -172,7 +175,7 @@ export async function setUserRole(openId: string, role: UserRole) {
 // Campus buildings
 // ---------------------------------------------------------------------------
 
-const DEMO_BUILDINGS_BY_ID = new Map(CAMPUS_BUILDINGS.map((b) => [b.id, b]));
+const DEMO_BUILDINGS_BY_ID = new Map(CAMPUS_BUILDINGS.map(b => [b.id, b]));
 
 function rowToBuilding(row: CampusBuildingRow): CampusBuilding {
   const demo = DEMO_BUILDINGS_BY_ID.get(row.id);
@@ -249,9 +252,7 @@ export async function upsertCampusBuilding(input: BuildingInput): Promise<void> 
  * description and coordinates are overwritten on existing rows, so floors,
  * departments and gallery entered in the admin panel survive a re-import.
  */
-export async function importCampusBuildings(
-  items: ImportedBuildingInput[],
-): Promise<{ imported: number }> {
+export async function importCampusBuildings(items: ImportedBuildingInput[]): Promise<{ imported: number }> {
   const db = await requireDb();
   for (const item of items) {
     const mapped = {
@@ -338,12 +339,9 @@ export type CampusNewsAdmin = CampusNewsItem & { published: boolean; sortOrder: 
 
 export async function listCampusNewsAdmin(): Promise<CampusNewsAdmin[]> {
   const db = await getDb();
-  if (!db) return CAMPUS_NEWS.map((item) => ({ ...item, published: true, sortOrder: 0 }));
-  const rows = await db
-    .select()
-    .from(campusNews)
-    .orderBy(asc(campusNews.sortOrder), asc(campusNews.createdAt));
-  return sortNewsRows(rows).map((row) => ({
+  if (!db) return CAMPUS_NEWS.map(item => ({ ...item, published: true, sortOrder: 0 }));
+  const rows = await db.select().from(campusNews).orderBy(asc(campusNews.sortOrder), asc(campusNews.createdAt));
+  return sortNewsRows(rows).map(row => ({
     ...rowToNews(row),
     published: row.published === 1,
     sortOrder: row.sortOrder,
@@ -385,7 +383,7 @@ export async function getCampusSettings(): Promise<CampusSettings> {
 
   try {
     const rows = await db.select().from(siteSettings);
-    const map = new Map(rows.map((row) => [row.key, row.value]));
+    const map = new Map(rows.map(row => [row.key, row.value]));
     const num = (key: string, fallback: number) => {
       const raw = map.get(key);
       const parsed = raw != null ? Number(raw) : NaN;
@@ -428,10 +426,7 @@ export async function updateCampusSettings(input: SettingsInput): Promise<void> 
   if (input.kioskLat !== undefined) entries.push(["kioskLat", input.kioskLat === null ? "" : String(input.kioskLat)]);
   if (input.kioskLng !== undefined) entries.push(["kioskLng", input.kioskLng === null ? "" : String(input.kioskLng)]);
   for (const [key, value] of entries) {
-    await db
-      .insert(siteSettings)
-      .values({ key, value })
-      .onDuplicateKeyUpdate({ set: { value } });
+    await db.insert(siteSettings).values({ key, value }).onDuplicateKeyUpdate({ set: { value } });
   }
 }
 

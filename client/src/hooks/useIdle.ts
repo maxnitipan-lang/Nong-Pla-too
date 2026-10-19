@@ -19,10 +19,10 @@ export function useIdle(ms: number): [idle: boolean, wake: () => void] {
       arm();
     };
     const events = ["pointerdown", "keydown", "wheel", "touchstart"] as const;
-    events.forEach((e) => window.addEventListener(e, activity, { passive: true }));
+    events.forEach(e => window.addEventListener(e, activity, { passive: true }));
     arm();
     return () => {
-      events.forEach((e) => window.removeEventListener(e, activity));
+      events.forEach(e => window.removeEventListener(e, activity));
       window.clearTimeout(timer.current);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

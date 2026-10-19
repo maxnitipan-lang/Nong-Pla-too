@@ -43,7 +43,7 @@ describe("local admin accounts", () => {
       res: { cookie: () => undefined } as unknown as TrpcContext["res"],
     };
     await expect(
-      appRouter.createCaller(ctx).auth.adminLogin({ username: "nobody", password: "whatever-123" }),
+      appRouter.createCaller(ctx).auth.adminLogin({ username: "nobody", password: "whatever-123" })
     ).rejects.toThrow(/ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง/);
   });
 
@@ -54,7 +54,7 @@ describe("local admin accounts", () => {
       res: {} as TrpcContext["res"],
     };
     await expect(
-      appRouter.createCaller(ctx).admin.users.create({ username: "somchai", name: "สมชาย", password: "12345678" }),
+      appRouter.createCaller(ctx).admin.users.create({ username: "somchai", name: "สมชาย", password: "12345678" })
     ).rejects.toThrow(/10002/);
   });
 });

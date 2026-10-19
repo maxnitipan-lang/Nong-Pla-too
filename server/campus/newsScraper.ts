@@ -37,7 +37,7 @@ export async function scrapeCollegeNews(limit = DEFAULT_LIMIT): Promise<NewsInpu
     throw new Error(
       status === 403
         ? "เว็บวิทยาลัยปฏิเสธการดึงข่าวจากเซิร์ฟเวอร์ (HTTP 403 — Cloudflare บล็อก) — ดึงจากคอมพิวเตอร์ในวิทยาลัยแทนด้วยคำสั่ง pnpm news:sync"
-        : `ดึงข่าวจากเว็บวิทยาลัยไม่สำเร็จ (HTTP ${status})`,
+        : `ดึงข่าวจากเว็บวิทยาลัยไม่สำเร็จ (HTTP ${status})`
     );
   }
 
@@ -53,21 +53,15 @@ export async function scrapeCollegeNews(limit = DEFAULT_LIMIT): Promise<NewsInpu
     const idMatch = href.match(/(\d+)\s*$/);
     // The title lives in the <h3> link text, or a `title=` attr on any of the
     // article's links (the image link always carries it).
-    const title = (
+    const title =
       $titleLink.text().trim() ||
       $titleLink.attr("title")?.trim() ||
       $el.find("a.txt-link[title]").first().attr("title")?.trim() ||
-      ""
-    );
+      "";
     if (!idMatch || !title) return;
 
     const numericId = idMatch[1];
-    const rawDate = $el
-      .find("time")
-      .first()
-      .text()
-      .replace(/ /g, " ")
-      .trim();
+    const rawDate = $el.find("time").first().text().replace(/ /g, " ").trim();
     const dateLabel = rawDate.replace(/^วันที่\s*/, "").trim() || rawDate || "—";
 
     const $img = $el.find("img").first();
@@ -98,9 +92,7 @@ export async function scrapeCollegeNews(limit = DEFAULT_LIMIT): Promise<NewsInpu
   });
 
   if (items.length === 0) {
-    throw new Error(
-      "ไม่พบรายการข่าวในหน้าเว็บวิทยาลัย — โครงสร้างหน้าเว็บอาจเปลี่ยน ต้องปรับ newsScraper.ts",
-    );
+    throw new Error("ไม่พบรายการข่าวในหน้าเว็บวิทยาลัย — โครงสร้างหน้าเว็บอาจเปลี่ยน ต้องปรับ newsScraper.ts");
   }
 
   return items;

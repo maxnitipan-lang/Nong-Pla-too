@@ -11,9 +11,7 @@
 
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "../db";
 
-const CHAT_BASE_URL =
-  process.env.CHAT_BASE_URL ||
-  "https://generativelanguage.googleapis.com/v1beta/openai";
+const CHAT_BASE_URL = process.env.CHAT_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
 // A pinned flash-lite model: generous free-tier quota AND consistently fast
 // (~3-5s). The "-latest" alias has been resolving to a build that takes
 // 30-60s per reply, which makes the chat look hung.
@@ -40,18 +38,18 @@ function buildSystemPrompt(
   buildings: Awaited<ReturnType<typeof getCampusBuildings>>,
   news: Awaited<ReturnType<typeof getCampusNews>>,
   settings: Awaited<ReturnType<typeof getCampusSettings>>,
-  spoken = false,
+  spoken = false
 ): string {
   const buildingLines = buildings
-    .map((b) => {
+    .map(b => {
       // Rooms per floor + kiosk departments, so "สาขา X อยู่ไหน" can be answered.
       const floors = b.floorsDetail
-        .filter((f) => f.rooms.length)
-        .map((f) => `${f.label}: ${f.rooms.join(", ")}`)
+        .filter(f => f.rooms.length)
+        .map(f => `${f.label}: ${f.rooms.join(", ")}`)
         .join(" / ");
       const departments = (b.departments ?? [])
-        .filter((d) => d.name && !b.floorsDetail.some((f) => f.rooms.includes(d.name)))
-        .map((d) => `${d.name} (ชั้น ${d.floor})`)
+        .filter(d => d.name && !b.floorsDetail.some(f => f.rooms.includes(d.name)))
+        .map(d => `${d.name} (ชั้น ${d.floor})`)
         .join(", ");
       return [
         `- id:${b.id} | ชื่อ: ${b.name} | กลุ่ม: ${b.category} | ${b.floors} ชั้น | รายละเอียด: ${b.description}`,
@@ -63,9 +61,7 @@ function buildSystemPrompt(
     })
     .join("\n");
 
-  const newsLines = news
-    .map((n) => `- [${n.date}] ${n.title}${n.link ? ` — ${n.link}` : ""}`)
-    .join("\n");
+  const newsLines = news.map(n => `- [${n.date}] ${n.title}${n.link ? ` — ${n.link}` : ""}`).join("\n");
 
   return [
     `คุณคือ "น้องปลาทู" ผู้ช่วยตอบคำถามประจำ "${settings.collegeName}" สำหรับนักเรียน ผู้ปกครอง และผู้มาติดต่อ`,
@@ -121,19 +117,16 @@ type OpenAiChoice = {
 };
 
 /** A bare greeting as the first turn — answer instantly, skip the slow AI call. */
-const GREETING_RE =
-  /^(สวัส?ดี|หวัดดี|ดีครับ|ดีค่ะ|ดีจ้า|hello|hi|hey|ทัก(ทาย)?)[\s!.ๆครับค่ะจ้าา]*$/i;
+const GREETING_RE = /^(สวัส?ดี|หวัดดี|ดีครับ|ดีค่ะ|ดีจ้า|hello|hi|hey|ทัก(ทาย)?)[\s!.ๆครับค่ะจ้าา]*$/i;
 
 /** Send the conversation to the model and return the assistant answer. */
 export async function askCampusChat(history: ChatMessage[], options: { spoken?: boolean } = {}): Promise<ChatAnswer> {
   if (!CHAT_API_KEY) {
-    throw new Error(
-      "ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในไฟล์ .env — ขอ key ฟรีที่ https://aistudio.google.com/apikey",
-    );
+    throw new Error("ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในไฟล์ .env — ขอ key ฟรีที่ https://aistudio.google.com/apikey");
   }
 
   const settingsEarly = await getCampusSettings();
-  const userTurns = history.filter((m) => m.role === "user");
+  const userTurns = history.filter(m => m.role === "user");
   const lastUser = userTurns.at(-1)?.content.trim() ?? "";
   if (userTurns.length === 1 && GREETING_RE.test(lastUser)) {
     return {
@@ -147,23 +140,16 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
     getCampusNews(),
     Promise.resolve(settingsEarly),
   ]);
-  const byId = new Map(buildings.map((b) => [b.id, b]));
-  const routableIds = buildings
-    .filter((b) => b.latitude && b.longitude)
-    .map((b) => b.id);
+  const byId = new Map(buildings.map(b => [b.id, b]));
+  const routableIds = buildings.filter(b => b.latitude && b.longitude).map(b => b.id);
 
   // Keep only the last few user/assistant turns; the system prompt is rebuilt
   // fresh so the model always has current building/news data.
-  const turns = history
-    .filter((m) => m.role === "user" || m.role === "assistant")
-    .slice(-10);
+  const turns = history.filter(m => m.role === "user" || m.role === "assistant").slice(-10);
 
   const requestBody = JSON.stringify({
     model: CHAT_MODEL,
-    messages: [
-      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken) },
-      ...turns,
-    ],
+    messages: [{ role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken) }, ...turns],
     temperature: 0.3,
     max_tokens: 800,
     tools: routableIds.length
@@ -172,8 +158,7 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
             type: "function",
             function: {
               name: ROUTE_TOOL,
-              description:
-                "แสดงแผนที่เส้นทางเดินไปยังอาคารในเว็บ ใช้เมื่อผู้ใช้ขอเส้นทาง วิธีไป หรือการนำทางไปอาคาร",
+              description: "แสดงแผนที่เส้นทางเดินไปยังอาคารในเว็บ ใช้เมื่อผู้ใช้ขอเส้นทาง วิธีไป หรือการนำทางไปอาคาร",
               parameters: {
                 type: "object",
                 properties: {
@@ -192,7 +177,7 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
   // 503 = transient capacity, worth a quick retry. 429 = per-minute quota, retrying
   // in-request won't help so fail fast with a clear message.
   for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise((r) => setTimeout(r, 500 * attempt));
+    if (attempt > 0) await new Promise(r => setTimeout(r, 500 * attempt));
 
     let res: Response;
     // Gemini can hold the connection open without ever responding; without a
@@ -233,23 +218,18 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
       const choice = data?.choices?.[0];
       const message = choice?.message;
 
-      const toolCall = message?.tool_calls?.find(
-        (c) => c.function?.name === ROUTE_TOOL,
-      );
+      const toolCall = message?.tool_calls?.find(c => c.function?.name === ROUTE_TOOL);
       if (toolCall) {
         let buildingId: string | null = null;
         try {
-          buildingId = JSON.parse(toolCall.function?.arguments ?? "{}")
-            ?.buildingId;
+          buildingId = JSON.parse(toolCall.function?.arguments ?? "{}")?.buildingId;
         } catch {
           buildingId = null;
         }
         const target = buildingId ? byId.get(buildingId) : undefined;
         if (target) {
           return {
-            reply:
-              message?.content?.trim() ||
-              `เปิดแผนที่เส้นทางเดินไป "${target.name}" ให้แล้วครับ 👇`,
+            reply: message?.content?.trim() || `เปิดแผนที่เส้นทางเดินไป "${target.name}" ให้แล้วครับ 👇`,
             routeToBuildingId: target.id,
           };
         }
@@ -262,9 +242,7 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
 
     lastStatus = res.status;
     if (res.status === 429) {
-      throw new Error(
-        "ถามบ่อยเกินไป (เกินโควตาต่อนาทีของ AI ฟรี) — รอสักครู่แล้วลองใหม่",
-      );
+      throw new Error("ถามบ่อยเกินไป (เกินโควตาต่อนาทีของ AI ฟรี) — รอสักครู่แล้วลองใหม่");
     }
     if (res.status !== 503) {
       const detail = await res.text().catch(() => "");
@@ -275,18 +253,12 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
       } catch {
         apiMessage = detail.slice(0, 200);
       }
-      throw new Error(
-        `บริการ AI ตอบกลับผิดพลาด (${res.status})${apiMessage ? `: ${apiMessage}` : ""}`,
-      );
+      throw new Error(`บริการ AI ตอบกลับผิดพลาด (${res.status})${apiMessage ? `: ${apiMessage}` : ""}`);
     }
   }
 
   if (lastStatus) {
-    throw new Error(
-      `บริการ AI มีผู้ใช้งานหนาแน่น (${lastStatus}) — กรุณาลองใหม่อีกครั้งในอีกสักครู่`,
-    );
+    throw new Error(`บริการ AI มีผู้ใช้งานหนาแน่น (${lastStatus}) — กรุณาลองใหม่อีกครั้งในอีกสักครู่`);
   }
-  throw new Error(
-    `เชื่อมต่อบริการ AI ไม่ได้ (${lastNetworkError}) — กรุณาลองใหม่อีกครั้ง`,
-  );
+  throw new Error(`เชื่อมต่อบริการ AI ไม่ได้ (${lastNetworkError}) — กรุณาลองใหม่อีกครั้ง`);
 }

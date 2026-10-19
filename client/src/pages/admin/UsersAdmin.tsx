@@ -17,13 +17,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { newAdminAccountSchema } from "@shared/adminSchemas";
@@ -39,7 +33,7 @@ import { Input } from "@/components/ui/input";
 function randomPassword(length = 12): string {
   const abc = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789";
   const bytes = crypto.getRandomValues(new Uint8Array(length));
-  return Array.from(bytes, (b) => abc[b % abc.length]).join("");
+  return Array.from(bytes, b => abc[b % abc.length]).join("");
 }
 
 function PasswordField({ value, onChange }: { value: string; onChange: (v: string) => void }) {
@@ -54,13 +48,13 @@ function PasswordField({ value, onChange }: { value: string; onChange: (v: strin
               <Input
                 type={visible ? "text" : "password"}
                 value={value}
-                onChange={(e) => onChange(e.target.value)}
+                onChange={e => onChange(e.target.value)}
                 autoComplete="new-password"
                 className="pr-10"
               />
               <button
                 type="button"
-                onClick={() => setVisible((v) => !v)}
+                onClick={() => setVisible(v => !v)}
                 className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                 aria-label={visible ? "ซ่อนรหัสผ่าน" : "แสดงรหัสผ่าน"}
               >
@@ -94,7 +88,12 @@ export default function UsersAdmin() {
   const utils = trpc.useUtils();
   const { data, isLoading } = trpc.admin.users.list.useQuery();
   const [createOpen, setCreateOpen] = useState(false);
-  const [form, setForm] = useState<{ username: string; name: string; password: string; role: StaffRole }>({ username: "", name: "", password: "", role: "editor" });
+  const [form, setForm] = useState<{ username: string; name: string; password: string; role: StaffRole }>({
+    username: "",
+    name: "",
+    password: "",
+    role: "editor",
+  });
   const [resetFor, setResetFor] = useState<{ openId: string; label: string } | null>(null);
   const [newPassword, setNewPassword] = useState("");
   const [deleteFor, setDeleteFor] = useState<{ openId: string; label: string } | null>(null);
@@ -109,7 +108,7 @@ export default function UsersAdmin() {
       refresh();
       toast.success("อัปเดตสิทธิ์แล้ว");
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
   const create = trpc.admin.users.create.useMutation({
     onSuccess: () => {
@@ -118,7 +117,7 @@ export default function UsersAdmin() {
       setCreateOpen(false);
       setForm({ username: "", name: "", password: "", role: "editor" });
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
   const resetPassword = trpc.admin.users.resetPassword.useMutation({
     onSuccess: () => {
@@ -126,7 +125,7 @@ export default function UsersAdmin() {
       setResetFor(null);
       setNewPassword("");
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
   const remove = trpc.admin.users.delete.useMutation({
     onSuccess: () => {
@@ -134,7 +133,7 @@ export default function UsersAdmin() {
       toast.success("ลบบัญชีแล้ว");
       setDeleteFor(null);
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
 
   const submitCreate = () => {
@@ -151,11 +150,16 @@ export default function UsersAdmin() {
       <DbBanner />
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <p className="max-w-2xl text-xs leading-6 text-[var(--muted-foreground)]">
-          เพิ่มคนเข้าส่วนผู้ดูแลเป็นรายคน (ชื่อผู้ใช้ + รหัสผ่าน) และกำหนดสิทธิ์: <b>ผู้ดูแล</b> — ทำได้ทุกอย่างรวมถึงจัดการผู้ใช้ ·{" "}
-          <b>ผู้แก้ไข</b> — แก้อาคาร ทางเดิน ข่าว ตั้งค่า · <b>ดูอย่างเดียว</b> — เปิดดูได้ แก้ไม่ได้
-          · บัญชีหลักใน .env (ADMIN_USERNAME / ADMIN_PASSWORD) ไม่แสดงในรายการนี้
+          เพิ่มคนเข้าส่วนผู้ดูแลเป็นรายคน (ชื่อผู้ใช้ + รหัสผ่าน) และกำหนดสิทธิ์: <b>ผู้ดูแล</b> —
+          ทำได้ทุกอย่างรวมถึงจัดการผู้ใช้ · <b>ผู้แก้ไข</b> — แก้อาคาร ทางเดิน ข่าว ตั้งค่า · <b>ดูอย่างเดียว</b> —
+          เปิดดูได้ แก้ไม่ได้ · บัญชีหลักใน .env (ADMIN_USERNAME / ADMIN_PASSWORD) ไม่แสดงในรายการนี้
         </p>
-        <Button onClick={() => { setForm({ username: "", name: "", password: randomPassword(), role: "editor" }); setCreateOpen(true); }}>
+        <Button
+          onClick={() => {
+            setForm({ username: "", name: "", password: randomPassword(), role: "editor" });
+            setCreateOpen(true);
+          }}
+        >
           <UserPlus size={16} /> เพิ่มผู้ใช้
         </Button>
       </div>
@@ -168,7 +172,7 @@ export default function UsersAdmin() {
         </p>
       ) : (
         <div className="space-y-2">
-          {data.map((u) => {
+          {data.map(u => {
             const isSelf = u.openId === user?.openId;
             const label = u.name ?? u.username ?? u.email ?? u.openId;
             return (
@@ -189,30 +193,33 @@ export default function UsersAdmin() {
                     )}
                   </p>
                   <p className="truncate text-[11px] text-[var(--muted-foreground)]">
-                    {u.username ? "เข้าสู่ระบบด้วยรหัสผ่าน" : u.email ?? u.openId} · เข้าสู่ระบบล่าสุด{" "}
+                    {u.username ? "เข้าสู่ระบบด้วยรหัสผ่าน" : (u.email ?? u.openId)} · เข้าสู่ระบบล่าสุด{" "}
                     {new Date(u.lastSignedIn).toLocaleDateString("th-TH")}
                   </p>
                 </div>
                 <Select
                   value={u.role}
-                  onValueChange={(role) =>
-                    setRole.mutate({ openId: u.openId, role: role as UserRole })
-                  }
+                  onValueChange={role => setRole.mutate({ openId: u.openId, role: role as UserRole })}
                   disabled={isSelf || setRole.isPending}
                 >
                   <SelectTrigger className="w-36">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    {[...USER_ROLES].reverse().map((r) => (
-                      <SelectItem key={r} value={r}>{ROLE_LABELS[r]}</SelectItem>
+                    {[...USER_ROLES].reverse().map(r => (
+                      <SelectItem key={r} value={r}>
+                        {ROLE_LABELS[r]}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
                 {u.username && (
                   <button
                     type="button"
-                    onClick={() => { setNewPassword(randomPassword()); setResetFor({ openId: u.openId, label }); }}
+                    onClick={() => {
+                      setNewPassword(randomPassword());
+                      setResetFor({ openId: u.openId, label });
+                    }}
                     className="rounded-lg p-2 text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                     aria-label="เปลี่ยนรหัสผ่าน"
                     title="เปลี่ยนรหัสผ่าน"
@@ -241,32 +248,40 @@ export default function UsersAdmin() {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>เพิ่มผู้ใช้ส่วนผู้ดูแล</DialogTitle>
-            <DialogDescription>เข้าสู่ระบบที่ /admin ด้วยชื่อผู้ใช้และรหัสผ่านนี้ ได้สิทธิ์ตามที่เลือกด้านล่าง</DialogDescription>
+            <DialogDescription>
+              เข้าสู่ระบบที่ /admin ด้วยชื่อผู้ใช้และรหัสผ่านนี้ ได้สิทธิ์ตามที่เลือกด้านล่าง
+            </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <TextField
               label="ชื่อผู้ใช้ (ใช้ตอนเข้าสู่ระบบ)"
               hint="a-z, 0-9, . _ - เช่น somchai"
               value={form.username}
-              onChange={(v) => setForm((f) => ({ ...f, username: v }))}
+              onChange={v => setForm(f => ({ ...f, username: v }))}
               placeholder="somchai"
             />
             <TextField
               label="ชื่อที่แสดง"
               value={form.name}
-              onChange={(v) => setForm((f) => ({ ...f, name: v }))}
+              onChange={v => setForm(f => ({ ...f, name: v }))}
               placeholder="เช่น ครูสมชาย งานประชาสัมพันธ์"
             />
-            <PasswordField value={form.password} onChange={(v) => setForm((f) => ({ ...f, password: v }))} />
+            <PasswordField value={form.password} onChange={v => setForm(f => ({ ...f, password: v }))} />
             <div>
               <p className="mb-2 text-xs font-bold text-[var(--ink)]">สิทธิ์</p>
               <div className="space-y-2">
-                {STAFF_ROLES.map((r) => (
+                {STAFF_ROLES.map(r => (
                   <label
                     key={r}
                     className={`flex cursor-pointer items-start gap-3 rounded-xl border p-3 text-sm ${form.role === r ? "border-[var(--ink)] bg-[var(--secondary)]" : "border-[var(--border)]"}`}
                   >
-                    <input type="radio" name="role" checked={form.role === r} onChange={() => setForm((f) => ({ ...f, role: r }))} className="mt-1" />
+                    <input
+                      type="radio"
+                      name="role"
+                      checked={form.role === r}
+                      onChange={() => setForm(f => ({ ...f, role: r }))}
+                      className="mt-1"
+                    />
                     <span>
                       <span className="block font-bold text-[var(--ink)]">{ROLE_LABELS[r]}</span>
                       <span className="block text-xs text-[var(--muted-foreground)]">{ROLE_DESCRIPTIONS[r]}</span>
@@ -277,7 +292,9 @@ export default function UsersAdmin() {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCreateOpen(false)}>ยกเลิก</Button>
+            <Button variant="outline" onClick={() => setCreateOpen(false)}>
+              ยกเลิก
+            </Button>
             <Button onClick={submitCreate} disabled={create.isPending}>
               {create.isPending ? "กำลังบันทึก…" : "เพิ่มผู้ใช้"}
             </Button>
@@ -285,7 +302,7 @@ export default function UsersAdmin() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!resetFor} onOpenChange={(v) => !v && setResetFor(null)}>
+      <Dialog open={!!resetFor} onOpenChange={v => !v && setResetFor(null)}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>เปลี่ยนรหัสผ่าน · {resetFor?.label}</DialogTitle>
@@ -293,7 +310,9 @@ export default function UsersAdmin() {
           </DialogHeader>
           <PasswordField value={newPassword} onChange={setNewPassword} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setResetFor(null)}>ยกเลิก</Button>
+            <Button variant="outline" onClick={() => setResetFor(null)}>
+              ยกเลิก
+            </Button>
             <Button
               onClick={() => resetFor && resetPassword.mutate({ openId: resetFor.openId, password: newPassword })}
               disabled={resetPassword.isPending || newPassword.length < 8}
@@ -304,7 +323,7 @@ export default function UsersAdmin() {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteFor} onOpenChange={(v) => !v && setDeleteFor(null)}>
+      <AlertDialog open={!!deleteFor} onOpenChange={v => !v && setDeleteFor(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>ลบบัญชี “{deleteFor?.label}”?</AlertDialogTitle>

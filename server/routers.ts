@@ -3,7 +3,14 @@ import { z } from "zod";
 import { COOKIE_NAME } from "@shared/const";
 import { adminRouter } from "./admin/adminRouter";
 import { askCampusChat, isChatConfigured } from "./assistant/chat";
-import { getCampusBuildings, getCampusNews, getCampusSettings, getUserRowByOpenId, getWalkNetwork, upsertUser } from "./db";
+import {
+  getCampusBuildings,
+  getCampusNews,
+  getCampusSettings,
+  getUserRowByOpenId,
+  getWalkNetwork,
+  upsertUser,
+} from "./db";
 import {
   USER_COOKIE_MAX_AGE_MS,
   USER_COOKIE_NAME,
@@ -43,7 +50,7 @@ export const appRouter = router({
   system: systemRouter,
   admin: adminRouter,
   auth: router({
-    me: publicProcedure.query((opts) => opts.ctx.user),
+    me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
@@ -65,7 +72,7 @@ export const appRouter = router({
         z.object({
           username: z.string().trim().min(1, "กรอกชื่อผู้ใช้").max(64),
           password: z.string().min(1).max(200),
-        }),
+        })
       )
       .mutation(async ({ input, ctx }) => {
         if (isLoginBlocked(ctx.req)) {
@@ -138,13 +145,11 @@ export const appRouter = router({
             /** …or to a point, e.g. the campus gate for people coming from outside. */
             to: latLngSchema.optional(),
           })
-          .refine((v) => Boolean(v.buildingId) !== Boolean(v.to), "ระบุ buildingId หรือ to อย่างใดอย่างหนึ่ง"),
+          .refine(v => Boolean(v.buildingId) !== Boolean(v.to), "ระบุ buildingId หรือ to อย่างใดอย่างหนึ่ง")
       )
       .mutation(async ({ input }) => {
         if (input.to) return getWalkingRoute(input.from, input.to);
-        const building = (await getCampusBuildings()).find(
-          (b) => b.id === input.buildingId,
-        );
+        const building = (await getCampusBuildings()).find(b => b.id === input.buildingId);
         const lat = Number(building?.latitude);
         const lng = Number(building?.longitude);
         if (!building?.latitude || !Number.isFinite(lat) || !Number.isFinite(lng)) {
@@ -170,13 +175,13 @@ export const appRouter = router({
               z.object({
                 role: z.enum(["system", "user", "assistant"]),
                 content: z.string().trim().min(1).max(4000),
-              }),
+              })
             )
             .min(1)
             .max(30),
           /** New (optional): the reply will be read aloud → short, no markdown. */
           spoken: z.boolean().optional(),
-        }),
+        })
       )
       .mutation(async ({ input }) => {
         try {
@@ -184,8 +189,7 @@ export const appRouter = router({
         } catch (error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
-            message:
-              error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเรียก AI",
+            message: error instanceof Error ? error.message : "เกิดข้อผิดพลาดในการเรียก AI",
           });
         }
       }),

@@ -20,7 +20,9 @@ function Router() {
       <Route path="/" component={KioskHome} />
       <Route path="/app" component={MobileApp} />
       {/* Old QR codes / shared links → the phone app with that place open. */}
-      <Route path="/building/:id">{(params) => <Redirect to={`/app?place=${encodeURIComponent(params.id)}`} replace />}</Route>
+      <Route path="/building/:id">
+        {params => <Redirect to={`/app?place=${encodeURIComponent(params.id)}`} replace />}
+      </Route>
       <Route path="/explore" component={Home} />
       <Route path="/admin" component={AdminOverview} />
       <Route path="/admin/buildings" component={BuildingsAdmin} />

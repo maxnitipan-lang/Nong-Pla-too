@@ -4,13 +4,7 @@ import "leaflet/dist/leaflet.css";
 import { LocateFixed, Loader2, Navigation2 } from "lucide-react";
 import { CAMPUS_BUILDINGS, type CampusBuilding } from "@shared/campus";
 import type { CampusRoute, LatLngTuple } from "@shared/walkNetwork";
-import {
-  buildingLatLng,
-  formatDistance,
-  getBestPosition,
-  type GpsFix,
-  type LatLng,
-} from "@/lib/directions";
+import { buildingLatLng, formatDistance, getBestPosition, type GpsFix, type LatLng } from "@/lib/directions";
 import { cn } from "@/lib/utils";
 
 /**
@@ -34,19 +28,28 @@ const CAMPUS_MARGIN_M = 160;
  */
 function campusBounds(buildings: CampusBuilding[]): L.LatLngBounds {
   const points = [...CAMPUS_BUILDINGS, ...buildings]
-    .map((b) => buildingLatLng(b))
+    .map(b => buildingLatLng(b))
     .filter((p): p is LatLng => p !== null)
-    .map((p) => L.latLng(p.lat, p.lng));
+    .map(p => L.latLng(p.lat, p.lng));
   const box = L.latLngBounds(points);
   const padLat = CAMPUS_MARGIN_M / 110_574;
   const padLng = CAMPUS_MARGIN_M / (111_320 * Math.cos((box.getCenter().lat * Math.PI) / 180));
   return L.latLngBounds(
     [box.getSouth() - padLat, box.getWest() - padLng],
-    [box.getNorth() + padLat, box.getEast() + padLng],
+    [box.getNorth() + padLat, box.getEast() + padLng]
   );
 }
 
-const COMPASS_TH = ["เหนือ", "ตะวันออกเฉียงเหนือ", "ตะวันออก", "ตะวันออกเฉียงใต้", "ใต้", "ตะวันตกเฉียงใต้", "ตะวันตก", "ตะวันตกเฉียงเหนือ"];
+const COMPASS_TH = [
+  "เหนือ",
+  "ตะวันออกเฉียงเหนือ",
+  "ตะวันออก",
+  "ตะวันออกเฉียงใต้",
+  "ใต้",
+  "ตะวันตกเฉียงใต้",
+  "ตะวันตก",
+  "ตะวันตกเฉียงเหนือ",
+];
 
 function pinIcon(color: string, active: boolean) {
   const w = active ? 32 : 24;
@@ -158,9 +161,9 @@ export function CampusLeafletMap({
     const map = mapRef.current;
     if (!map) return;
     const points = buildingsRef.current
-      .map((b) => buildingLatLng(b))
+      .map(b => buildingLatLng(b))
       .filter((p): p is LatLng => p !== null)
-      .map((p) => [p.lat, p.lng] as L.LatLngTuple);
+      .map(p => [p.lat, p.lng] as L.LatLngTuple);
     if (points.length) map.fitBounds(L.latLngBounds(points).pad(0.15), { animate });
     else map.setView([center.lat, center.lng], zoom, { animate });
   };
@@ -182,7 +185,12 @@ export function CampusLeafletMap({
       (() => {
         const me = L.marker([fix.lat, fix.lng], { icon: meIcon, zIndexOffset: 2000, interactive: false });
         if (userLabelRef.current) {
-          me.bindTooltip(userLabelRef.current, { permanent: true, direction: "top", offset: [0, -10], className: "!rounded-full !bg-[#1a73e8] !px-2.5 !py-1 !text-[11px] !font-black !text-white !border-0" });
+          me.bindTooltip(userLabelRef.current, {
+            permanent: true,
+            direction: "top",
+            offset: [0, -10],
+            className: "!rounded-full !bg-[#1a73e8] !px-2.5 !py-1 !text-[11px] !font-black !text-white !border-0",
+          });
         }
         return me;
       })(),
@@ -231,7 +239,7 @@ export function CampusLeafletMap({
     const map = mapRef.current;
     if (!ready || !map) return;
 
-    markersRef.current.forEach((marker) => marker.remove());
+    markersRef.current.forEach(marker => marker.remove());
     markersRef.current.clear();
     if (!showMarkers) return;
 
@@ -259,14 +267,14 @@ export function CampusLeafletMap({
     if (!ready || !map || !showMarkers) return;
 
     markersRef.current.forEach((marker, id) => {
-      const building = buildings.find((item) => item.id === id);
+      const building = buildings.find(item => item.id === id);
       if (!building) return;
       const active = id === selectedId;
       marker.setIcon(iconFor(building, active));
       marker.setZIndexOffset(active ? 1000 : 0);
     });
 
-    const selected = buildings.find((building) => building.id === selectedId);
+    const selected = buildings.find(building => building.id === selectedId);
     const point = selected ? buildingLatLng(selected) : null;
     if (point && !route) map.flyTo([point.lat, point.lng], 18, { duration: 0.8 });
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -291,8 +299,12 @@ export function CampusLeafletMap({
     if (approachPath && approachPath.length >= 2) {
       L.polyline(approachPath, { color: "#1a73e8", weight: 4, opacity: 0.75, dashArray: "8 10" }).addTo(layer);
     }
-    L.polyline(route.path, { color: "#ffffff", weight: 10, opacity: 0.95, lineCap: "round", lineJoin: "round" }).addTo(layer);
-    L.polyline(route.path, { color: "#1a73e8", weight: 6, opacity: 1, lineCap: "round", lineJoin: "round" }).addTo(layer);
+    L.polyline(route.path, { color: "#ffffff", weight: 10, opacity: 0.95, lineCap: "round", lineJoin: "round" }).addTo(
+      layer
+    );
+    L.polyline(route.path, { color: "#1a73e8", weight: 6, opacity: 1, lineCap: "round", lineJoin: "round" }).addTo(
+      layer
+    );
     const end = route.path[route.path.length - 1];
     L.circleMarker(end, { radius: 9, color: "#fff", weight: 3, fillColor: "#e8563f", fillOpacity: 1 }).addTo(layer);
     layer.addTo(map);
@@ -311,7 +323,13 @@ export function CampusLeafletMap({
     if (!ready || !map || !route || activeStep === undefined) return;
     const step = route.steps[activeStep + 1]; // the next maneuver ahead of the walker
     if (!step) return;
-    stepMarkerRef.current = L.circleMarker(step.at, { radius: 7, color: "#1a73e8", weight: 3, fillColor: "#fff", fillOpacity: 1 }).addTo(map);
+    stepMarkerRef.current = L.circleMarker(step.at, {
+      radius: 7,
+      color: "#1a73e8",
+      weight: 3,
+      fillColor: "#fff",
+      fillOpacity: 1,
+    }).addTo(map);
   }, [ready, route, activeStep]);
 
   // 6. The walker's position; in live mode keep them centred.
@@ -356,17 +374,18 @@ export function CampusLeafletMap({
   // Where the walker is when they're outside the locked campus area (shown as a chip).
   const [outsideFix, setOutsideFix] = useState<GpsFix | null>(null);
   const shownFix = userFix ?? outsideFix;
-  const outside = shownFix && !boundsRef.current.contains([shownFix.lat, shownFix.lng])
-    ? (() => {
-        const c = boundsRef.current.getCenter();
-        const from = L.latLng(shownFix.lat, shownFix.lng);
-        const dy = c.lat - from.lat;
-        const dx = (c.lng - from.lng) * Math.cos((from.lat * Math.PI) / 180);
-        const bearing = ((Math.atan2(dx, dy) * 180) / Math.PI + 360) % 360; // you → campus
-        const fromCampus = (bearing + 180) % 360; // campus → you
-        return { distance: from.distanceTo(c), direction: COMPASS_TH[Math.round(fromCampus / 45) % 8], bearing };
-      })()
-    : null;
+  const outside =
+    shownFix && !boundsRef.current.contains([shownFix.lat, shownFix.lng])
+      ? (() => {
+          const c = boundsRef.current.getCenter();
+          const from = L.latLng(shownFix.lat, shownFix.lng);
+          const dy = c.lat - from.lat;
+          const dx = (c.lng - from.lng) * Math.cos((from.lat * Math.PI) / 180);
+          const bearing = ((Math.atan2(dx, dy) * 180) / Math.PI + 360) % 360; // you → campus
+          const fromCampus = (bearing + 180) % 360; // campus → you
+          return { distance: from.distanceTo(c), direction: COMPASS_TH[Math.round(fromCampus / 45) % 8], bearing };
+        })()
+      : null;
 
   // Auto-hide the locate note after a while.
   useEffect(() => {
@@ -380,12 +399,19 @@ export function CampusLeafletMap({
       <div ref={containerRef} className="absolute inset-0 h-full w-full" />
       {outside && (
         <div className="pointer-events-none absolute bottom-14 left-1/2 z-[1000] flex max-w-[calc(100%-1.5rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-white/95 px-3.5 py-2 text-[11px] font-black text-[var(--ink)] shadow-lg">
-          <Navigation2 size={14} className="shrink-0 text-[#1a73e8]" style={{ transform: `rotate(${outside.bearing}deg)` }} />
+          <Navigation2
+            size={14}
+            className="shrink-0 text-[#1a73e8]"
+            style={{ transform: `rotate(${outside.bearing}deg)` }}
+          />
           คุณอยู่นอกวิทยาลัย · ห่าง ~{formatDistance(outside.distance)} ทางทิศ{outside.direction}
         </div>
       )}
       {showLocateButton && (
-        <div className="pointer-events-none absolute right-[10px] z-[1000] flex flex-col items-end gap-2" style={{ top: controlsTop }}>
+        <div
+          className="pointer-events-none absolute right-[10px] z-[1000] flex flex-col items-end gap-2"
+          style={{ top: controlsTop }}
+        >
           <button
             type="button"
             onClick={locateMe}

@@ -37,10 +37,7 @@ const NAV: { section: AdminSection; label: string; path: string; icon: typeof Bu
 ];
 
 function AdminGate() {
-  const { data: passwordEnabled } = trpc.auth.adminLoginEnabled.useQuery(
-    undefined,
-    { staleTime: Infinity },
-  );
+  const { data: passwordEnabled } = trpc.auth.adminLoginEnabled.useQuery(undefined, { staleTime: Infinity });
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const login = trpc.auth.adminLogin.useMutation({
@@ -50,7 +47,7 @@ function AdminGate() {
       // react-query won't reliably refetch them — a reload starts clean.
       window.location.reload();
     },
-    onError: (error) => toast.error(error.message),
+    onError: error => toast.error(error.message),
   });
 
   return (
@@ -60,7 +57,7 @@ function AdminGate() {
 
       {passwordEnabled ? (
         <form
-          onSubmit={(event) => {
+          onSubmit={event => {
             event.preventDefault();
             if (username.trim() && password) login.mutate({ username: username.trim(), password });
           }}
@@ -69,7 +66,7 @@ function AdminGate() {
           <input
             type="text"
             value={username}
-            onChange={(event) => setUsername(event.target.value)}
+            onChange={event => setUsername(event.target.value)}
             placeholder="ชื่อผู้ใช้"
             required
             autoComplete="username"
@@ -80,7 +77,7 @@ function AdminGate() {
           <input
             type="password"
             value={password}
-            onChange={(event) => setPassword(event.target.value)}
+            onChange={event => setPassword(event.target.value)}
             placeholder="รหัสผ่าน"
             required
             autoComplete="current-password"
@@ -146,7 +143,7 @@ export function AdminShell({
     return <AdminGate />;
   }
 
-  const adminOnlyPage = NAV.find((item) => item.section === section)?.adminOnly;
+  const adminOnlyPage = NAV.find(item => item.section === section)?.adminOnly;
   if (!isStaff(user.role) || (adminOnlyPage && !canManageUsers(user.role))) {
     return (
       <CenteredCard>
@@ -189,7 +186,7 @@ export function AdminShell({
           </div>
         </div>
         <nav className="flex gap-1 overflow-x-auto px-3 pb-3 lg:flex-col lg:overflow-visible lg:pb-0">
-          {NAV.filter((item) => !item.adminOnly || canManageUsers(user.role)).map((item) => {
+          {NAV.filter(item => !item.adminOnly || canManageUsers(user.role)).map(item => {
             const active = item.section === section;
             const Icon = item.icon;
             return (
@@ -198,9 +195,7 @@ export function AdminShell({
                 href={item.path}
                 className={cn(
                   "flex shrink-0 items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold transition-colors",
-                  active
-                    ? "bg-[var(--ink)] text-white"
-                    : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]",
+                  active ? "bg-[var(--ink)] text-white" : "text-[var(--muted-foreground)] hover:bg-[var(--muted)]"
                 )}
               >
                 <Icon size={16} />
@@ -229,9 +224,7 @@ export function AdminShell({
       <main className="mx-auto w-full max-w-5xl flex-1 px-5 py-8 sm:px-8">
         <header className="mb-6 flex flex-wrap items-end justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold tracking-[-0.03em] text-[var(--ink)]">
-              {title}
-            </h1>
+            <h1 className="font-display text-2xl font-bold tracking-[-0.03em] text-[var(--ink)]">{title}</h1>
             <p className="mt-1 flex items-center gap-2 text-xs text-[var(--muted-foreground)]">
               เข้าสู่ระบบเป็น {user.name ?? user.email}
               <span className="rounded-full bg-[var(--secondary)] px-2 py-0.5 text-[10px] font-bold text-[var(--secondary-foreground)]">
@@ -239,10 +232,7 @@ export function AdminShell({
               </span>
             </p>
           </div>
-          <a
-            href="/"
-            className="flex items-center gap-1.5 text-xs font-bold text-[#287c78] lg:hidden"
-          >
+          <a href="/" className="flex items-center gap-1.5 text-xs font-bold text-[#287c78] lg:hidden">
             <ExternalLink size={13} /> หน้าเว็บ
           </a>
         </header>

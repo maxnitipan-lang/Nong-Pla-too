@@ -7,19 +7,12 @@
 
 import "dotenv/config";
 import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_SETTINGS_DEFAULTS } from "@shared/campus";
-import {
-  getDb,
-  updateCampusSettings,
-  upsertCampusBuilding,
-  upsertCampusNews,
-} from "../db";
+import { getDb, updateCampusSettings, upsertCampusBuilding, upsertCampusNews } from "../db";
 
 async function main() {
   const db = await getDb();
   if (!db) {
-    console.error(
-      "ไม่พบการเชื่อมต่อฐานข้อมูล — ตั้งค่า DATABASE_URL ใน .env แล้วรัน `pnpm db:push` ก่อน",
-    );
+    console.error("ไม่พบการเชื่อมต่อฐานข้อมูล — ตั้งค่า DATABASE_URL ใน .env แล้วรัน `pnpm db:push` ก่อน");
     process.exit(1);
   }
 
@@ -83,7 +76,7 @@ async function main() {
   process.exit(0);
 }
 
-main().catch((error) => {
+main().catch(error => {
   console.error(error);
   process.exit(1);
 });

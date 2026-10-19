@@ -13,10 +13,7 @@ export type DataApiCallOptions = {
   formData?: Record<string, unknown>;
 };
 
-export async function callDataApi(
-  apiId: string,
-  options: DataApiCallOptions = {}
-): Promise<unknown> {
+export async function callDataApi(apiId: string, options: DataApiCallOptions = {}): Promise<unknown> {
   if (!ENV.forgeApiUrl) {
     throw new Error("BUILT_IN_FORGE_API_URL is not configured");
   }

@@ -1,5 +1,5 @@
 import { trpc } from "@/lib/trpc";
-import { COOKIE_NAME, UNAUTHED_ERR_MSG } from '@shared/const';
+import { COOKIE_NAME, UNAUTHED_ERR_MSG } from "@shared/const";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { httpBatchLink, TRPCClientError } from "@trpc/client";
 import { createRoot } from "react-dom/client";
@@ -9,7 +9,9 @@ import { startLogin } from "./const";
 import "./index.css";
 
 if ("serviceWorker" in navigator && import.meta.env.PROD) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => undefined));
+  window.addEventListener("load", () =>
+    navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => undefined)
+  );
   // A new service worker took over (e.g. after a deploy) → reload once so the page isn't a stale copy.
   const hadController = Boolean(navigator.serviceWorker.controller);
   let reloaded = false;
@@ -23,9 +25,12 @@ if ("serviceWorker" in navigator && import.meta.env.PROD) {
 // Free hosting (Render) puts the server to sleep after 15 idle minutes, and waking
 // it takes ~50 s — a frozen kiosk. While a page is open, ping it every 10 minutes.
 if (import.meta.env.PROD) {
-  window.setInterval(() => {
-    fetch("/api/health", { cache: "no-store" }).catch(() => undefined);
-  }, 10 * 60 * 1000);
+  window.setInterval(
+    () => {
+      fetch("/api/health", { cache: "no-store" }).catch(() => undefined);
+    },
+    10 * 60 * 1000
+  );
 }
 
 const queryClient = new QueryClient();

@@ -10,8 +10,7 @@
 
 import { CAMPUS_OVERVIEW } from "@shared/campus";
 
-const ORS_URL =
-  "https://api.heigit.org/openrouteservice/v2/directions/foot-walking";
+const ORS_URL = "https://api.heigit.org/openrouteservice/v2/directions/foot-walking";
 const ORS_API_KEY = process.env.ORS_API_KEY || process.env.VITE_ORS_API_KEY || "";
 
 /** Starts farther than this from campus are not worth a walking route. */
@@ -39,31 +38,25 @@ export function haversineMeters(a: LatLng, b: LatLng): number {
   const toRad = (d: number) => (d * Math.PI) / 180;
   const dLat = toRad(b.lat - a.lat);
   const dLng = toRad(b.lng - a.lng);
-  const h =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
   return 2 * R * Math.asin(Math.sqrt(h));
 }
 
 const cache = new Map<string, { at: number; route: WalkingRoute | null }>();
 
-export async function getWalkingRoute(
-  from: LatLng,
-  to: LatLng,
-): Promise<WalkingRoute | null> {
+export async function getWalkingRoute(from: LatLng, to: LatLng): Promise<WalkingRoute | null> {
   if (!isWalkingRouteConfigured()) return null;
   if (haversineMeters(from, CAMPUS_OVERVIEW.mapCenter) > MAX_START_DISTANCE_M) {
     return null;
   }
 
   // ~10 m grid so people standing in the same spot share one ORS call.
-  const key = [from.lat, from.lng, to.lat, to.lng].map((n) => n.toFixed(4)).join(",");
+  const key = [from.lat, from.lng, to.lat, to.lng].map(n => n.toFixed(4)).join(",");
   const hit = cache.get(key);
   if (hit && Date.now() - hit.at < CACHE_TTL_MS) return hit.route;
 
   const url =
-    `${ORS_URL}?api_key=${encodeURIComponent(ORS_API_KEY)}` +
-    `&start=${from.lng},${from.lat}&end=${to.lng},${to.lat}`;
+    `${ORS_URL}?api_key=${encodeURIComponent(ORS_API_KEY)}` + `&start=${from.lng},${from.lat}&end=${to.lng},${to.lat}`;
 
   let route: WalkingRoute | null = null;
   try {

@@ -1,4 +1,4 @@
-import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from '@shared/const';
+import { NOT_ADMIN_ERR_MSG, UNAUTHED_ERR_MSG } from "@shared/const";
 import { initTRPC, TRPCError } from "@trpc/server";
 import superjson from "superjson";
 import { READ_ONLY_ERR_MSG, canEdit, isStaff } from "@shared/roles";
@@ -35,7 +35,7 @@ export const staffProcedure = t.procedure.use(
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
     return next({ ctx: { ...ctx, user: ctx.user } });
-  }),
+  })
 );
 
 /** Editors and admins — for content writes. Viewers get a clear read-only error. */
@@ -48,7 +48,7 @@ export const editorProcedure = t.procedure.use(
       throw new TRPCError({ code: "FORBIDDEN", message: READ_ONLY_ERR_MSG });
     }
     return next({ ctx: { ...ctx, user: ctx.user } });
-  }),
+  })
 );
 
 /** Admins only — user management. */
@@ -56,7 +56,7 @@ export const adminProcedure = t.procedure.use(
   t.middleware(async opts => {
     const { ctx, next } = opts;
 
-    if (!ctx.user || ctx.user.role !== 'admin') {
+    if (!ctx.user || ctx.user.role !== "admin") {
       throw new TRPCError({ code: "FORBIDDEN", message: NOT_ADMIN_ERR_MSG });
     }
 
@@ -66,5 +66,5 @@ export const adminProcedure = t.procedure.use(
         user: ctx.user,
       },
     });
-  }),
+  })
 );

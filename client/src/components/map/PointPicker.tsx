@@ -15,7 +15,15 @@ const pinIcon = L.divIcon({
  * Small satellite map for choosing one point (e.g. where the kiosk stands):
  * click to place, drag to fine-tune. Building names are shown for orientation.
  */
-export function PointPicker({ value, onChange, disabled }: { value: LatLng | null; onChange: (p: LatLng) => void; disabled?: boolean }) {
+export function PointPicker({
+  value,
+  onChange,
+  disabled,
+}: {
+  value: LatLng | null;
+  onChange: (p: LatLng) => void;
+  disabled?: boolean;
+}) {
   const boxRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<L.Map | null>(null);
   const markerRef = useRef<L.Marker | null>(null);
@@ -34,11 +42,24 @@ export function PointPicker({ value, onChange, disabled }: { value: LatLng | nul
     for (const b of CAMPUS_BUILDINGS) {
       const p = buildingLatLng(b);
       if (!p) continue;
-      L.circleMarker([p.lat, p.lng], { radius: 4, color: "#fff", weight: 1, fillColor: b.accent, fillOpacity: 1, interactive: false })
-        .bindTooltip(b.shortName, { permanent: true, direction: "right", offset: [5, 0], className: "!text-[10px] !font-bold !py-0 !px-1" })
+      L.circleMarker([p.lat, p.lng], {
+        radius: 4,
+        color: "#fff",
+        weight: 1,
+        fillColor: b.accent,
+        fillOpacity: 1,
+        interactive: false,
+      })
+        .bindTooltip(b.shortName, {
+          permanent: true,
+          direction: "right",
+          offset: [5, 0],
+          className: "!text-[10px] !font-bold !py-0 !px-1",
+        })
         .addTo(map);
     }
-    if (!disabled) map.on("click", (e: L.LeafletMouseEvent) => onChangeRef.current({ lat: e.latlng.lat, lng: e.latlng.lng }));
+    if (!disabled)
+      map.on("click", (e: L.LeafletMouseEvent) => onChangeRef.current({ lat: e.latlng.lat, lng: e.latlng.lng }));
     mapRef.current = map;
     setTimeout(() => map.invalidateSize(), 200);
     return () => {
@@ -68,5 +89,10 @@ export function PointPicker({ value, onChange, disabled }: { value: LatLng | nul
     }
   }, [value, disabled]);
 
-  return <div ref={boxRef} className="relative isolate h-72 w-full overflow-hidden rounded-xl border border-[var(--border)]" />;
+  return (
+    <div
+      ref={boxRef}
+      className="relative isolate h-72 w-full overflow-hidden rounded-xl border border-[var(--border)]"
+    />
+  );
 }

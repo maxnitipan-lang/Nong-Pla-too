@@ -12,7 +12,7 @@ import { registerStorageProxy } from "./storageProxy";
 import { serveStatic, setupVite } from "./vite";
 
 function isPortAvailable(port: number): Promise<boolean> {
-  return new Promise((resolve) => {
+  return new Promise(resolve => {
     const server = net.createServer();
     server.listen(port, () => server.close(() => resolve(true)));
     server.on("error", () => resolve(false));
@@ -42,10 +42,7 @@ async function startServer(): Promise<void> {
     res.json({ ok: true, uptime: Math.round(process.uptime()) });
   });
 
-  app.use(
-    "/api/trpc",
-    createExpressMiddleware({ router: appRouter, createContext }),
-  );
+  app.use("/api/trpc", createExpressMiddleware({ router: appRouter, createContext }));
 
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);
@@ -57,9 +54,7 @@ async function startServer(): Promise<void> {
   // In production (a host like Render/Railway) bind to the assigned $PORT exactly;
   // the port-scan is only a local-dev convenience so parallel runs don't collide.
   const isProduction = process.env.NODE_ENV === "production";
-  const port = isProduction
-    ? preferredPort
-    : await findAvailablePort(preferredPort);
+  const port = isProduction ? preferredPort : await findAvailablePort(preferredPort);
   if (!isProduction && port !== preferredPort) {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }

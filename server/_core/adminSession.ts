@@ -26,10 +26,7 @@ export function verifyAdminPassword(password: string): boolean {
 /** Create a signed session token: `<issuedAtMs>.<hmac>`. */
 export function mintAdminToken(): string {
   const issued = Date.now().toString();
-  const sig = crypto
-    .createHmac("sha256", ADMIN_PASSWORD)
-    .update(issued)
-    .digest("hex");
+  const sig = crypto.createHmac("sha256", ADMIN_PASSWORD).update(issued).digest("hex");
   return `${issued}.${sig}`;
 }
 
@@ -39,10 +36,7 @@ export function verifyAdminToken(token: string | undefined | null): boolean {
   if (dot < 1) return false;
   const issued = token.slice(0, dot);
   const sig = token.slice(dot + 1);
-  const expected = crypto
-    .createHmac("sha256", ADMIN_PASSWORD)
-    .update(issued)
-    .digest("hex");
+  const expected = crypto.createHmac("sha256", ADMIN_PASSWORD).update(issued).digest("hex");
   if (!timingSafeEqualStr(sig, expected)) return false;
   const issuedAt = Number(issued);
   return Number.isFinite(issuedAt) && Date.now() - issuedAt < TOKEN_MAX_AGE_MS;

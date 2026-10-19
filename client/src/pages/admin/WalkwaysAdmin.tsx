@@ -29,7 +29,12 @@ type Selection = { kind: "node"; id: string } | { kind: "edge"; index: number } 
 
 const MODES: { mode: Mode; label: string; hint: string; icon: typeof MousePointer2 }[] = [
   { mode: "select", label: "เลือก / ย้าย", hint: "คลิกจุดหรือเส้นเพื่อแก้ชื่อ · ลากจุดเพื่อย้าย", icon: MousePointer2 },
-  { mode: "draw", label: "วาดทางเดิน", hint: "คลิกบนแผนที่เพื่อวางจุดต่อกันเป็นเส้น · คลิกจุดเดิมเพื่อต่อทาง · คลิกบนเส้นเพื่อแยกทาง · Esc = จบเส้น", icon: Footprints },
+  {
+    mode: "draw",
+    label: "วาดทางเดิน",
+    hint: "คลิกบนแผนที่เพื่อวางจุดต่อกันเป็นเส้น · คลิกจุดเดิมเพื่อต่อทาง · คลิกบนเส้นเพื่อแยกทาง · Esc = จบเส้น",
+    icon: Footprints,
+  },
   { mode: "erase", label: "ลบ", hint: "คลิกจุด (ลบพร้อมเส้นที่ต่ออยู่) หรือคลิกเส้นเพื่อลบ", icon: Eraser },
   { mode: "test", label: "ทดลองเส้นทาง", hint: "คลิกบนแผนที่ = จุดเริ่ม แล้วเลือกอาคารปลายทาง", icon: Route },
 ];
@@ -78,8 +83,8 @@ export default function WalkwaysAdmin() {
 
   /** Apply an edit with undo support. */
   const apply = useCallback((next: WalkNetwork) => {
-    setNetwork((current) => {
-      if (current) setHistory((h) => [...h.slice(-99), current]);
+    setNetwork(current => {
+      if (current) setHistory(h => [...h.slice(-99), current]);
       return next;
     });
     setFuture([]);
@@ -89,8 +94,8 @@ export default function WalkwaysAdmin() {
   const undo = () => {
     const prev = history[history.length - 1];
     if (!prev || !network) return;
-    setFuture((f) => [network, ...f]);
-    setHistory((h) => h.slice(0, -1));
+    setFuture(f => [network, ...f]);
+    setHistory(h => h.slice(0, -1));
     setNetwork(prev);
     setDirty(true);
     setSelection(null);
@@ -99,8 +104,8 @@ export default function WalkwaysAdmin() {
   const redo = () => {
     const next = future[0];
     if (!next || !network) return;
-    setHistory((h) => [...h, network]);
-    setFuture((f) => f.slice(1));
+    setHistory(h => [...h, network]);
+    setFuture(f => f.slice(1));
     setNetwork(next);
     setDirty(true);
   };
@@ -112,7 +117,7 @@ export default function WalkwaysAdmin() {
       utils.admin.walkNetwork.get.invalidate();
       utils.campus.walkNetwork.invalidate();
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
   const reset = trpc.admin.walkNetwork.reset.useMutation({
     onSuccess: () => {
@@ -121,7 +126,7 @@ export default function WalkwaysAdmin() {
       utils.admin.walkNetwork.get.invalidate();
       utils.campus.walkNetwork.invalidate();
     },
-    onError: (e) => toast.error(e.message),
+    onError: e => toast.error(e.message),
   });
 
   const submit = () => {
@@ -156,13 +161,19 @@ export default function WalkwaysAdmin() {
       if (!network) return;
       if (mode === "select") setSelection({ kind: "node", id });
       if (mode === "erase") {
-        apply({ ...network, nodes: network.nodes.filter((n) => n.id !== id), edges: network.edges.filter((e) => e.a !== id && e.b !== id) });
+        apply({
+          ...network,
+          nodes: network.nodes.filter(n => n.id !== id),
+          edges: network.edges.filter(e => e.a !== id && e.b !== id),
+        });
         if (chainFrom === id) setChainFrom(null);
         setSelection(null);
       }
       if (mode === "draw") {
         if (chainFrom && chainFrom !== id) {
-          const exists = network.edges.some((e) => (e.a === chainFrom && e.b === id) || (e.a === id && e.b === chainFrom));
+          const exists = network.edges.some(
+            e => (e.a === chainFrom && e.b === id) || (e.a === id && e.b === chainFrom)
+          );
           if (!exists) apply({ ...network, edges: [...network.edges, { a: chainFrom, b: id }] });
         }
         setChainFrom(id);
@@ -178,8 +189,8 @@ export default function WalkwaysAdmin() {
       }
       if (mode === "draw") {
         // Split the edge where it was clicked, then continue the chain from there.
-        const a = network.nodes.find((n) => n.id === edge.a);
-        const b = network.nodes.find((n) => n.id === edge.b);
+        const a = network.nodes.find(n => n.id === edge.a);
+        const b = network.nodes.find(n => n.id === edge.b);
         if (!a || !b) return;
         const point = projectOnSegment(at, a, b).point;
         const id = newId();
@@ -192,7 +203,7 @@ export default function WalkwaysAdmin() {
     },
     moveNode(id, at) {
       if (!network) return;
-      apply({ ...network, nodes: network.nodes.map((n) => (n.id === id ? { ...n, lat: at.lat, lng: at.lng } : n)) });
+      apply({ ...network, nodes: network.nodes.map(n => (n.id === id ? { ...n, lat: at.lat, lng: at.lng } : n)) });
     },
     clickMap(at) {
       if (mode === "draw") this.addNode(at);
@@ -207,15 +218,25 @@ export default function WalkwaysAdmin() {
       if ((event.target as HTMLElement)?.closest("input, textarea, select")) return;
       if (event.key === "Escape") setChainFrom(null);
       if (!canEdit) return;
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") { event.preventDefault(); undo(); }
-      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") { event.preventDefault(); redo(); }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "z") {
+        event.preventDefault();
+        undo();
+      }
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "y") {
+        event.preventDefault();
+        redo();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   });
-  useEffect(() => { if (mode !== "draw") setChainFrom(null); }, [mode]);
+  useEffect(() => {
+    if (mode !== "draw") setChainFrom(null);
+  }, [mode]);
   // View-only accounts start (and stay) out of the editing modes.
-  useEffect(() => { if (!canEdit && (mode === "draw" || mode === "erase")) setMode("test"); }, [canEdit, mode]);
+  useEffect(() => {
+    if (!canEdit && (mode === "draw" || mode === "erase")) setMode("test");
+  }, [canEdit, mode]);
 
   // ------------------------------------------------------------------ map
   // Callback ref: the map box only exists once AdminShell has let an admin in.
@@ -227,9 +248,21 @@ export default function WalkwaysAdmin() {
 
   useEffect(() => {
     if (!container || mapRef.current) return;
-    const map = L.map(container, { center: [CAMPUS_OVERVIEW.mapCenter.lat, CAMPUS_OVERVIEW.mapCenter.lng], zoom: 18, maxZoom: 21, doubleClickZoom: false });
-    const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 21, maxNativeZoom: 19, attribution: "&copy; OpenStreetMap" });
-    const sat = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", { maxZoom: 21, maxNativeZoom: 19, attribution: "Imagery &copy; Esri" });
+    const map = L.map(container, {
+      center: [CAMPUS_OVERVIEW.mapCenter.lat, CAMPUS_OVERVIEW.mapCenter.lng],
+      zoom: 18,
+      maxZoom: 21,
+      doubleClickZoom: false,
+    });
+    const osm = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 21,
+      maxNativeZoom: 19,
+      attribution: "&copy; OpenStreetMap",
+    });
+    const sat = L.tileLayer(
+      "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+      { maxZoom: 21, maxNativeZoom: 19, attribution: "Imagery &copy; Esri" }
+    );
     baseRef.current = { osm, sat };
     sat.addTo(map);
     map.on("click", (e: L.LeafletMouseEvent) => edit.current.clickMap(e.latlng));
@@ -248,14 +281,22 @@ export default function WalkwaysAdmin() {
     const map = mapRef.current;
     const base = baseRef.current;
     if (!map || !base) return;
-    if (satellite) { base.osm.remove(); base.sat.addTo(map); } else { base.sat.remove(); base.osm.addTo(map); }
+    if (satellite) {
+      base.osm.remove();
+      base.sat.addTo(map);
+    } else {
+      base.sat.remove();
+      base.osm.addTo(map);
+    }
   }, [satellite, mapReady]);
 
-  const testBuilding = buildings.find((b) => b.id === testTarget);
+  const testBuilding = buildings.find(b => b.id === testTarget);
   const testRoute: CampusRoute | null = useMemo(() => {
     if (!network || !testStart || !testBuilding) return null;
     const p = buildingLatLng(testBuilding);
-    return p ? planCampusRoute(network, testStart, { ...p, buildingId: testBuilding.id, name: testBuilding.name }) : null;
+    return p
+      ? planCampusRoute(network, testStart, { ...p, buildingId: testBuilding.id, name: testBuilding.name })
+      : null;
   }, [network, testStart, testBuilding]);
 
   // Redraw everything on change (a campus graph is a few hundred items — cheap).
@@ -263,13 +304,25 @@ export default function WalkwaysAdmin() {
     const layer = drawRef.current;
     if (!layer || !network) return;
     layer.clearLayers();
-    const byId = new Map(network.nodes.map((n) => [n.id, n]));
+    const byId = new Map(network.nodes.map(n => [n.id, n]));
 
     for (const b of buildings) {
       const p = buildingLatLng(b);
       if (!p) continue;
-      L.circleMarker([p.lat, p.lng], { radius: 5, color: "#fff", weight: 1, fillColor: b.accent, fillOpacity: 0.9, interactive: false })
-        .bindTooltip(b.shortName, { permanent: true, direction: "right", className: "!text-[10px] !font-bold !py-0 !px-1", offset: [6, 0] })
+      L.circleMarker([p.lat, p.lng], {
+        radius: 5,
+        color: "#fff",
+        weight: 1,
+        fillColor: b.accent,
+        fillOpacity: 0.9,
+        interactive: false,
+      })
+        .bindTooltip(b.shortName, {
+          permanent: true,
+          direction: "right",
+          className: "!text-[10px] !font-bold !py-0 !px-1",
+          offset: [6, 0],
+        })
         .addTo(layer);
     }
 
@@ -278,9 +331,24 @@ export default function WalkwaysAdmin() {
       const b = byId.get(e.b);
       if (!a || !b) return;
       const selected = selection?.kind === "edge" && selection.index === index;
-      const line = L.polyline([[a.lat, a.lng], [b.lat, b.lng]], { color: selected ? "#f59e0b" : "#1a73e8", weight: selected ? 7 : 5, opacity: 0.9 });
-      L.polyline([[a.lat, a.lng], [b.lat, b.lng]], { color: "#000", opacity: 0, weight: 18 }) // wide invisible hit area
-        .on("click", (ev: L.LeafletMouseEvent) => { L.DomEvent.stopPropagation(ev); edit.current.clickEdge(index, ev.latlng); })
+      const line = L.polyline(
+        [
+          [a.lat, a.lng],
+          [b.lat, b.lng],
+        ],
+        { color: selected ? "#f59e0b" : "#1a73e8", weight: selected ? 7 : 5, opacity: 0.9 }
+      );
+      L.polyline(
+        [
+          [a.lat, a.lng],
+          [b.lat, b.lng],
+        ],
+        { color: "#000", opacity: 0, weight: 18 }
+      ) // wide invisible hit area
+        .on("click", (ev: L.LeafletMouseEvent) => {
+          L.DomEvent.stopPropagation(ev);
+          edit.current.clickEdge(index, ev.latlng);
+        })
         .addTo(layer);
       line.addTo(layer);
       if (e.name) line.bindTooltip(e.name, { sticky: true });
@@ -289,12 +357,26 @@ export default function WalkwaysAdmin() {
     if (testRoute) {
       L.polyline(testRoute.path, { color: "#e8563f", weight: 6, opacity: 0.9 }).addTo(layer);
     }
-    if (testStart) L.circleMarker([testStart.lat, testStart.lng], { radius: 8, color: "#fff", weight: 3, fillColor: "#16a34a", fillOpacity: 1 }).addTo(layer);
+    if (testStart)
+      L.circleMarker([testStart.lat, testStart.lng], {
+        radius: 8,
+        color: "#fff",
+        weight: 3,
+        fillColor: "#16a34a",
+        fillOpacity: 1,
+      }).addTo(layer);
 
     for (const node of network.nodes) {
       const selected = selection?.kind === "node" && selection.id === node.id;
-      const marker = L.marker([node.lat, node.lng], { icon: nodeIcon(node, selected, chainFrom === node.id), draggable: canEdit && mode === "select", zIndexOffset: selected ? 1000 : 0 });
-      marker.on("click", (ev: L.LeafletMouseEvent) => { L.DomEvent.stopPropagation(ev); edit.current.clickNode(node.id); });
+      const marker = L.marker([node.lat, node.lng], {
+        icon: nodeIcon(node, selected, chainFrom === node.id),
+        draggable: canEdit && mode === "select",
+        zIndexOffset: selected ? 1000 : 0,
+      });
+      marker.on("click", (ev: L.LeafletMouseEvent) => {
+        L.DomEvent.stopPropagation(ev);
+        edit.current.clickNode(node.id);
+      });
       marker.on("dragend", () => edit.current.moveNode(node.id, marker.getLatLng()));
       if (node.name) marker.bindTooltip(node.name, { direction: "top" });
       marker.addTo(layer);
@@ -305,15 +387,15 @@ export default function WalkwaysAdmin() {
   const stats = useMemo(() => {
     if (!network) return null;
     const comp = networkComponents(network);
-    const entrances = new Map(network.nodes.filter((n) => n.buildingId).map((n) => [n.buildingId!, n]));
-    const withCoords = buildings.filter((b) => buildingLatLng(b));
-    const missing = withCoords.filter((b) => !entrances.has(b.id));
+    const entrances = new Map(network.nodes.filter(n => n.buildingId).map(n => [n.buildingId!, n]));
+    const withCoords = buildings.filter(b => buildingLatLng(b));
+    const missing = withCoords.filter(b => !entrances.has(b.id));
     // The biggest component is "the campus"; entrances outside it are unreachable.
     const sizes = new Map<number, number>();
-    comp.forEach((c) => sizes.set(c, (sizes.get(c) ?? 0) + 1));
+    comp.forEach(c => sizes.set(c, (sizes.get(c) ?? 0) + 1));
     const main = Array.from(sizes.entries()).sort((x, y) => y[1] - x[1])[0]?.[0];
-    const islands = withCoords.filter((b) => entrances.has(b.id) && comp.get(entrances.get(b.id)!.id) !== main);
-    return { length: networkLength(network), missing, islands, gates: network.nodes.filter((n) => n.gate).length };
+    const islands = withCoords.filter(b => entrances.has(b.id) && comp.get(entrances.get(b.id)!.id) !== main);
+    return { length: networkLength(network), missing, islands, gates: network.nodes.filter(n => n.gate).length };
   }, [network, buildings]);
 
   const connectMissing = () => {
@@ -332,79 +414,176 @@ export default function WalkwaysAdmin() {
     if (p) mapRef.current?.flyTo([p.lat, p.lng], 20);
   };
 
-  const selectedNode = selection?.kind === "node" ? network?.nodes.find((n) => n.id === selection.id) : undefined;
+  const selectedNode = selection?.kind === "node" ? network?.nodes.find(n => n.id === selection.id) : undefined;
   const selectedEdge = selection?.kind === "edge" ? network?.edges[selection.index] : undefined;
   const updateNode = (patch: Partial<WalkNode>) => {
     if (!network || !selectedNode) return;
-    apply({ ...network, nodes: network.nodes.map((n) => (n.id === selectedNode.id ? cleanNode({ ...n, ...patch }) : n)) });
+    apply({
+      ...network,
+      nodes: network.nodes.map(n => (n.id === selectedNode.id ? cleanNode({ ...n, ...patch }) : n)),
+    });
   };
   const updateEdgeName = (name: string) => {
     if (!network || selection?.kind !== "edge") return;
-    apply({ ...network, edges: network.edges.map((e, i) => (i === selection.index ? (name.trim() ? { ...e, name } : { a: e.a, b: e.b }) : e)) });
+    apply({
+      ...network,
+      edges: network.edges.map((e, i) =>
+        i === selection.index ? (name.trim() ? { ...e, name } : { a: e.a, b: e.b }) : e
+      ),
+    });
   };
 
-  const hint = MODES.find((m) => m.mode === mode)!.hint;
+  const hint = MODES.find(m => m.mode === mode)!.hint;
 
   return (
     <AdminShell section="walkways" title="ทางเดิน (นำทางในวิทยาลัย)">
       <DbBanner />
       <p className="mb-4 max-w-3xl text-sm leading-7 text-[var(--muted-foreground)]">
-        วาดทางเดินจริงของวิทยาลัยลงบนแผนที่ (แนะนำโหมดดาวเทียม) ระบบนำทางจะพาเดินตามเส้นเหล่านี้เท่านั้น พร้อมบอกทางเลี้ยวทีละขั้น
-        จุด<span className="font-bold text-[#e8563f]">สีส้มแดง</span> = ทางเข้าอาคาร · จุด<span className="font-bold text-[#16a34a]">สีเขียว</span> = ประตูวิทยาลัย
-        (คนที่อยู่นอกวิทยาลัยจะถูกพามาที่ประตูก่อน) · ตั้งชื่อจุดสำคัญ เช่น "โรงอาหาร" เพื่อให้คำบอกทางเป็น "เลี้ยวซ้าย ที่โรงอาหาร"
+        วาดทางเดินจริงของวิทยาลัยลงบนแผนที่ (แนะนำโหมดดาวเทียม) ระบบนำทางจะพาเดินตามเส้นเหล่านี้เท่านั้น
+        พร้อมบอกทางเลี้ยวทีละขั้น จุด<span className="font-bold text-[#e8563f]">สีส้มแดง</span> = ทางเข้าอาคาร · จุด
+        <span className="font-bold text-[#16a34a]">สีเขียว</span> = ประตูวิทยาลัย
+        (คนที่อยู่นอกวิทยาลัยจะถูกพามาที่ประตูก่อน) · ตั้งชื่อจุดสำคัญ เช่น "โรงอาหาร" เพื่อให้คำบอกทางเป็น "เลี้ยวซ้าย
+        ที่โรงอาหาร"
       </p>
 
       <div className="mb-3 flex flex-wrap items-center gap-2">
-        {MODES.filter(({ mode: m }) => canEdit || m === "select" || m === "test").map(({ mode: m, label, icon: Icon }) => (
-          <button key={m} type="button" onClick={() => setMode(m)} className={cn("flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-bold", mode === m ? "bg-[var(--ink)] text-white" : "bg-[var(--muted)] text-[var(--ink)]")}>
-            <Icon size={14} /> {label}
-          </button>
-        ))}
+        {MODES.filter(({ mode: m }) => canEdit || m === "select" || m === "test").map(
+          ({ mode: m, label, icon: Icon }) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMode(m)}
+              className={cn(
+                "flex h-9 items-center gap-1.5 rounded-full px-3 text-xs font-bold",
+                mode === m ? "bg-[var(--ink)] text-white" : "bg-[var(--muted)] text-[var(--ink)]"
+              )}
+            >
+              <Icon size={14} /> {label}
+            </button>
+          )
+        )}
         <span className="mx-1 h-6 w-px bg-[var(--border)]" />
-        {canEdit && <><button type="button" onClick={undo} disabled={!history.length} className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--muted)] disabled:opacity-40" aria-label="ย้อนกลับ" title="ย้อนกลับ (Ctrl+Z)"><Undo2 size={15} /></button>
-        <button type="button" onClick={redo} disabled={!future.length} className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--muted)] disabled:opacity-40" aria-label="ทำซ้ำ" title="ทำซ้ำ (Ctrl+Y)"><Redo2 size={15} /></button></>}
+        {canEdit && (
+          <>
+            <button
+              type="button"
+              onClick={undo}
+              disabled={!history.length}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--muted)] disabled:opacity-40"
+              aria-label="ย้อนกลับ"
+              title="ย้อนกลับ (Ctrl+Z)"
+            >
+              <Undo2 size={15} />
+            </button>
+            <button
+              type="button"
+              onClick={redo}
+              disabled={!future.length}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-[var(--muted)] disabled:opacity-40"
+              aria-label="ทำซ้ำ"
+              title="ทำซ้ำ (Ctrl+Y)"
+            >
+              <Redo2 size={15} />
+            </button>
+          </>
+        )}
         <label className="ml-1 flex items-center gap-2 text-xs font-bold">
-          <input type="checkbox" checked={satellite} onChange={(e) => setSatellite(e.target.checked)} /> ภาพดาวเทียม
+          <input type="checkbox" checked={satellite} onChange={e => setSatellite(e.target.checked)} /> ภาพดาวเทียม
         </label>
-        {canEdit && <div className="ml-auto flex gap-2">
-          <Button
-            variant="outline"
-            onClick={() => { if (window.confirm("ลบทางเดินที่บันทึกไว้ทั้งหมด แล้วกลับไปใช้ทางเดินเริ่มต้นจาก OpenStreetMap?")) reset.mutate(); }}
-            disabled={reset.isPending}
-          >
-            <RotateCcw size={15} /> คืนค่าเริ่มต้น
-          </Button>
-          <Button onClick={submit} disabled={!dirty || save.isPending}>
-            <Save size={15} /> {save.isPending ? "กำลังบันทึก…" : dirty ? "บันทึก" : "บันทึกแล้ว"}
-          </Button>
-        </div>}
+        {canEdit && (
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                if (window.confirm("ลบทางเดินที่บันทึกไว้ทั้งหมด แล้วกลับไปใช้ทางเดินเริ่มต้นจาก OpenStreetMap?"))
+                  reset.mutate();
+              }}
+              disabled={reset.isPending}
+            >
+              <RotateCcw size={15} /> คืนค่าเริ่มต้น
+            </Button>
+            <Button onClick={submit} disabled={!dirty || save.isPending}>
+              <Save size={15} /> {save.isPending ? "กำลังบันทึก…" : dirty ? "บันทึก" : "บันทึกแล้ว"}
+            </Button>
+          </div>
+        )}
       </div>
-      <p className="mb-3 text-xs font-bold text-[#1a73e8]">{hint}{mode === "draw" && chainFrom ? " · กำลังวาดต่อจากจุดสีเหลือง" : ""}</p>
+      <p className="mb-3 text-xs font-bold text-[#1a73e8]">
+        {hint}
+        {mode === "draw" && chainFrom ? " · กำลังวาดต่อจากจุดสีเหลือง" : ""}
+      </p>
 
       <div className="grid gap-4 xl:grid-cols-[1fr_320px]">
         <div className="relative isolate h-[70vh] min-h-[480px] overflow-hidden rounded-2xl border border-[var(--border)]">
-          <div ref={setContainer} className={cn("absolute inset-0", mode === "draw" || mode === "test" ? "cursor-crosshair" : "")} />
+          <div
+            ref={setContainer}
+            className={cn("absolute inset-0", mode === "draw" || mode === "test" ? "cursor-crosshair" : "")}
+          />
         </div>
 
         <aside className="space-y-4">
           {stats && (
             <div className="rounded-2xl border border-[var(--border)] bg-card p-4 text-xs">
-              <p className="font-bold text-[var(--ink)]">สถานะโครงข่าย {remote?.source === "default" && !dirty && <span className="ml-1 rounded-full bg-[#fff6e5] px-2 py-0.5 text-[10px] text-[#8a6412]">ค่าเริ่มต้นจาก OSM</span>}</p>
-              <p className="mt-2 text-[var(--muted-foreground)]">{network?.nodes.length} จุด · {network?.edges.length} เส้น · ทางเดินรวม {formatDistance(stats.length)} · ประตู {stats.gates}</p>
+              <p className="font-bold text-[var(--ink)]">
+                สถานะโครงข่าย{" "}
+                {remote?.source === "default" && !dirty && (
+                  <span className="ml-1 rounded-full bg-[#fff6e5] px-2 py-0.5 text-[10px] text-[#8a6412]">
+                    ค่าเริ่มต้นจาก OSM
+                  </span>
+                )}
+              </p>
+              <p className="mt-2 text-[var(--muted-foreground)]">
+                {network?.nodes.length} จุด · {network?.edges.length} เส้น · ทางเดินรวม {formatDistance(stats.length)} ·
+                ประตู {stats.gates}
+              </p>
               {stats.missing.length > 0 && (
                 <div className="mt-3 rounded-xl bg-[#fff1eb] p-3">
                   <p className="font-bold text-[#c46242]">ยังไม่มีทางเข้า {stats.missing.length} อาคาร</p>
-                  <div className="mt-1 flex flex-wrap gap-1">{stats.missing.map((b) => <button key={b.id} type="button" onClick={() => focus(b)} className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold">{b.shortName}</button>)}</div>
-                  {canEdit && <button type="button" onClick={connectMissing} className="mt-2 flex items-center gap-1 font-bold text-[#1a73e8]"><Wand2 size={13} /> ต่อทางเข้าอัตโนมัติ (ต่อกับทางที่ใกล้ที่สุด)</button>}
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {stats.missing.map(b => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => focus(b)}
+                        className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold"
+                      >
+                        {b.shortName}
+                      </button>
+                    ))}
+                  </div>
+                  {canEdit && (
+                    <button
+                      type="button"
+                      onClick={connectMissing}
+                      className="mt-2 flex items-center gap-1 font-bold text-[#1a73e8]"
+                    >
+                      <Wand2 size={13} /> ต่อทางเข้าอัตโนมัติ (ต่อกับทางที่ใกล้ที่สุด)
+                    </button>
+                  )}
                 </div>
               )}
               {stats.islands.length > 0 && (
                 <div className="mt-3 rounded-xl bg-[#fff1eb] p-3">
-                  <p className="font-bold text-[#c46242]">ไปไม่ถึงจากทางหลัก {stats.islands.length} อาคาร — วาดทางเชื่อมให้ติดกัน</p>
-                  <div className="mt-1 flex flex-wrap gap-1">{stats.islands.map((b) => <button key={b.id} type="button" onClick={() => focus(b)} className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold">{b.shortName}</button>)}</div>
+                  <p className="font-bold text-[#c46242]">
+                    ไปไม่ถึงจากทางหลัก {stats.islands.length} อาคาร — วาดทางเชื่อมให้ติดกัน
+                  </p>
+                  <div className="mt-1 flex flex-wrap gap-1">
+                    {stats.islands.map(b => (
+                      <button
+                        key={b.id}
+                        type="button"
+                        onClick={() => focus(b)}
+                        className="rounded-full bg-white px-2 py-0.5 text-[10px] font-bold"
+                      >
+                        {b.shortName}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               )}
-              {!stats.missing.length && !stats.islands.length && <p className="mt-2 font-bold text-[#16a34a]">✓ ทุกอาคารมีทางเข้าและเดินถึงกันได้</p>}
+              {!stats.missing.length && !stats.islands.length && (
+                <p className="mt-2 font-bold text-[#16a34a]">✓ ทุกอาคารมีทางเข้าและเดินถึงกันได้</p>
+              )}
             </div>
           )}
 
@@ -413,17 +592,35 @@ export default function WalkwaysAdmin() {
               <p className="font-bold text-[var(--ink)]">จุดที่เลือก</p>
               <label className="block">
                 <span className="mb-1 block font-bold">ชื่อจุด (ใช้ในคำบอกทาง)</span>
-                <input value={selectedNode.name ?? ""} onChange={(e) => updateNode({ name: e.target.value })} placeholder="เช่น โรงอาหาร, เสาธง" className="h-9 w-full rounded-md border border-[var(--border)] bg-card px-2" />
+                <input
+                  value={selectedNode.name ?? ""}
+                  onChange={e => updateNode({ name: e.target.value })}
+                  placeholder="เช่น โรงอาหาร, เสาธง"
+                  className="h-9 w-full rounded-md border border-[var(--border)] bg-card px-2"
+                />
               </label>
               <label className="block">
                 <span className="mb-1 block font-bold">เป็นทางเข้าของอาคาร</span>
-                <select value={selectedNode.buildingId ?? ""} onChange={(e) => updateNode({ buildingId: e.target.value || undefined })} className="h-9 w-full rounded-md border border-[var(--border)] bg-card px-2">
+                <select
+                  value={selectedNode.buildingId ?? ""}
+                  onChange={e => updateNode({ buildingId: e.target.value || undefined })}
+                  className="h-9 w-full rounded-md border border-[var(--border)] bg-card px-2"
+                >
                   <option value="">— ไม่ใช่ทางเข้าอาคาร —</option>
-                  {buildings.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                  {buildings.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
                 </select>
               </label>
               <label className="flex items-center gap-2 font-bold">
-                <input type="checkbox" checked={Boolean(selectedNode.gate)} onChange={(e) => updateNode({ gate: e.target.checked || undefined })} /> เป็นประตูเข้า-ออกวิทยาลัย
+                <input
+                  type="checkbox"
+                  checked={Boolean(selectedNode.gate)}
+                  onChange={e => updateNode({ gate: e.target.checked || undefined })}
+                />{" "}
+                เป็นประตูเข้า-ออกวิทยาลัย
               </label>
             </div>
           )}
@@ -432,30 +629,54 @@ export default function WalkwaysAdmin() {
               <p className="font-bold text-[var(--ink)]">เส้นทางเดินที่เลือก</p>
               <label className="block">
                 <span className="mb-1 block font-bold">ชื่อทางเดิน (ไม่บังคับ)</span>
-                <input value={selectedEdge.name ?? ""} onChange={(e) => updateEdgeName(e.target.value)} placeholder="เช่น ทางเดินมีหลังคา" className="h-9 w-full rounded-md border border-[var(--border)] bg-card px-2" />
+                <input
+                  value={selectedEdge.name ?? ""}
+                  onChange={e => updateEdgeName(e.target.value)}
+                  placeholder="เช่น ทางเดินมีหลังคา"
+                  className="h-9 w-full rounded-md border border-[var(--border)] bg-card px-2"
+                />
               </label>
-              <p className="flex items-center gap-1 text-[var(--muted-foreground)]"><Link2 size={12} /> ตั้งชื่อต่อเนื่องหลายเส้นได้ คำบอกทางจะเป็น "เลี้ยวซ้ายเข้า&lt;ชื่อ&gt;"</p>
+              <p className="flex items-center gap-1 text-[var(--muted-foreground)]">
+                <Link2 size={12} /> ตั้งชื่อต่อเนื่องหลายเส้นได้ คำบอกทางจะเป็น "เลี้ยวซ้ายเข้า&lt;ชื่อ&gt;"
+              </p>
             </div>
           )}
 
           {mode === "test" && (
             <div className="space-y-3 rounded-2xl border border-[var(--border)] bg-card p-4 text-xs">
               <p className="font-bold text-[var(--ink)]">ทดลองเส้นทาง</p>
-              <p className="text-[var(--muted-foreground)]">{testStart ? "จุดเริ่ม: จุดสีเขียวบนแผนที่ (คลิกใหม่เพื่อย้าย)" : "คลิกบนแผนที่เพื่อวางจุดเริ่ม"}</p>
-              <select value={testTarget} onChange={(e) => setTestTarget(e.target.value)} className="h-9 w-full rounded-md border border-[var(--border)] bg-card px-2">
+              <p className="text-[var(--muted-foreground)]">
+                {testStart ? "จุดเริ่ม: จุดสีเขียวบนแผนที่ (คลิกใหม่เพื่อย้าย)" : "คลิกบนแผนที่เพื่อวางจุดเริ่ม"}
+              </p>
+              <select
+                value={testTarget}
+                onChange={e => setTestTarget(e.target.value)}
+                className="h-9 w-full rounded-md border border-[var(--border)] bg-card px-2"
+              >
                 <option value="">— เลือกอาคารปลายทาง —</option>
-                {buildings.map((b) => <option key={b.id} value={b.id}>{b.name}</option>)}
+                {buildings.map(b => (
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
+                ))}
               </select>
-              {testStart && testBuilding && !testRoute && <p className="font-bold text-[#c46242]">ไม่พบเส้นทาง — จุดเริ่มกับอาคารนี้ไม่ได้เชื่อมกัน</p>}
+              {testStart && testBuilding && !testRoute && (
+                <p className="font-bold text-[#c46242]">ไม่พบเส้นทาง — จุดเริ่มกับอาคารนี้ไม่ได้เชื่อมกัน</p>
+              )}
               {testRoute && (
                 <>
-                  <p className="font-bold text-[var(--ink)]">เดิน {formatDistance(testRoute.distance)} · ~{Math.max(1, Math.round(testRoute.duration / 60))} นาที{testRoute.offCampus ? " (เริ่มจากประตู)" : ""}</p>
+                  <p className="font-bold text-[var(--ink)]">
+                    เดิน {formatDistance(testRoute.distance)} · ~{Math.max(1, Math.round(testRoute.duration / 60))} นาที
+                    {testRoute.offCampus ? " (เริ่มจากประตู)" : ""}
+                  </p>
                   <ol className="space-y-1">
                     {testRoute.steps.map((s, i) => (
                       <li key={i} className="flex items-center gap-2">
                         <ManeuverIcon maneuver={s.maneuver} className="h-4 w-4 shrink-0 text-[#1a73e8]" />
                         <span className="flex-1">{s.instruction}</span>
-                        {s.distance > 0 && <span className="font-bold text-[var(--muted-foreground)]">{formatDistance(s.distance)}</span>}
+                        {s.distance > 0 && (
+                          <span className="font-bold text-[var(--muted-foreground)]">{formatDistance(s.distance)}</span>
+                        )}
                       </li>
                     ))}
                   </ol>

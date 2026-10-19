@@ -37,7 +37,8 @@ import { Streamdown } from "streamdown";
 type ChatMessage = { role: "user" | "assistant"; content: string; spoken?: boolean };
 type Phase = "idle" | "listening" | "transcribing" | "thinking" | "speaking";
 
-const GREETING = "สวัสดีครับ ผมน้องปลาทู 🐟\n\nแตะปุ่มไมค์แล้วพูดได้เลย หรือพิมพ์ถามเรื่องอาคาร สาขา ข่าวสาร และขอเส้นทางได้ครับ";
+const GREETING =
+  "สวัสดีครับ ผมน้องปลาทู 🐟\n\nแตะปุ่มไมค์แล้วพูดได้เลย หรือพิมพ์ถามเรื่องอาคาร สาขา ข่าวสาร และขอเส้นทางได้ครับ";
 
 const QUICK_QUESTIONS = [
   { icon: Navigation, label: "ขอเส้นทางไปสาขาช่างยนต์" },
@@ -145,7 +146,8 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
   }, [messages, interim, phase]);
 
   const engine: SpeakEngine = settings.engine === "ai" && aiVoice ? "ai" : "device";
-  const canSpeakOut = engine === "ai" || Boolean(deviceVoiceName) || typeof window !== "undefined" && "speechSynthesis" in window;
+  const canSpeakOut =
+    engine === "ai" || Boolean(deviceVoiceName) || (typeof window !== "undefined" && "speechSynthesis" in window);
   const canListen = hasMicrophone() && (hasBrowserRecognition() || aiVoice);
 
   /** Stop listening, thinking and talking. */
@@ -171,7 +173,7 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
       await speech.done;
       if (session === sessionRef.current) setPhase("idle");
     },
-    [aiVoice],
+    [aiVoice]
   );
 
   // `startListening` and `ask` call each other (hands-free loop) — tie them through refs.
@@ -185,18 +187,21 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
       stopSpeaking();
       listeningRef.current?.cancel();
       setNotice(null);
-      const history = [...messagesRef.current.slice(1).map(({ role, content }) => ({ role, content })), { role: "user" as const, content: q }].slice(-30);
-      setMessages((m) => [...m, { role: "user", content: q, spoken: fromVoice }]);
+      const history = [
+        ...messagesRef.current.slice(1).map(({ role, content }) => ({ role, content })),
+        { role: "user" as const, content: q },
+      ].slice(-30);
+      setMessages(m => [...m, { role: "user", content: q, spoken: fromVoice }]);
       setPhase("thinking");
       const controller = new AbortController();
       abortRef.current = controller;
       try {
         const { reply, routeToBuildingId } = await utils.client.chat.ask.mutate(
           { messages: history, spoken: fromVoice || undefined },
-          { signal: controller.signal },
+          { signal: controller.signal }
         );
         if (session !== sessionRef.current) return;
-        setMessages((m) => [...m, { role: "assistant", content: reply }]);
+        setMessages(m => [...m, { role: "assistant", content: reply }]);
         if (routeToBuildingId && onShowRoute) {
           // Say it, then hand over to the map (the panel closes so the route is visible).
           void speakReply(reply, session);
@@ -212,13 +217,13 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
         const content = controller.signal.aborted
           ? "หยุดแล้วครับ — ถามใหม่ได้เลย"
           : `ขออภัยครับ ระบบยังตอบไม่ได้ตอนนี้\n(${error instanceof Error ? error.message : "ไม่ทราบสาเหตุ"})`;
-        setMessages((m) => [...m, { role: "assistant", content }]);
+        setMessages(m => [...m, { role: "assistant", content }]);
         setPhase("idle");
       } finally {
         if (abortRef.current === controller) abortRef.current = null;
       }
     },
-    [onShowRoute, speakReply, utils],
+    [onShowRoute, speakReply, utils]
   );
 
   const startListening = useCallback(
@@ -229,10 +234,13 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
       setInterim("");
       setPhase("listening");
       const engine = preferServer ? "server" : preferredListenEngine(aiVoice);
-      const l = listen({ onInterim: setInterim, onLevel: setLevel, onProcessing: () => setPhase("transcribing") }, engine);
+      const l = listen(
+        { onInterim: setInterim, onLevel: setLevel, onProcessing: () => setPhase("transcribing") },
+        engine
+      );
       listeningRef.current = l;
       l.result
-        .then((text) => {
+        .then(text => {
           if (session !== sessionRef.current || listeningRef.current !== l) return;
           listeningRef.current = null;
           setLevel(0);
@@ -263,10 +271,14 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
             startListeningRef.current(true);
             return;
           }
-          setNotice(error.message.startsWith("recognizer:") ? "ระบบฟังเสียงของเบราว์เซอร์ใช้ไม่ได้ — พิมพ์คำถามแทนได้ครับ" : error.message);
+          setNotice(
+            error.message.startsWith("recognizer:")
+              ? "ระบบฟังเสียงของเบราว์เซอร์ใช้ไม่ได้ — พิมพ์คำถามแทนได้ครับ"
+              : error.message
+          );
         });
     },
-    [aiVoice, ask],
+    [aiVoice, ask]
   );
   startListeningRef.current = startListening;
 
@@ -288,7 +300,7 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
     const onVoice = () => {
       unlockAudio();
       setOpen(true);
-      setSettings((s) => ({ ...s, handsFree: true }));
+      setSettings(s => ({ ...s, handsFree: true }));
       setTimeout(() => startListeningRef.current(), 250);
     };
     window.addEventListener(OPEN_VOICE_EVENT, onVoice);
@@ -343,7 +355,10 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
         <div
           role="dialog"
           aria-label="ผู้ช่วยน้องปลาทู"
-          className={cn("fixed right-3 z-[1200] flex max-h-[calc(100dvh-7rem)] w-[min(440px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--card)] shadow-[0_24px_80px_rgba(16,41,58,0.28)] sm:right-6", hideLauncher ? "bottom-20" : "bottom-24")}
+          className={cn(
+            "fixed right-3 z-[1200] flex max-h-[calc(100dvh-7rem)] w-[min(440px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--card)] shadow-[0_24px_80px_rgba(16,41,58,0.28)] sm:right-6",
+            hideLauncher ? "bottom-20" : "bottom-24"
+          )}
         >
           {/* Header */}
           <div className="flex items-center justify-between bg-[var(--deep)] px-5 py-3.5 text-white">
@@ -359,7 +374,7 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
             <div className="flex items-center gap-1.5">
               <button
                 type="button"
-                onClick={() => setSettings((s) => ({ ...s, speakReplies: !s.speakReplies }))}
+                onClick={() => setSettings(s => ({ ...s, speakReplies: !s.speakReplies }))}
                 className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10"
                 aria-label={settings.speakReplies ? "ปิดเสียงตอบ" : "เปิดเสียงตอบ"}
                 title={settings.speakReplies ? "ปิดเสียงตอบ" : "เปิดเสียงตอบ"}
@@ -368,14 +383,22 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
               </button>
               <button
                 type="button"
-                onClick={() => setShowSettings((v) => !v)}
-                className={cn("flex h-9 w-9 items-center justify-center rounded-full", showSettings ? "bg-white/25" : "bg-white/10")}
+                onClick={() => setShowSettings(v => !v)}
+                className={cn(
+                  "flex h-9 w-9 items-center justify-center rounded-full",
+                  showSettings ? "bg-white/25" : "bg-white/10"
+                )}
                 aria-label="ตั้งค่าเสียง"
                 title="ตั้งค่าเสียง"
               >
                 <Settings2 size={16} />
               </button>
-              <button type="button" onClick={close} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10" aria-label="ปิดผู้ช่วย">
+              <button
+                type="button"
+                onClick={close}
+                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10"
+                aria-label="ปิดผู้ช่วย"
+              >
                 <X size={17} />
               </button>
             </div>
@@ -386,34 +409,52 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
               <label className="flex items-center justify-between gap-3 font-bold">
                 <span>
                   อ่านคำตอบออกเสียง
-                  <span className="block text-[10px] font-medium text-[var(--muted-foreground)]">ปิดได้ถ้าอยู่ในที่ที่ต้องเงียบ</span>
+                  <span className="block text-[10px] font-medium text-[var(--muted-foreground)]">
+                    ปิดได้ถ้าอยู่ในที่ที่ต้องเงียบ
+                  </span>
                 </span>
-                <input type="checkbox" checked={settings.speakReplies} onChange={(e) => setSettings((s) => ({ ...s, speakReplies: e.target.checked }))} className="h-4 w-4" />
+                <input
+                  type="checkbox"
+                  checked={settings.speakReplies}
+                  onChange={e => setSettings(s => ({ ...s, speakReplies: e.target.checked }))}
+                  className="h-4 w-4"
+                />
               </label>
               <label className="flex items-center justify-between gap-3 font-bold">
                 <span>
                   สนทนาต่อเนื่อง (ไม่ต้องกดไมค์ซ้ำ)
-                  <span className="block text-[10px] font-medium text-[var(--muted-foreground)]">ตอบจบแล้วฟังต่อทันที — เงียบ 2 รอบจะหยุดเอง</span>
+                  <span className="block text-[10px] font-medium text-[var(--muted-foreground)]">
+                    ตอบจบแล้วฟังต่อทันที — เงียบ 2 รอบจะหยุดเอง
+                  </span>
                 </span>
-                <input type="checkbox" checked={settings.handsFree} onChange={(e) => setSettings((s) => ({ ...s, handsFree: e.target.checked }))} className="h-4 w-4" />
+                <input
+                  type="checkbox"
+                  checked={settings.handsFree}
+                  onChange={e => setSettings(s => ({ ...s, handsFree: e.target.checked }))}
+                  className="h-4 w-4"
+                />
               </label>
               <div>
                 <p className="mb-1.5 font-bold">เสียงพูด</p>
                 <div className="grid grid-cols-2 gap-2">
-                  {(["ai", "device"] as const).map((e) => (
+                  {(["ai", "device"] as const).map(e => (
                     <button
                       key={e}
                       type="button"
                       disabled={e === "ai" && !aiVoice}
-                      onClick={() => setSettings((s) => ({ ...s, engine: e }))}
+                      onClick={() => setSettings(s => ({ ...s, engine: e }))}
                       className={cn(
                         "rounded-xl border px-3 py-2 text-left disabled:opacity-40",
-                        engine === e ? "border-[var(--ink)] bg-[var(--secondary)]" : "border-[var(--border)]",
+                        engine === e ? "border-[var(--ink)] bg-[var(--secondary)]" : "border-[var(--border)]"
                       )}
                     >
                       <span className="block font-bold">{e === "ai" ? "เสียง AI (ธรรมชาติ)" : "เสียงของเครื่อง"}</span>
                       <span className="block truncate text-[10px] text-[var(--muted-foreground)]">
-                        {e === "ai" ? (aiVoice ? "Gemini · ต้องต่ออินเทอร์เน็ต" : "ยังไม่พร้อมใช้") : deviceVoiceName ?? "ไม่พบเสียงภาษาไทยในเครื่อง"}
+                        {e === "ai"
+                          ? aiVoice
+                            ? "Gemini · ต้องต่ออินเทอร์เน็ต"
+                            : "ยังไม่พร้อมใช้"
+                          : (deviceVoiceName ?? "ไม่พบเสียงภาษาไทยในเครื่อง")}
                       </span>
                     </button>
                   ))}
@@ -427,13 +468,19 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
                   max={1.2}
                   step={0.1}
                   value={settings.rate}
-                  onChange={(e) => setSettings((s) => ({ ...s, rate: Number(e.target.value) }))}
+                  onChange={e => setSettings(s => ({ ...s, rate: Number(e.target.value) }))}
                   className="mt-1 w-full"
                 />
               </label>
               <button
                 type="button"
-                onClick={() => unlockAudio() ?? speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", { engine, rate: settings.rate })}
+                onClick={() =>
+                  unlockAudio() ??
+                  speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", {
+                    engine,
+                    rate: settings.rate,
+                  })
+                }
                 className="flex items-center gap-1.5 font-bold text-[#1a73e8]"
               >
                 <Volume2 size={13} /> ทดลองฟังเสียง
@@ -501,8 +548,18 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
                 <div className="relative flex h-24 w-24 items-center justify-center">
                   {(phase === "listening" || phase === "speaking") && (
                     <>
-                      <span className={cn("absolute inset-0 animate-ping rounded-full opacity-25", phase === "listening" ? "bg-[#e97967]" : "bg-[var(--aqua)]")} />
-                      <span className={cn("absolute inset-2 rounded-full opacity-30", phase === "listening" ? "bg-[#e97967]" : "bg-[var(--aqua)]")} />
+                      <span
+                        className={cn(
+                          "absolute inset-0 animate-ping rounded-full opacity-25",
+                          phase === "listening" ? "bg-[#e97967]" : "bg-[var(--aqua)]"
+                        )}
+                      />
+                      <span
+                        className={cn(
+                          "absolute inset-2 rounded-full opacity-30",
+                          phase === "listening" ? "bg-[#e97967]" : "bg-[var(--aqua)]"
+                        )}
+                      />
                     </>
                   )}
                   <button
@@ -511,18 +568,44 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
                     style={{ transform: `scale(${orbScale})` }}
                     className={cn(
                       "relative flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-[transform,background-color] duration-100",
-                      phase === "listening" ? "bg-[#e0533d]" : phase === "speaking" ? "bg-[#1a8f8a]" : busy ? "bg-[var(--muted-foreground)]" : "bg-[var(--deep)]",
+                      phase === "listening"
+                        ? "bg-[#e0533d]"
+                        : phase === "speaking"
+                          ? "bg-[#1a8f8a]"
+                          : busy
+                            ? "bg-[var(--muted-foreground)]"
+                            : "bg-[var(--deep)]"
                     )}
-                    aria-label={phase === "listening" ? "พูดจบแล้ว" : phase === "speaking" ? "พูดแทรก" : busy ? "หยุด" : "แตะเพื่อพูด"}
+                    aria-label={
+                      phase === "listening"
+                        ? "พูดจบแล้ว"
+                        : phase === "speaking"
+                          ? "พูดแทรก"
+                          : busy
+                            ? "หยุด"
+                            : "แตะเพื่อพูด"
+                    }
                   >
-                    {busy ? <Loader2 size={30} className="animate-spin" /> : phase === "speaking" ? <SpeakingBars /> : <Mic size={32} />}
+                    {busy ? (
+                      <Loader2 size={30} className="animate-spin" />
+                    ) : phase === "speaking" ? (
+                      <SpeakingBars />
+                    ) : (
+                      <Mic size={32} />
+                    )}
                   </button>
                 </div>
                 <p className="mt-2 text-center text-xs font-black text-[var(--ink)]">{PHASE_TEXT[phase]}</p>
-                {phase === "listening" && <p className="text-[10px] text-[var(--muted-foreground)]">พูดจบแล้วรอสักครู่ หรือแตะปุ่มอีกครั้ง</p>}
+                {phase === "listening" && (
+                  <p className="text-[10px] text-[var(--muted-foreground)]">พูดจบแล้วรอสักครู่ หรือแตะปุ่มอีกครั้ง</p>
+                )}
                 {notice && <p className="mt-1 text-center text-[11px] font-bold text-[#c46242]">{notice}</p>}
                 {(phase !== "idle" || settings.handsFree) && phase !== "listening" && (
-                  <button type="button" onClick={stopAll} className="mt-1 flex items-center gap-1 text-[10px] font-bold text-[var(--muted-foreground)] hover:text-[var(--ink)]">
+                  <button
+                    type="button"
+                    onClick={stopAll}
+                    className="mt-1 flex items-center gap-1 text-[10px] font-bold text-[var(--muted-foreground)] hover:text-[var(--ink)]"
+                  >
                     <Square size={10} /> {phase === "idle" ? "โหมดสนทนาต่อเนื่องเปิดอยู่" : "หยุดทั้งหมด"}
                   </button>
                 )}
@@ -558,7 +641,7 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
             <form onSubmit={submitText} className="mt-2 flex gap-2">
               <input
                 value={textInput}
-                onChange={(event) => setTextInput(event.target.value)}
+                onChange={event => setTextInput(event.target.value)}
                 placeholder="หรือพิมพ์คำถาม เช่น ห้องน้ำอยู่ไหน"
                 className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm text-[var(--foreground)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
                 aria-label="พิมพ์คำถาม"
@@ -576,21 +659,23 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
         </div>
       )}
 
-      {!hideLauncher && <button
-        type="button"
-        onClick={() => {
-          unlockAudio();
-          if (open) close();
-          else setOpen(true);
-        }}
-        className="fixed bottom-5 right-3 z-[1200] flex h-14 items-center gap-2 rounded-full bg-[var(--deep)] px-4 text-white shadow-[0_14px_35px_rgba(16,41,58,0.3)] transition-all hover:-translate-y-1 sm:right-6"
-        aria-label={open ? "ปิด Nong Platoo AI" : "เปิด Nong Platoo AI"}
-      >
-        <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[var(--aqua)] text-[var(--ink)]">
-          {phase === "listening" ? <Mic size={17} className="animate-pulse" /> : <MessageCircle size={17} />}
-        </span>
-        <span className="hidden text-xs font-extrabold sm:inline">{open ? "ปิดผู้ช่วย" : "ถามน้องปลาทู"}</span>
-      </button>}
+      {!hideLauncher && (
+        <button
+          type="button"
+          onClick={() => {
+            unlockAudio();
+            if (open) close();
+            else setOpen(true);
+          }}
+          className="fixed bottom-5 right-3 z-[1200] flex h-14 items-center gap-2 rounded-full bg-[var(--deep)] px-4 text-white shadow-[0_14px_35px_rgba(16,41,58,0.3)] transition-all hover:-translate-y-1 sm:right-6"
+          aria-label={open ? "ปิด Nong Platoo AI" : "เปิด Nong Platoo AI"}
+        >
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[var(--aqua)] text-[var(--ink)]">
+            {phase === "listening" ? <Mic size={17} className="animate-pulse" /> : <MessageCircle size={17} />}
+          </span>
+          <span className="hidden text-xs font-extrabold sm:inline">{open ? "ปิดผู้ช่วย" : "ถามน้องปลาทู"}</span>
+        </button>
+      )}
     </>
   );
 }
@@ -599,7 +684,7 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
 function SpeakingBars() {
   return (
     <span className="flex h-8 items-end gap-1" aria-hidden>
-      {[0, 1, 2, 3].map((i) => (
+      {[0, 1, 2, 3].map(i => (
         <span
           key={i}
           className="w-1.5 rounded-full bg-white"
