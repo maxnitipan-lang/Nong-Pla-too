@@ -216,16 +216,13 @@ export function AdminShell({
           >
             <ExternalLink size={14} /> เปิดหน้าเว็บจริง
           </a>
-          {/* With OPEN_ADMIN there is no login, so there is nothing to sign out of. */}
-          {user.loginMethod !== "open" && (
-            <button
-              type="button"
-              onClick={logout}
-              className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-[var(--destructive)] hover:bg-[var(--muted)]"
-            >
-              <LogOut size={14} /> ออกจากระบบ
-            </button>
-          )}
+          <button
+            type="button"
+            onClick={logout}
+            className="mt-1 flex w-full items-center gap-2 rounded-xl px-3 py-2 text-xs font-semibold text-[var(--destructive)] hover:bg-[var(--muted)]"
+          >
+            <LogOut size={14} /> ออกจากระบบ
+          </button>
         </div>
       </aside>
 

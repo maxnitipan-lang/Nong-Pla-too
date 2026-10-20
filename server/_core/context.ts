@@ -67,28 +67,6 @@ async function devAdminUser(): Promise<User | null> {
   }
 }
 
-/**
- * No-login admin: with `OPEN_ADMIN=1` (also in production) every visitor who is
- * not signed in is treated as an admin, so /admin needs no username/password.
- * Anyone who knows the /admin link can then change or delete everything —
- * remove the variable to bring the login back.
- */
-function openAdminUser(): User | null {
-  if (process.env.OPEN_ADMIN !== "1") return null;
-  const now = new Date();
-  return {
-    id: -3,
-    openId: "open-admin",
-    name: "ผู้ดูแล",
-    email: null,
-    loginMethod: "open",
-    role: "admin",
-    createdAt: now,
-    updatedAt: now,
-    lastSignedIn: now,
-  };
-}
-
 export async function createContext(
   opts: CreateExpressContextOptions
 ): Promise<TrpcContext> {
@@ -102,11 +80,7 @@ export async function createContext(
   }
 
   if (!user) {
-    user =
-      (await localAccountUser(opts.req)) ??
-      passwordAdminUser(opts.req) ??
-      (await devAdminUser()) ??
-      openAdminUser();
+    user = (await localAccountUser(opts.req)) ?? passwordAdminUser(opts.req) ?? (await devAdminUser());
   }
 
   return {

@@ -25,9 +25,6 @@ services:
         sync: false
       - key: ADMIN_USERNAME
         value: admin
-      # --- 1 = เข้า /admin ได้โดยไม่ต้องใส่รหัส (ใครรู้ลิงก์ก็แก้ข้อมูลได้) — ลบออกเพื่อกลับมาใช้รหัส ---
-      - key: OPEN_ADMIN
-        value: "1"
       # --- กุญแจเซ็น cookie ล็อกอิน (สุ่มให้อัตโนมัติ) ---
       - key: JWT_SECRET
         generateValue: true
