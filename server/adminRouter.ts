@@ -30,6 +30,7 @@ import {
   upsertCampusBuilding,
   upsertCampusNews,
 } from "./db";
+import { saveImage } from "./images";
 import { syncCollegeNews } from "./newsScraper";
 import { adminProcedure, editorProcedure, router, staffProcedure } from "./_core/trpc";
 
@@ -136,6 +137,22 @@ export const adminRouter = router({
           throw new TRPCError({ code: "BAD_REQUEST", message: "ลบบัญชีของตัวเองไม่ได้" });
         }
         return run(() => deleteUser(input.openId));
+      }),
+  }),
+
+  /** New (not in the old API): upload a picture (department logo, building photo) — returns its URL. */
+  images: router({
+    upload: editorProcedure
+      .input(z.object({ dataUrl: z.string().max(2_100_000) }))
+      .mutation(async ({ input }) => {
+        try {
+          return await saveImage(input.dataUrl);
+        } catch (error) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: error instanceof Error ? error.message : "อัปโหลดรูปไม่สำเร็จ",
+          });
+        }
       }),
   }),
 

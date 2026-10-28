@@ -42,6 +42,8 @@ export type DepartmentProfile = {
   careers: string[];
   activities?: string[];
   accent: string;
+  /** Logo picture URL (uploaded in /admin/buildings → /api/images/…). Optional. */
+  logo?: string;
 };
 
 export type CampusBuilding = {

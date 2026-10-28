@@ -1,4 +1,4 @@
-import { int, json, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import { int, json, mediumtext, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
 export const users = mysqlTable("users", {
   id: int("id").autoincrement().primaryKey(),
@@ -82,6 +82,18 @@ export type CampusNewsRow = typeof campusNews.$inferSelect;
 export type SiteSettingRow = typeof siteSettings.$inferSelect;
 
 /** The campus walkway graph (see shared/walkNetwork.ts), one row per network id. */
+/**
+ * Pictures uploaded in /admin (department logos, building photos), stored in the
+ * database so they survive redeploys (Render's disk is wiped on every deploy).
+ * id = content hash, served at /api/images/<id>; data = base64.
+ */
+export const campusImages = mysqlTable("campus_images", {
+  id: varchar("id", { length: 32 }).primaryKey(),
+  mime: varchar("mime", { length: 40 }).notNull(),
+  data: mediumtext("data").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
 export const walkNetworks = mysqlTable("walk_networks", {
   id: varchar("id", { length: 32 }).primaryKey(),
   data: json("data").notNull(),

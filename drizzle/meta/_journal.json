@@ -57,6 +57,13 @@
       "when": 1790500690994,
       "tag": "0007_staff_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1793178029271,
+      "tag": "0008_campus_images",
+      "breakpoints": true
     }
   ]
 }

@@ -5,6 +5,7 @@ import { createServer } from "http";
 import net from "net";
 import { appRouter } from "../routers";
 import { startNewsAutoSync } from "../newsScraper";
+import { registerImageRoutes } from "../images";
 import { registerVoiceRoutes } from "../voice";
 import { createContext } from "./context";
 import { registerOAuthRoutes } from "./oauth";
@@ -36,6 +37,7 @@ async function startServer(): Promise<void> {
   registerStorageProxy(app);
   registerOAuthRoutes(app);
   registerVoiceRoutes(app);
+  registerImageRoutes(app);
   // Cheap liveness probe (no DB) — Render's health check and the kiosk keep-alive ping hit this.
   app.get("/api/health", (_req, res) => {
     res.setHeader("Cache-Control", "no-store");

@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/dialog";
 import { trpc } from "@/lib/trpc";
 import type { CampusBuilding, DepartmentProfile, GalleryImage } from "@shared/campus";
+import { ImageUploadButton } from "@/components/ImageUploadButton";
 import { MyMapsImport } from "@/components/MyMapsImport";
 import { CAMPUS_CATEGORIES, buildingInputSchema } from "@shared/adminSchemas";
 import { Building2, Pencil, Plus, Trash2 } from "lucide-react";
@@ -411,6 +412,15 @@ export default function BuildingsAdmin() {
             </div>
           </details>
 
+          <BuildingImages
+            buildingName={form.name}
+            departmentsJson={form.departmentsJson}
+            galleryJson={form.galleryJson}
+            onDepartmentsJson={(v) => set("departmentsJson", v)}
+            onGalleryJson={(v) => set("galleryJson", v)}
+            disabled={!canEdit}
+          />
+
           <details className="rounded-xl border border-[var(--border)] p-3">
             <summary className="cursor-pointer text-xs font-bold text-[var(--ink)]">
               สาขาวิชา + Gallery ของอาคาร (หน้าตู้ Kiosk · JSON)
@@ -470,5 +480,108 @@ export default function BuildingsAdmin() {
         </AlertDialogContent>
       </AlertDialog>
     </AdminShell>
+  );
+}
+
+/**
+ * Pictures for one building, without touching JSON: a logo per department
+ * (shown on the map pin and the department cards) and building photos.
+ * Edits the same departments/gallery JSON as the advanced fields below.
+ */
+function BuildingImages({
+  buildingName,
+  departmentsJson,
+  galleryJson,
+  onDepartmentsJson,
+  onGalleryJson,
+  disabled,
+}: {
+  buildingName: string;
+  departmentsJson: string;
+  galleryJson: string;
+  onDepartmentsJson: (json: string) => void;
+  onGalleryJson: (json: string) => void;
+  disabled: boolean;
+}) {
+  const departments = parseJsonArray<DepartmentProfile>(departmentsJson, "สาขาวิชา");
+  const gallery = parseJsonArray<GalleryImage>(galleryJson, "Gallery");
+  const write = (list: unknown[]) => JSON.stringify(list, null, 2);
+
+  const setLogo = (index: number, logo: string | undefined) => {
+    const next = departments.value!.map((d, i) => {
+      if (i !== index) return d;
+      const { logo: _old, ...rest } = d;
+      return logo ? { ...rest, logo } : rest;
+    });
+    onDepartmentsJson(write(next));
+  };
+  const addPhoto = (url: string) =>
+    onGalleryJson(
+      write([...(gallery.value ?? []), { id: `photo-${Date.now()}`, url, caption: "", alt: buildingName || "รูปอาคาร" }]),
+    );
+  const removePhoto = (id: string) => onGalleryJson(write((gallery.value ?? []).filter((g) => g.id !== id)));
+
+  return (
+    <div className="rounded-xl border border-[var(--border)] p-3">
+      <p className="text-xs font-bold text-[var(--ink)]">รูปภาพ</p>
+      <p className="mt-0.5 text-[10px] text-[var(--muted-foreground)]">
+        เลือกรูปจากเครื่องได้เลย ระบบย่อรูปให้อัตโนมัติ — เสร็จแล้วกด “บันทึก” ด้านล่าง
+      </p>
+
+      <p className="mt-3 mb-2 text-[11px] font-bold text-[var(--ink)]">โลโก้สาขา (แสดงบนหมุดแผนที่และการ์ดสาขา)</p>
+      {departments.error ? (
+        <p className="text-[11px] text-[var(--destructive)]">{departments.error} — แก้ในช่อง JSON ด้านล่างก่อน</p>
+      ) : departments.value!.length === 0 ? (
+        <p className="text-[11px] text-[var(--muted-foreground)]">อาคารนี้ยังไม่มีสาขา</p>
+      ) : (
+        <ul className="space-y-2">
+          {departments.value!.map((d, i) => (
+            <li key={d.id ?? i} className="flex items-center gap-3">
+              <span
+                className="relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-xl text-[10px] font-bold text-white"
+                style={{ backgroundColor: d.accent || "#3c8f8d" }}
+              >
+                {d.logo ? <img src={d.logo} alt="" className="absolute inset-0 h-full w-full object-cover" /> : d.code}
+              </span>
+              <span className="min-w-0 flex-1 truncate text-xs font-semibold">{d.name}</span>
+              <ImageUploadButton
+                kind="logo"
+                label={d.logo ? "เปลี่ยน" : "ใส่โลโก้"}
+                onUploaded={(url) => setLogo(i, url)}
+                disabled={disabled}
+              />
+              {d.logo && (
+                <Button type="button" size="sm" variant="ghost" disabled={disabled} onClick={() => setLogo(i, undefined)}>
+                  ลบ
+                </Button>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <p className="mt-4 mb-2 text-[11px] font-bold text-[var(--ink)]">รูปอาคาร</p>
+      {gallery.error ? (
+        <p className="text-[11px] text-[var(--destructive)]">{gallery.error} — แก้ในช่อง JSON ด้านล่างก่อน</p>
+      ) : (
+        <div className="flex flex-wrap items-end gap-2">
+          {gallery.value!.map((g) => (
+            <figure key={g.id} className="relative h-20 w-28 overflow-hidden rounded-lg bg-[var(--muted)]">
+              <img src={g.url} alt={g.alt} className="h-full w-full object-cover" />
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => removePhoto(g.id)}
+                className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-black/60 text-white"
+                aria-label="ลบรูปนี้"
+              >
+                <Trash2 size={12} />
+              </button>
+            </figure>
+          ))}
+          <ImageUploadButton kind="photo" label="เพิ่มรูปอาคาร" onUploaded={addPhoto} disabled={disabled} />
+        </div>
+      )}
+    </div>
   );
 }

@@ -27,6 +27,13 @@ export const floorDetailSchema = z.object({
   rooms: z.array(z.string().trim().min(1).max(160)).max(40),
 });
 
+/** A picture link: https://… or a path on this site (/images/…, /api/images/…). */
+const imageUrlSchema = z
+  .string()
+  .trim()
+  .max(500)
+  .refine((v) => /^https:\/\//.test(v) || v.startsWith("/"), "ต้องเป็นลิงก์ https:// หรือ path ในเว็บ (/...)");
+
 export const departmentSchema = z.object({
   id: z.string().trim().min(1).max(80),
   floor: z.number().int().min(0).max(60),
@@ -37,15 +44,12 @@ export const departmentSchema = z.object({
   careers: z.array(z.string().trim().min(1).max(120)).max(30).default([]),
   activities: z.array(z.string().trim().min(1).max(120)).max(30).optional(),
   accent: hexColorSchema.default("#3c8f8d"),
+  logo: imageUrlSchema.optional(),
 });
 
 export const galleryImageSchema = z.object({
   id: z.string().trim().min(1).max(80),
-  url: z
-    .string()
-    .trim()
-    .max(500)
-    .refine((v) => /^https:\/\//.test(v) || v.startsWith("/"), "ต้องเป็นลิงก์ https:// หรือ path ในเว็บ (/...)"),
+  url: imageUrlSchema,
   caption: z.string().trim().max(200).default(""),
   alt: z.string().trim().max(200).default(""),
 });
