@@ -89,6 +89,8 @@ type CampusAIWidgetProps = {
   onShowRoute?: (buildingId: string) => void;
   /** Hide the floating "ถามน้องปลาทู" button (the page opens the panel itself, e.g. from a tab bar). */
   hideLauncher?: boolean;
+  /** On the kiosk: answers can say how far a building is from here. */
+  atKiosk?: boolean;
 };
 
 /**
@@ -99,7 +101,7 @@ type CampusAIWidgetProps = {
  * browser recogniser → server transcription; AI voice → device voice.
  * Chat itself is `chat.ask` like the old app (stateless, full history each time).
  */
-export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWidgetProps = {}) {
+export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = false }: CampusAIWidgetProps = {}) {
   const { data: configured } = trpc.chat.configured.useQuery(undefined, { staleTime: Infinity });
   const utils = trpc.useUtils();
 
@@ -192,7 +194,7 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false }: CampusAIWi
       abortRef.current = controller;
       try {
         const { reply, routeToBuildingId } = await utils.client.chat.ask.mutate(
-          { messages: history, spoken: fromVoice || undefined },
+          { messages: history, spoken: fromVoice || undefined, atKiosk: atKiosk || undefined },
           { signal: controller.signal },
         );
         if (session !== sessionRef.current) return;

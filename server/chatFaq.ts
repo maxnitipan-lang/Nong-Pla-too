@@ -11,6 +11,7 @@
 
 import faqData from "../shared/data/chatFaq.json";
 import type { CampusBuilding, CampusSettings } from "@shared/campus";
+import { describeLocation, locateBuilding } from "./buildingLocation";
 
 export type FaqEntry = {
   id: string;
@@ -112,6 +113,11 @@ function buildingKeys(building: CampusBuilding): string[] {
  * ambiguous — e.g. "ก่อสร้าง" is part of two buildings' names, so let the AI ask.
  */
 export function findBuildingInQuestion(question: string, buildings: CampusBuilding[]): CampusBuilding | null {
+  return findBuildingMatch(question, buildings)?.building ?? null;
+}
+
+/** Like findBuildingInQuestion, plus the (normalised) words that matched. */
+function findBuildingMatch(question: string, buildings: CampusBuilding[]): { building: CampusBuilding; key: string } | null {
   const text = normalizeQuestion(question);
   const keysById = new Map(buildings.map((b) => [b.id, buildingKeys(b)]));
   let best: { building: CampusBuilding; key: string } | null = null;
@@ -135,19 +141,47 @@ export function findBuildingInQuestion(question: string, buildings: CampusBuildi
   const ambiguous = buildings.some(
     (b) => b.id !== winner.building.id && keysById.get(b.id)!.some((k) => k !== winner.key && k.includes(winner.key))
   );
-  return ambiguous ? null : winner.building;
+  return ambiguous ? null : winner;
 }
 
-function buildingAnswer(question: string, buildings: CampusBuilding[]): FaqAnswer | null {
+/** The department or room the matched words refer to, when it is not just the building itself. */
+function matchedPlace(building: CampusBuilding, key: string): { name: string; floor: number | null } | null {
+  if (normalizeQuestion(building.name).includes(key)) return null;
+  const department = (building.departments ?? []).find((d) => normalizeQuestion(d.name).includes(key));
+  if (department) return { name: department.name, floor: department.floor };
+  for (const floor of building.floorsDetail) {
+    const room = floor.rooms.find((r) => normalizeQuestion(r).includes(key));
+    if (room) return { name: room, floor: floor.level };
+  }
+  return null;
+}
+
+/** "…อาคาร 1" + "ครับ" reads better with a space after a number or English word. */
+const politely = (text: string) => `${text}${/[0-9A-Za-z.)]$/.test(text) ? " " : ""}ครับ`;
+
+function buildingAnswer(
+  question: string,
+  buildings: CampusBuilding[],
+  kiosk: CampusSettings["kiosk"]
+): FaqAnswer | null {
   const text = normalizeQuestion(question);
   if (!LOCATION_INTENT.test(text)) return null;
-  const building = findBuildingInQuestion(question, buildings);
-  if (!building) return null;
+  const match = findBuildingMatch(question, buildings);
+  if (!match) return null;
+  const { building, key } = match;
   const routable = Boolean(building.latitude && building.longitude);
+  const where = describeLocation(locateBuilding(building, buildings, kiosk)) || `อยู่ในกลุ่ม${building.category}`;
+  const place = matchedPlace(building, key);
+  // The built-in data only lists floor 1 for every building — mention a floor once real per-floor
+  // data has been entered (more than one floor listed), or when it is above floor 1.
+  const floorKnown = building.floorsDetail.length > 1 || (place?.floor ?? 0) > 1;
+  const floor = place?.floor && building.floors > 1 && floorKnown ? ` ชั้น ${place.floor}` : "";
+  const sentences = [
+    politely(place ? `${place.name} อยู่ที่ **${building.name}**${floor} ซึ่ง${where}` : `**${building.name}** ${where}`),
+    routable ? "ผมเปิดเส้นทางเดินให้บนแผนที่แล้วครับ" : "",
+  ];
   return {
-    reply: routable
-      ? `**${building.name}** อยู่ในกลุ่ม${building.category} มี ${building.floors} ชั้นครับ ผมเปิดเส้นทางเดินให้บนแผนที่แล้วครับ`
-      : `**${building.name}** อยู่ในกลุ่ม${building.category} มี ${building.floors} ชั้นครับ`,
+    reply: sentences.filter(Boolean).join(" "),
     routeToBuildingId: routable ? building.id : null,
     faqId: `building:${building.id}`,
   };
@@ -173,7 +207,9 @@ export function bestFaqMatch(question: string): { entry: FaqEntry; score: number
 export function answerFromFaq(
   question: string,
   buildings: CampusBuilding[],
-  settings: CampusSettings
+  settings: CampusSettings,
+  /** The kiosk location when asked on the kiosk — answers then say how far it is from here. */
+  kiosk: CampusSettings["kiosk"] = null
 ): FaqAnswer | null {
   const trimmed = question.trim();
   if (!trimmed || trimmed.length > MAX_LENGTH) return null;
@@ -183,5 +219,5 @@ export function answerFromFaq(
     const routeTo = match.entry.routeTo && buildings.some((b) => b.id === match.entry.routeTo) ? match.entry.routeTo : null;
     return { reply: fill(match.entry.answer, settings), routeToBuildingId: routeTo, faqId: match.entry.id };
   }
-  return buildingAnswer(trimmed, buildings);
+  return buildingAnswer(trimmed, buildings, kiosk);
 }

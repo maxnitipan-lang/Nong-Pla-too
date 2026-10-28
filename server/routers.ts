@@ -176,11 +176,13 @@ export const appRouter = router({
             .max(30),
           /** New (optional): the reply will be read aloud → short, no markdown. */
           spoken: z.boolean().optional(),
+          /** New (optional): asked on the kiosk → "how far from here" uses the kiosk location. */
+          atKiosk: z.boolean().optional(),
         }),
       )
       .mutation(async ({ input }) => {
         try {
-          return await askCampusChat(input.messages, { spoken: input.spoken });
+          return await askCampusChat(input.messages, { spoken: input.spoken, atKiosk: input.atKiosk });
         } catch (error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",

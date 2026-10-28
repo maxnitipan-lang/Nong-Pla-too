@@ -9,6 +9,8 @@
 //   CHAT_BASE_URL    (optional) default Gemini's OpenAI-compatible base
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
+import type { CampusSettings } from "@shared/campus";
+import { describeLocation, locateBuilding } from "./buildingLocation";
 import { answerFromFaq } from "./chatFaq";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db";
 
@@ -44,6 +46,7 @@ function buildSystemPrompt(
   news: Awaited<ReturnType<typeof getCampusNews>>,
   settings: Awaited<ReturnType<typeof getCampusSettings>>,
   spoken = false,
+  kiosk: CampusSettings["kiosk"] = null,
 ): string {
   const buildingLines = buildings
     .map((b) => {
@@ -56,8 +59,11 @@ function buildSystemPrompt(
         .filter((d) => d.name && !b.floorsDetail.some((f) => f.rooms.includes(d.name)))
         .map((d) => `${d.name} (ชั้น ${d.floor})`)
         .join(", ");
+      // Where it is on campus, worked out from the coordinates (side of campus, neighbours, distance from the kiosk).
+      const where = describeLocation(locateBuilding(b, buildings, kiosk));
       return [
         `- id:${b.id} | ชื่อ: ${b.name} | กลุ่ม: ${b.category} | ${b.floors} ชั้น | รายละเอียด: ${b.description}`,
+        where && `ตำแหน่ง: ${where}`,
         floors && `ห้อง/หน่วยงาน: ${floors}`,
         departments && `สาขา: ${departments}`,
       ]
@@ -92,9 +98,10 @@ function buildSystemPrompt(
     `3. ถ้าไม่มีข้อมูลให้บอกตรง ๆ ว่าไม่ทราบ และแนะนำให้ติดต่อวิทยาลัย${
       settings.contactEmail ? ` ที่ ${settings.contactEmail}` : ""
     }`,
-    `4. ถ้าผู้ใช้ขอเส้นทาง / วิธีไป / นำทาง ไปอาคารใดอาคารหนึ่ง ให้เรียกฟังก์ชัน ${ROUTE_TOOL} พร้อม buildingId (id จากรายการด้านบน) ของอาคารนั้น แทนการอธิบายเส้นทางด้วยข้อความ`,
-    "5. ถ้าคำถามไม่เกี่ยวกับวิทยาลัย (เช่น การบ้าน ข่าวทั่วไป ความเห็นส่วนตัว) ให้ตอบปฏิเสธอย่างสุภาพเพียง 1 ประโยค แล้วชวนถามเรื่องในวิทยาลัยแทน ห้ามตอบเนื้อหานั้นยาว",
-    "6. ตอบสั้น กระชับ อ่านง่าย:",
+    "4. ถ้าผู้ใช้ถามว่าอาคาร สาขา หรือห้องอยู่ตรงไหน ให้บอกตำแหน่งจากช่อง ตำแหน่ง: ของอาคารนั้น (อยู่ฝั่งไหนของวิทยาลัย ใกล้อาคารอะไร) และชั้นถ้ามีข้อมูล",
+    `5. ถ้าผู้ใช้ขอเส้นทาง / วิธีไป / นำทาง ไปอาคารใดอาคารหนึ่ง ให้เรียกฟังก์ชัน ${ROUTE_TOOL} พร้อม buildingId (id จากรายการด้านบน) ของอาคารนั้น แทนการอธิบายเส้นทางด้วยข้อความ`,
+    "6. ถ้าคำถามไม่เกี่ยวกับวิทยาลัย (เช่น การบ้าน ข่าวทั่วไป ความเห็นส่วนตัว) ให้ตอบปฏิเสธอย่างสุภาพเพียง 1 ประโยค แล้วชวนถามเรื่องในวิทยาลัยแทน ห้ามตอบเนื้อหานั้นยาว",
+    "7. ตอบสั้น กระชับ อ่านง่าย:",
     "   - ถ้ามีหลายรายการ (ตั้งแต่ 2 ข้อขึ้นไป) ให้ทำเป็น bullet list ขึ้นต้นบรรทัดด้วย '- ' ห้ามเขียนต่อกันยาว ๆ ในย่อหน้าเดียว",
     "   - เกริ่นนำ 1 บรรทัดสั้น ๆ ก่อนลิสต์ แล้วขึ้นบรรทัดใหม่",
     "   - แต่ละย่อหน้าไม่เกิน 2 ประโยค เว้นบรรทัดว่างระหว่างย่อหน้า",
@@ -125,7 +132,7 @@ type OpenAiChoice = {
 };
 
 /** Send the conversation to the model and return the assistant answer. */
-export async function askCampusChat(history: ChatMessage[], options: { spoken?: boolean } = {}): Promise<ChatAnswer> {
+export async function askCampusChat(history: ChatMessage[], options: { spoken?: boolean; atKiosk?: boolean } = {}): Promise<ChatAnswer> {
   const [buildings, news, settings] = await Promise.all([
     getCampusBuildings(),
     getCampusNews(),
@@ -135,7 +142,8 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
   // Greetings, common and off-topic questions, "where is X": answer from the
   // ready-made set — instant, and no AI tokens spent.
   const lastUser = history.filter((m) => m.role === "user").at(-1)?.content ?? "";
-  const ready = answerFromFaq(lastUser, buildings, settings);
+  const kiosk = options.atKiosk ? settings.kiosk : null;
+  const ready = answerFromFaq(lastUser, buildings, settings, kiosk);
   if (ready) {
     return { reply: ready.reply, routeToBuildingId: ready.routeToBuildingId, source: "faq" };
   }
@@ -159,7 +167,7 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
   const requestBody = JSON.stringify({
     model: CHAT_MODEL,
     messages: [
-      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken) },
+      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk) },
       ...turns,
     ],
     temperature: 0.3,
