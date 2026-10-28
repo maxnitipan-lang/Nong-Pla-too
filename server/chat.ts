@@ -9,6 +9,7 @@
 //   CHAT_BASE_URL    (optional) default Gemini's OpenAI-compatible base
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
+import { answerFromFaq } from "./chatFaq";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db";
 
 const CHAT_BASE_URL =
@@ -31,6 +32,8 @@ export type ChatAnswer = {
   reply: string;
   /** When set, the client opens the walking-route map for this building. */
   routeToBuildingId: string | null;
+  /** New (optional): "faq" = ready-made answer from chatFaq.json (no AI call), "ai" = from the model. */
+  source?: "faq" | "ai";
 };
 
 /** Whether an API key is configured. */
@@ -90,7 +93,8 @@ function buildSystemPrompt(
       settings.contactEmail ? ` ที่ ${settings.contactEmail}` : ""
     }`,
     `4. ถ้าผู้ใช้ขอเส้นทาง / วิธีไป / นำทาง ไปอาคารใดอาคารหนึ่ง ให้เรียกฟังก์ชัน ${ROUTE_TOOL} พร้อม buildingId (id จากรายการด้านบน) ของอาคารนั้น แทนการอธิบายเส้นทางด้วยข้อความ`,
-    "5. ตอบสั้น กระชับ อ่านง่าย:",
+    "5. ถ้าคำถามไม่เกี่ยวกับวิทยาลัย (เช่น การบ้าน ข่าวทั่วไป ความเห็นส่วนตัว) ให้ตอบปฏิเสธอย่างสุภาพเพียง 1 ประโยค แล้วชวนถามเรื่องในวิทยาลัยแทน ห้ามตอบเนื้อหานั้นยาว",
+    "6. ตอบสั้น กระชับ อ่านง่าย:",
     "   - ถ้ามีหลายรายการ (ตั้งแต่ 2 ข้อขึ้นไป) ให้ทำเป็น bullet list ขึ้นต้นบรรทัดด้วย '- ' ห้ามเขียนต่อกันยาว ๆ ในย่อหน้าเดียว",
     "   - เกริ่นนำ 1 บรรทัดสั้น ๆ ก่อนลิสต์ แล้วขึ้นบรรทัดใหม่",
     "   - แต่ละย่อหน้าไม่เกิน 2 ประโยค เว้นบรรทัดว่างระหว่างย่อหน้า",
@@ -120,33 +124,27 @@ type OpenAiChoice = {
   };
 };
 
-/** A bare greeting as the first turn — answer instantly, skip the slow AI call. */
-const GREETING_RE =
-  /^(สวัส?ดี|หวัดดี|ดีครับ|ดีค่ะ|ดีจ้า|hello|hi|hey|ทัก(ทาย)?)[\s!.ๆครับค่ะจ้าา]*$/i;
-
 /** Send the conversation to the model and return the assistant answer. */
 export async function askCampusChat(history: ChatMessage[], options: { spoken?: boolean } = {}): Promise<ChatAnswer> {
+  const [buildings, news, settings] = await Promise.all([
+    getCampusBuildings(),
+    getCampusNews(),
+    getCampusSettings(),
+  ]);
+
+  // Greetings, common and off-topic questions, "where is X": answer from the
+  // ready-made set — instant, and no AI tokens spent.
+  const lastUser = history.filter((m) => m.role === "user").at(-1)?.content ?? "";
+  const ready = answerFromFaq(lastUser, buildings, settings);
+  if (ready) {
+    return { reply: ready.reply, routeToBuildingId: ready.routeToBuildingId, source: "faq" };
+  }
+
   if (!CHAT_API_KEY) {
     throw new Error(
       "ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในไฟล์ .env — ขอ key ฟรีที่ https://aistudio.google.com/apikey",
     );
   }
-
-  const settingsEarly = await getCampusSettings();
-  const userTurns = history.filter((m) => m.role === "user");
-  const lastUser = userTurns.at(-1)?.content.trim() ?? "";
-  if (userTurns.length === 1 && GREETING_RE.test(lastUser)) {
-    return {
-      reply: `สวัสดีครับ ยินดีต้อนรับสู่${settingsEarly.collegeName}ครับ มีอะไรให้น้องปลาทูช่วยไหมครับ`,
-      routeToBuildingId: null,
-    };
-  }
-
-  const [buildings, news, settings] = await Promise.all([
-    getCampusBuildings(),
-    getCampusNews(),
-    Promise.resolve(settingsEarly),
-  ]);
   const byId = new Map(buildings.map((b) => [b.id, b]));
   const routableIds = buildings
     .filter((b) => b.latitude && b.longitude)
@@ -251,13 +249,14 @@ export async function askCampusChat(history: ChatMessage[], options: { spoken?: 
               message?.content?.trim() ||
               `เปิดแผนที่เส้นทางเดินไป "${target.name}" ให้แล้วครับ 👇`,
             routeToBuildingId: target.id,
+            source: "ai",
           };
         }
       }
 
       const content = message?.content?.trim();
       if (!content) throw new Error("AI ไม่ได้ตอบกลับข้อความ");
-      return { reply: content, routeToBuildingId: null };
+      return { reply: content, routeToBuildingId: null, source: "ai" };
     }
 
     lastStatus = res.status;
