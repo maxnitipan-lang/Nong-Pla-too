@@ -51,7 +51,7 @@ async function startServer() {
   // The same procedures as plain JSON endpoints (/api/campus/buildings …) for the HTML/JS pages.
   registerRestApi(app);
   registerSharedFiles(app);
-  // New plain HTML/CSS/JS pages (preview at /new while the conversion is in progress).
+  // Kiosk ( / ) and phone app ( /app ) — plain HTML/CSS/JS pages in web/.
   registerWebPages(app);
 
   if (process.env.NODE_ENV === "development") {

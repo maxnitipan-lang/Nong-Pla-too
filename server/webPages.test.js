@@ -14,25 +14,35 @@ beforeAll(async () => {
   base = `http://127.0.0.1:${server.address().port}`;
 });
 
-afterAll(() => new Promise(resolve => server.close(resolve)));
+afterAll(
+  () =>
+    new Promise(resolve => {
+      server.closeAllConnections(); // keep-alive sockets from the redirect checks
+      server.close(resolve);
+    })
+);
 
-describe("plain HTML pages (preview at /new)", () => {
-  it("sends /new to /new/ so relative links work", async () => {
-    const res = await fetch(`${base}/new`, { redirect: "manual" });
-    expect(res.status).toBe(301);
-    expect(res.headers.get("location")).toBe("/new/");
-  });
-
-  it("serves the kiosk and the phone page", async () => {
-    const kiosk = await fetch(`${base}/new/`).then(r => r.text());
+describe("plain HTML pages", () => {
+  it("serves the kiosk at / and the phone app at /app", async () => {
+    const kiosk = await fetch(`${base}/`).then(r => r.text());
     expect(kiosk).toContain('data-mode="kiosk"');
-    const phone = await fetch(`${base}/new/app`).then(r => r.text());
+    const phone = await fetch(`${base}/app`).then(r => r.text());
     expect(phone).toContain('data-mode="phone"');
   });
 
-  it("serves the page scripts, styles and Leaflet", async () => {
-    for (const path of ["/new/js/app.js", "/new/css/app.css", "/new/vendor/leaflet/leaflet.js", "/new/vendor/qrcode.js"]) {
+  it("serves the page scripts, styles and local libraries, but not tests", async () => {
+    for (const path of ["/js/app.js", "/js/chat.js", "/css/app.css", "/vendor/leaflet/leaflet.js", "/vendor/qrcode.js", "/vendor/three/three.module.min.js"]) {
       expect((await fetch(base + path)).status, path).toBe(200);
     }
+    expect((await fetch(`${base}/js/markdown.test.js`)).status).toBe(404);
+  });
+
+  it("sends old links to the new pages", async () => {
+    const building = await fetch(`${base}/building/mech-auto`, { redirect: "manual" });
+    expect(building.headers.get("location")).toBe("/app?place=mech-auto");
+    const preview = await fetch(`${base}/new/app?place=x`, { redirect: "manual" });
+    expect(preview.headers.get("location")).toBe("/app?place=x");
+    const previewKiosk = await fetch(`${base}/new/`, { redirect: "manual" });
+    expect(previewKiosk.headers.get("location")).toBe("/");
   });
 });

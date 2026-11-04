@@ -802,6 +802,20 @@ if (KIOSK) {
 
 /* ------------------------------------------------------------------ start */
 
+/** Offline support (/sw.js). Not on localhost, so development always shows fresh files. */
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator) || ["localhost", "127.0.0.1", "[::1]"].includes(location.hostname)) return;
+  navigator.serviceWorker.register("/sw.js", { updateViaCache: "none" }).catch(() => undefined);
+  // A new service worker took over (e.g. after a deploy) → reload once so the page isn't a stale copy.
+  const hadController = Boolean(navigator.serviceWorker.controller);
+  let reloaded = false;
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (!hadController || reloaded) return;
+    reloaded = true;
+    window.location.reload();
+  });
+}
+
 async function start() {
   render();
   // The chat panel lives outside #app, so re-drawing the screens never resets the conversation.
@@ -810,6 +824,7 @@ async function start() {
   startGpsWatch();
   if (params.get("voice") === "1") setTimeout(() => openChat(true), 600);
 
+  registerServiceWorker();
   // Free hosting (Render) sleeps after 15 idle minutes; a page left open pings it every 10.
   setInterval(() => fetch("/api/health", { cache: "no-store" }).catch(() => undefined), 10 * 60 * 1000);
 

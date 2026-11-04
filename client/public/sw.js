@@ -1,6 +1,6 @@
 // Bump the version whenever the caching rules change: `activate` deletes every
 // other cache, so users stuck on an old copy get cleaned up automatically.
-const CACHE_NAME = "nong-platoo-ontour-v4";
+const CACHE_NAME = "nong-platoo-ontour-v5"; // v5: kiosk and phone pages are plain HTML/CSS/JS
 const APP_SHELL = ["/", "/app", "/manifest.json", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 self.addEventListener("install", (event) => {
@@ -25,7 +25,7 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
 
-  // API: always live. Offline fallback for data is handled in the app (lib/offlineData.ts).
+  // API: always live. Offline fallback for data is handled in the page (web/js/api.js).
   if (url.pathname.startsWith("/api/")) return;
 
   // Hashed build assets never change under the same name → cache-first is safe.
