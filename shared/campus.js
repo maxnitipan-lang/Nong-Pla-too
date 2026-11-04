@@ -7,94 +7,7 @@
 // seed content for `campus_buildings` / `campus_news`.
 
 // The four Google My Maps layers of the campus PR map.
-export const CAMPUS_CATEGORIES = [
-  "สายอุตสาหกรรม",
-  "พาณิชยกรรม/คหกรรม/สามัญ",
-  "บริหาร-สนับสนุน",
-  "ส่วนกลาง-กิจกรรม",
-] as const;
-export type BuildingCategory = (typeof CAMPUS_CATEGORIES)[number];
-
-export type Floor = {
-  level: number;
-  label: string;
-  rooms: string[];
-};
-/** Old-API name for {@link Floor}. */
-export type FloorDetail = Floor;
-/** Old-API name for {@link BuildingCategory}. */
-export type CampusCategory = BuildingCategory;
-
-export type GalleryImage = {
-  id: string;
-  url: string;
-  caption: string;
-  alt: string;
-};
-
-export type DepartmentProfile = {
-  id: string;
-  floor: number;
-  name: string;
-  code: string;
-  description: string;
-  skills: string[];
-  careers: string[];
-  activities?: string[];
-  accent: string;
-  /** Logo picture URL (uploaded in /admin/buildings → /api/images/…). Optional. */
-  logo?: string;
-};
-
-export type CampusBuilding = {
-  id: string;
-  name: string;
-  shortName: string;
-  category: BuildingCategory;
-  description: string;
-  floors: number;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  accent: string;
-  floorsDetail: Floor[];
-  /** Real-world coordinates as strings, e.g. "13.4207317663681" (old API contract). Missing = undefined. */
-  latitude?: string;
-  longitude?: string;
-  /** Kiosk extras — not part of the old API, safe for old clients to ignore. */
-  departments?: DepartmentProfile[];
-  gallery?: GalleryImage[];
-};
-
-export type CampusNewsItem = {
-  id: string;
-  tag: string;
-  title: string;
-  excerpt: string;
-  date: string;
-  time: string;
-  accent: string;
-  /** Full-article URL, or "" for a card with no link. */
-  link: string;
-  /** Thumbnail image URL, or "" for a plain accent card. */
-  image: string;
-  /** "" = added by hand, "sstc.ac.th" = pulled from the college website. */
-  source: string;
-};
-export type CampusNews = CampusNewsItem;
-
-/** Editable site-wide settings, managed from the admin panel. */
-export type CampusSettings = {
-  collegeName: string;
-  address: string;
-  contactEmail: string;
-  /** Google My Maps "embed on my site" URL, or "" (kept for API compatibility; the site no longer shows it). */
-  mapEmbedUrl: string;
-  mapCenter: { lat: number; lng: number };
-  /** New: where the kiosk stands — its walking routes start here instead of GPS. null = not set. */
-  kiosk: { name: string; lat: number; lng: number } | null;
-};
+export const CAMPUS_CATEGORIES = ["สายอุตสาหกรรม", "พาณิชยกรรม/คหกรรม/สามัญ", "บริหาร-สนับสนุน", "ส่วนกลาง-กิจกรรม"];
 
 export const CAMPUS_OVERVIEW = {
   name: "วิทยาลัยเทคนิคสมุทรสงคราม",
@@ -108,20 +21,36 @@ export const CAMPUS_OVERVIEW = {
   ],
 };
 
-export const DEFAULT_GALLERY: GalleryImage[] = [
-  { id: "workshop", url: "/manus-storage/workshop-class_7b9c890d.jpg", caption: "บรรยากาศการเรียนรู้แบบลงมือทำ", alt: "ห้องเรียนเชิงปฏิบัติการ" },
-  { id: "lab", url: "/manus-storage/modern-lab_369cb2fd.jpeg", caption: "ห้องปฏิบัติการพร้อมใช้งาน", alt: "ห้องปฏิบัติการสมัยใหม่" },
-  { id: "training", url: "/manus-storage/training-space_8dd5d5f6.jpg", caption: "พื้นที่ฝึกทักษะสายอาชีพ", alt: "นักเรียนในห้องฝึกทักษะ" },
+export const DEFAULT_GALLERY = [
+  {
+    id: "workshop",
+    url: "/manus-storage/workshop-class_7b9c890d.jpg",
+    caption: "บรรยากาศการเรียนรู้แบบลงมือทำ",
+    alt: "ห้องเรียนเชิงปฏิบัติการ",
+  },
+  {
+    id: "lab",
+    url: "/manus-storage/modern-lab_369cb2fd.jpeg",
+    caption: "ห้องปฏิบัติการพร้อมใช้งาน",
+    alt: "ห้องปฏิบัติการสมัยใหม่",
+  },
+  {
+    id: "training",
+    url: "/manus-storage/training-space_8dd5d5f6.jpg",
+    caption: "พื้นที่ฝึกทักษะสายอาชีพ",
+    alt: "นักเรียนในห้องฝึกทักษะ",
+  },
 ];
 
 /** Generic demo departments — only used as a placeholder for a freshly-created building that has no real department data yet. */
-export const DEFAULT_DEPARTMENTS: DepartmentProfile[] = [
+export const DEFAULT_DEPARTMENTS = [
   {
     id: "digital-business",
     floor: 3,
     name: "เทคโนโลยีธุรกิจดิจิทัล",
     code: "DBT",
-    description: "เรียนรู้การใช้เทคโนโลยีเพื่อสร้างธุรกิจยุคใหม่ ตั้งแต่การจัดการข้อมูล สื่อดิจิทัล ไปจนถึงการวางแผนธุรกิจออนไลน์",
+    description:
+      "เรียนรู้การใช้เทคโนโลยีเพื่อสร้างธุรกิจยุคใหม่ ตั้งแต่การจัดการข้อมูล สื่อดิจิทัล ไปจนถึงการวางแผนธุรกิจออนไลน์",
     skills: ["การวิเคราะห์ข้อมูล", "การออกแบบสื่อดิจิทัล", "การจัดการธุรกิจออนไลน์"],
     careers: ["Digital Marketer", "Content Creator", "เจ้าหน้าที่ธุรกิจดิจิทัล"],
     activities: ["เวิร์กช็อปออกแบบสื่อ", "ฝึกทำธุรกิจจำลอง", "กิจกรรมสร้างแบรนด์ออนไลน์"],
@@ -141,7 +70,7 @@ export const DEFAULT_DEPARTMENTS: DepartmentProfile[] = [
 ];
 
 /** One lightweight DepartmentProfile stub per unit/department actually housed in a building — derived from its floor-1 room list so the kiosk UI (pin logos, department panels) shows real content instead of the generic demo departments above. */
-function buildDepartments(building: { id: string; floorsDetail: Floor[]; accent: string }): DepartmentProfile[] {
+function buildDepartments(building) {
   const rooms = building.floorsDetail[0]?.rooms ?? [];
   return rooms.map((room, index) => ({
     id: `${building.id}-dept-${index + 1}`,
@@ -155,10 +84,8 @@ function buildDepartments(building: { id: string; floorsDetail: Floor[]; accent:
   }));
 }
 
-type RawBuilding = Omit<CampusBuilding, "departments" | "gallery" | "latitude" | "longitude"> & { latitude: number; longitude: number };
-
 // อาคาร/หน่วยงาน 22 จุด + พิกัดจริง นำเข้าจาก Google My Maps ของวิทยาลัย (KMZ + สเปรดชีต, ก.ย. 2569)
-const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
+const RAW_CAMPUS_BUILDINGS = [
   {
     id: "mech-auto",
     name: "สาขาวิชาช่างยนต์",
@@ -189,7 +116,13 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
     accent: "#e8863f",
     latitude: 13.4204089013263,
     longitude: 100.010475464028,
-    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาอิเล็กทรอนิกส์ / เทคโนโลยีสารสนเทศ", "สาขาวิชาเทคนิคคอมพิวเตอร์"] }],
+    floorsDetail: [
+      {
+        level: 1,
+        label: "แผนกวิชา / หน่วยงาน",
+        rooms: ["สาขาวิชาอิเล็กทรอนิกส์ / เทคโนโลยีสารสนเทศ", "สาขาวิชาเทคนิคคอมพิวเตอร์"],
+      },
+    ],
   },
   {
     id: "electrical-construction",
@@ -221,7 +154,13 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
     accent: "#e8863f",
     latitude: 13.4193720017185,
     longitude: 100.011311702798,
-    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาช่างเชื่อมโลหะ", "สาขาวิชาเมคคาทรอนิกส์และหุ่นยนต์", "สาขาวิชาการจัดการสำนักงาน"] }],
+    floorsDetail: [
+      {
+        level: 1,
+        label: "แผนกวิชา / หน่วยงาน",
+        rooms: ["สาขาวิชาช่างเชื่อมโลหะ", "สาขาวิชาเมคคาทรอนิกส์และหุ่นยนต์", "สาขาวิชาการจัดการสำนักงาน"],
+      },
+    ],
   },
   {
     id: "general-subjects",
@@ -317,7 +256,13 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
     accent: "#6b7a86",
     latitude: 13.4191765796198,
     longitude: 100.010118496356,
-    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["ฝ่ายบริหารทรัพยากร", "ฝ่ายยุทธศาสตร์และแผนงาน", "ฝ่ายกิจการนักเรียนนักศึกษา", "ฝ่ายวิชาการ"] }],
+    floorsDetail: [
+      {
+        level: 1,
+        label: "แผนกวิชา / หน่วยงาน",
+        rooms: ["ฝ่ายบริหารทรัพยากร", "ฝ่ายยุทธศาสตร์และแผนงาน", "ฝ่ายกิจการนักเรียนนักศึกษา", "ฝ่ายวิชาการ"],
+      },
+    ],
   },
   {
     id: "ivec-central-5",
@@ -413,7 +358,13 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
     accent: "#e8863f",
     latitude: 13.419732967845,
     longitude: 100.011070041427,
-    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาวิชาเทคโนโลยีธุรกิจดิจิทัล", "สาขาวิชาเขียนแบบเครื่องกล"] }],
+    floorsDetail: [
+      {
+        level: 1,
+        label: "แผนกวิชา / หน่วยงาน",
+        rooms: ["สาขาวิชาเทคโนโลยีธุรกิจดิจิทัล", "สาขาวิชาเขียนแบบเครื่องกล"],
+      },
+    ],
   },
   {
     id: "construction-workshop",
@@ -513,7 +464,7 @@ const RAW_CAMPUS_BUILDINGS: RawBuilding[] = [
   },
 ];
 
-export const CAMPUS_BUILDINGS: CampusBuilding[] = RAW_CAMPUS_BUILDINGS.map((building) => ({
+export const CAMPUS_BUILDINGS = RAW_CAMPUS_BUILDINGS.map(building => ({
   ...building,
   latitude: String(building.latitude),
   longitude: String(building.longitude),
@@ -521,7 +472,7 @@ export const CAMPUS_BUILDINGS: CampusBuilding[] = RAW_CAMPUS_BUILDINGS.map((buil
   gallery: [],
 }));
 
-export const CAMPUS_NEWS: CampusNews[] = [
+export const CAMPUS_NEWS = [
   {
     id: "open-house-2026",
     tag: "กิจกรรมเด่น",
@@ -561,7 +512,7 @@ export const CAMPUS_NEWS: CampusNews[] = [
 ];
 
 /** Fallback settings used until the `site_settings` table has real values. */
-export const CAMPUS_SETTINGS_DEFAULTS: CampusSettings = {
+export const CAMPUS_SETTINGS_DEFAULTS = {
   collegeName: CAMPUS_OVERVIEW.name,
   address: CAMPUS_OVERVIEW.address,
   contactEmail: "info@smtc.ac.th",
@@ -581,5 +532,4 @@ export const CAMPUS_SETTINGS_KEYS = [
   "kioskName",
   "kioskLat",
   "kioskLng",
-] as const;
-export type CampusSettingKey = (typeof CAMPUS_SETTINGS_KEYS)[number];
+];

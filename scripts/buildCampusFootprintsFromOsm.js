@@ -5,7 +5,7 @@
 // Input : scripts/data/campus-osm.json   (Overpass `out geom` of highway/building ways around campus)
 // Output: shared/data/campusFootprints.json  (read by client/src/components/CampusMap3D.tsx)
 //
-// The 3D map matches each campus building (shared/campus.ts / database, by its
+// The 3D map matches each campus building (shared/campus.js / database, by its
 // lat/lng pin) to the OSM footprint it sits in, so the footprints don't need ids
 // of their own. A building with no footprint is drawn as a plain box at its pin.
 // Map data © OpenStreetMap contributors (ODbL) — keep the credit on the map.

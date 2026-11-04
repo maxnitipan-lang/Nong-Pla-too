@@ -1,7 +1,7 @@
 // How each campus building looks in the 3D map (client/src/lib/campus3d.ts).
 //
 // Colours, roof shapes and sizes were taken from photos of the real buildings
-// (พ.ย. 2569). Keyed by building id (shared/campus.ts / database). A building
+// (พ.ย. 2569). Keyed by building id (shared/campus.js / database). A building
 // not listed here gets DEFAULT_3D_STYLE.
 //
 //   wall      outside wall colour
@@ -19,24 +19,9 @@
 // Roof colours were checked against a satellite view of the campus (พ.ย. 2569):
 // from above most "white" buildings have grey, blue or dark metal roofs.
 
-export type RoofType = "flat" | "gable" | "barrel";
+export const DEFAULT_3D_STYLE = { wall: "#eeeeea", roof: "#c9ced3", trim: "#b9c0c6", roofType: "flat" };
 
-export type Building3DStyle = {
-  wall: string;
-  roof: string;
-  trim?: string;
-  roofType?: RoofType;
-  floors?: number;
-  height?: number;
-  size?: [number, number];
-  turn?: number;
-  /** Draw window rows on the walls (default true; off for halls and sheds). */
-  windows?: boolean;
-};
-
-export const DEFAULT_3D_STYLE: Building3DStyle = { wall: "#eeeeea", roof: "#c9ced3", trim: "#b9c0c6", roofType: "flat" };
-
-export const BUILDING_3D_STYLES: Record<string, Building3DStyle> = {
+export const BUILDING_3D_STYLES = {
   // ตึก ๑๒ ICT / เทคนิคการผลิต — white, curved balconies, big teal-blue metal roof.
   // OSM has no footprint for it, so it's drawn as a box this size.
   // From above: the big blue roof east of the hall, long side running east–west.
@@ -62,13 +47,20 @@ export const BUILDING_3D_STYLES: Record<string, Building3DStyle> = {
   auditorium: { wall: "#efdca8", roof: "#9c6f5f", trim: "#e2ad8f", roofType: "gable", height: 9, windows: false },
 
   // อาคารกิจกรรม — white hall, pale mint base, silver arched roof.
-  "activity-building": { wall: "#f4f6f4", roof: "#bfc1c2", trim: "#cde9e3", roofType: "barrel", height: 11, windows: false },
+  "activity-building": {
+    wall: "#f4f6f4",
+    roof: "#bfc1c2",
+    trim: "#cde9e3",
+    roofType: "barrel",
+    height: 11,
+    windows: false,
+  },
 
   // Roof colour from the satellite view only (no photo of the walls yet).
   "general-subjects": { wall: "#eeeeea", roof: "#5f7fbf", trim: "#b9c0c6", roofType: "gable" },
   "student-development": { wall: "#eeeeea", roof: "#6f9c9c", trim: "#b9c0c6", roofType: "flat" },
 };
 
-export function building3dStyle(id: string | undefined): Building3DStyle {
+export function building3dStyle(id) {
   return (id && BUILDING_3D_STYLES[id]) || DEFAULT_3D_STYLE;
 }

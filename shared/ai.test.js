@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractCampusAIReply } from "./ai";
+import { extractCampusAIReply } from "./ai.js";
 
 describe("extractCampusAIReply", () => {
   it("accepts plain text responses", () => {

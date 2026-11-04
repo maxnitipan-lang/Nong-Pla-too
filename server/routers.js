@@ -160,7 +160,7 @@ export const appRouter = router({
 
     /**
      * New (not in the old API): the campus walkway graph. Routing + turn-by-turn
-     * runs in the browser over this (shared/walkNetwork.ts), so it also works offline.
+     * runs in the browser over this (shared/walkNetwork.js), so it also works offline.
      */
     walkNetwork: publicProcedure.query(() => getWalkNetwork()),
   }),

@@ -1,4 +1,4 @@
-// Seed the database with the demo content from `shared/campus.ts`.
+// Seed the database with the demo content from `shared/campus.js`.
 //
 //   pnpm db:seed
 //

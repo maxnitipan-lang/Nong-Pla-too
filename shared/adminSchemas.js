@@ -1,13 +1,8 @@
 // Zod schemas shared by the admin tRPC procedures and the admin UI forms.
 import { z } from "zod";
-import { STAFF_ROLES, USER_ROLES } from "./roles";
+import { STAFF_ROLES, USER_ROLES } from "./roles.js";
 
-export const CAMPUS_CATEGORIES = [
-  "สายอุตสาหกรรม",
-  "พาณิชยกรรม/คหกรรม/สามัญ",
-  "บริหาร-สนับสนุน",
-  "ส่วนกลาง-กิจกรรม",
-] as const;
+export const CAMPUS_CATEGORIES = ["สายอุตสาหกรรม", "พาณิชยกรรม/คหกรรม/สามัญ", "บริหาร-สนับสนุน", "ส่วนกลาง-กิจกรรม"];
 
 const idSchema = z
   .string()
@@ -32,7 +27,7 @@ const imageUrlSchema = z
   .string()
   .trim()
   .max(500)
-  .refine((v) => /^https:\/\//.test(v) || v.startsWith("/"), "ต้องเป็นลิงก์ https:// หรือ path ในเว็บ (/...)");
+  .refine(v => /^https:\/\//.test(v) || v.startsWith("/"), "ต้องเป็นลิงก์ https:// หรือ path ในเว็บ (/...)");
 
 export const departmentSchema = z.object({
   id: z.string().trim().min(1).max(80),
@@ -74,7 +69,6 @@ export const buildingInputSchema = z.object({
   departments: z.array(departmentSchema).max(60).optional(),
   gallery: z.array(galleryImageSchema).max(40).optional(),
 });
-export type BuildingInput = z.infer<typeof buildingInputSchema>;
 
 /** One row read from a Google My Maps CSV/KML export (admin.buildings.import). */
 export const importedBuildingSchema = z.object({
@@ -86,7 +80,6 @@ export const importedBuildingSchema = z.object({
   latitude: z.number().finite().min(-90).max(90),
   longitude: z.number().finite().min(-180).max(180),
 });
-export type ImportedBuildingInput = z.infer<typeof importedBuildingSchema>;
 
 export const newsInputSchema = z.object({
   id: idSchema,
@@ -100,19 +93,18 @@ export const newsInputSchema = z.object({
     .string()
     .trim()
     .max(500)
-    .refine((v) => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์ http(s)")
+    .refine(v => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์ http(s)")
     .default(""),
   imageUrl: z
     .string()
     .trim()
     .max(500)
-    .refine((v) => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์รูปภาพ http(s)")
+    .refine(v => v === "" || /^https?:\/\//.test(v), "ต้องเป็นลิงก์รูปภาพ http(s)")
     .default(""),
   source: z.string().trim().max(80).default(""),
   published: z.boolean().default(true),
   sortOrder: z.number().int().min(0).max(9999).default(0),
 });
-export type NewsInput = z.infer<typeof newsInputSchema>;
 
 export const settingsInputSchema = z.object({
   collegeName: z.string().trim().min(1).max(160),
@@ -121,17 +113,14 @@ export const settingsInputSchema = z.object({
     .string()
     .trim()
     .max(320)
-    .refine(
-      (v) => v === "" || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
-      "อีเมลไม่ถูกต้อง",
-    ),
+    .refine(v => v === "" || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v), "อีเมลไม่ถูกต้อง"),
   mapEmbedUrl: z
     .string()
     .trim()
     .max(1000)
     .refine(
-      (v) => v === "" || /^https:\/\/(www\.)?google\.com\/maps\/d\/embed\?mid=/.test(v),
-      "ต้องเป็นลิงก์ฝัง Google My Maps (https://www.google.com/maps/d/embed?mid=...)",
+      v => v === "" || /^https:\/\/(www\.)?google\.com\/maps\/d\/embed\?mid=/.test(v),
+      "ต้องเป็นลิงก์ฝัง Google My Maps (https://www.google.com/maps/d/embed?mid=...)"
     ),
   mapCenterLat: z.number().min(-90).max(90),
   mapCenterLng: z.number().min(-180).max(180),
@@ -140,7 +129,6 @@ export const settingsInputSchema = z.object({
   kioskLat: z.number().min(-90).max(90).nullable().optional(),
   kioskLng: z.number().min(-180).max(180).nullable().optional(),
 });
-export type SettingsInput = z.infer<typeof settingsInputSchema>;
 
 export const newAdminAccountSchema = z.object({
   username: z
@@ -167,7 +155,7 @@ export const setRoleSchema = z.object({
 
 const walkIdSchema = z.string().trim().min(1).max(64);
 
-/** The campus walkway graph as saved from the admin editor (shared/walkNetwork.ts). */
+/** The campus walkway graph as saved from the admin editor (shared/walkNetwork.js). */
 export const walkNetworkSchema = z
   .object({
     version: z.literal(1),
@@ -180,14 +168,14 @@ export const walkNetworkSchema = z
           name: z.string().trim().max(120).optional(),
           buildingId: z.string().trim().max(64).optional(),
           gate: z.boolean().optional(),
-        }),
+        })
       )
       .max(5000),
     edges: z
       .array(z.object({ a: walkIdSchema, b: walkIdSchema, name: z.string().trim().max(120).optional() }))
       .max(10000),
   })
-  .refine((net) => {
-    const ids = new Set(net.nodes.map((n) => n.id));
-    return ids.size === net.nodes.length && net.edges.every((e) => ids.has(e.a) && ids.has(e.b) && e.a !== e.b);
+  .refine(net => {
+    const ids = new Set(net.nodes.map(n => n.id));
+    return ids.size === net.nodes.length && net.edges.every(e => ids.has(e.a) && ids.has(e.b) && e.a !== e.b);
   }, "โครงข่ายทางเดินไม่ถูกต้อง: มีจุดซ้ำ หรือมีเส้นที่ต่อกับจุดที่ไม่มีอยู่");
