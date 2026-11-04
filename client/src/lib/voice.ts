@@ -209,12 +209,19 @@ function speakOnDevice(text: string, rate: number, onStart?: () => void): Speech
         u.lang = "th-TH";
         if (voice) u.voice = voice;
         u.rate = rate;
+        // Some browsers (Chrome on Android, Safari) never fire onend for an utterance — without
+        // this the assistant would stay "speaking" forever and hands-free would never listen again.
+        const guard = window.setTimeout(resolve, 4000 + (piece.length * 120) / rate);
+        const finish = () => {
+          window.clearTimeout(guard);
+          resolve();
+        };
         u.onstart = () => {
           if (first) onStart?.();
           first = false;
         };
-        u.onend = () => resolve();
-        u.onerror = () => resolve();
+        u.onend = finish;
+        u.onerror = finish;
         window.speechSynthesis.speak(u);
       });
     }
@@ -260,15 +267,23 @@ export function speak(rawText: string, options: SpeakOptions): Speech {
         audio.src = url;
         audio.playbackRate = rate;
         (audio as HTMLAudioElement & { preservesPitch?: boolean }).preservesPitch = true;
+        let onEnded: (() => void) | null = null;
         await new Promise<void>((resolve, reject) => {
+          onEnded = () => resolve();
           audio!.onplay = () => options.onStart?.();
-          audio!.onended = () => resolve();
+          audio!.onended = onEnded;
           audio!.onerror = () => reject(new Error("audio playback failed"));
           audio!.onpause = () => {
             if (controller.signal.aborted) resolve();
           };
           audio!.play().catch(reject);
-        }).finally(() => URL.revokeObjectURL(url));
+        }).finally(() => {
+          URL.revokeObjectURL(url);
+          // The player is shared and reused by unlockAudio() on the next tap — don't let that
+          // silent unlock sound fire this reply's handlers (e.g. switch the UI to "speaking").
+          // Only if a newer reply has not already taken the player over.
+          if (audio!.onended === onEnded) audio!.onplay = audio!.onended = audio!.onerror = audio!.onpause = null;
+        });
         return;
       } catch (error) {
         if (controller.signal.aborted) return;
@@ -423,6 +438,7 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
 /** Server engine: record 16 kHz WAV until silence, then POST to /api/voice/stt. */
 function listenWithServer(cb: ListenCallbacks): Listening {
   let stopNow: (() => void) | null = null;
+  let stopRequested = false;
   let cancelled = false;
   audioContext(); // create/resume now, while we're still inside the user's tap
 
@@ -435,18 +451,26 @@ function listenWithServer(cb: ListenCallbacks): Listening {
 
     // Voice activity detection with an adaptive noise floor.
     let noiseFloor = 0.01;
+    let quietest = Infinity;
     let heardSpeech = false;
     let lastLoud = performance.now();
     const startedAt = performance.now();
 
     await new Promise<void>((resolve) => {
       stopNow = resolve;
+      // Stopped or cancelled while the mic permission prompt was still open.
+      if (stopRequested || cancelled) return resolve();
       processor.onaudioprocess = (e) => {
         const input = e.inputBuffer.getChannelData(0);
         chunks.push(new Float32Array(input));
         const level = rms(input);
         const now = performance.now();
-        if (now - startedAt < 400) noiseFloor = Math.max(noiseFloor, level * 1.5); // calibrate
+        // Calibrate on the quietest moment of the first 0.4 s — not the loudest, or someone
+        // who starts talking straight away sets the "noise" so high they are never heard.
+        if (now - startedAt < 400) {
+          quietest = Math.min(quietest, level);
+          noiseFloor = Math.min(0.05, Math.max(0.01, quietest * 1.5));
+        }
         if (level > Math.max(0.02, noiseFloor * 2.5)) {
           heardSpeech = true;
           lastLoud = now;
@@ -478,7 +502,10 @@ function listenWithServer(cb: ListenCallbacks): Listening {
   return {
     engine: "server",
     result,
-    stop: () => stopNow?.(),
+    stop: () => {
+      stopRequested = true;
+      stopNow?.();
+    },
     cancel: () => {
       cancelled = true;
       stopNow?.();

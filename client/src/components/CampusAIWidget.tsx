@@ -168,8 +168,15 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
     async (text: string, session: number) => {
       const s = settingsRef.current;
       if (!s.speakReplies) return;
-      setPhase("speaking");
-      const speech = speak(text, { engine: s.engine === "ai" && aiVoice ? "ai" : "device", rate: s.rate });
+      // The AI voice takes a few seconds to arrive — stay on "กำลังคิด…" until sound actually plays.
+      setPhase("thinking");
+      const speech = speak(text, {
+        engine: s.engine === "ai" && aiVoice ? "ai" : "device",
+        rate: s.rate,
+        onStart: () => {
+          if (session === sessionRef.current) setPhase("speaking");
+        },
+      });
       await speech.done;
       if (session === sessionRef.current) setPhase("idle");
     },

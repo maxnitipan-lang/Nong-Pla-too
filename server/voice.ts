@@ -175,7 +175,8 @@ export async function transcribeSpeech(wav: Buffer): Promise<string> {
             {
               text:
                 "ถอดความเสียงพูดในไฟล์นี้เป็นข้อความภาษาไทยตามที่พูดจริงทุกคำ " +
-                "ตอบเฉพาะข้อความที่ถอดได้ ไม่ต้องอธิบาย ถ้าไม่มีเสียงพูดให้ตอบว่างเปล่า",
+                "ตอบเฉพาะข้อความที่ถอดได้ ไม่ต้องอธิบาย ไม่ต้องใส่เวลา (timestamp) หรือคำบรรยายเสียง " +
+                "ถ้าไม่มีเสียงคนพูด ให้ตอบว่างเปล่า",
             },
           ],
         },
@@ -185,7 +186,25 @@ export async function transcribeSpeech(wav: Buffer): Promise<string> {
     30_000,
   )) as { candidates?: { content?: { parts?: { text?: string }[] } }[] };
   const text = json.candidates?.[0]?.content?.parts?.map((p) => p.text ?? "").join("") ?? "";
-  return text.replace(/^["'“”\s]+|["'“”\s]+$/g, "").trim();
+  return cleanTranscript(text);
+}
+
+/**
+ * The model sometimes "transcribes" silence or noise as a timestamp ("00:00"),
+ * a sound tag ("[เสียงลม]", "(silence)") or punctuation. Those are not questions —
+ * return "" so the app says it did not hear anything instead of asking the bot "00:00".
+ */
+export function cleanTranscript(raw: string): string {
+  const text = raw
+    .replace(/^["'“”\s]+|["'“”\s]+$/g, "")
+    .replace(/\[[^\]]*\]|\([^)]*(silence|noise|music|เสียง|เงียบ)[^)]*\)/gi, " ")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+  if (!text) return "";
+  if (/^[\d\s:.,\-–—]+$/.test(text)) return ""; // "00:00", "0:01 - 0:03"
+  if (!/[\p{L}]/u.test(text)) return ""; // only punctuation / symbols
+  if (/^(no speech|silence|inaudible|ไม่มีเสียง(พูด)?|ไม่ได้ยิน)$/i.test(text)) return "";
+  return text;
 }
 
 // ---------------------------------------------------------------------------
