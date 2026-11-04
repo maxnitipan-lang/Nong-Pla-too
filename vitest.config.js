@@ -14,6 +14,6 @@ export default defineConfig({
   },
   test: {
     environment: "node",
-    include: ["server/**/*.test.js", "server/**/*.spec.js", "shared/**/*.test.js", "client/src/**/*.test.ts"],
+    include: ["server/**/*.test.js", "server/**/*.spec.js", "shared/**/*.test.js", "client/src/**/*.test.ts", "web/**/*.test.js"],
   },
 });

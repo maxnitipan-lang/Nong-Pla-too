@@ -9,6 +9,7 @@ import { distanceM, planCampusRoute } from "/shared/walkNetwork.js";
 import { loadBuildings, loadNews, loadSettings, loadWalkNetwork, savedBuildings, savedNews } from "./api.js";
 import { buildingLatLng, buildingSearchText, formatDistance, hasCoords, phoneRouteUrl, walkMinutes, walkingDeepLink } from "./directions.js";
 import { icon } from "./icons.js";
+import { createChat } from "./chat.js";
 import { CampusMap } from "./map.js";
 import { CampusNavigation } from "./navigation.js";
 import { fillQrCodes } from "./qr.js";
@@ -124,11 +125,11 @@ function walkEstimate() {
   return { distance: total, minutes: walkMinutes(total), offCampus: Boolean(route.offCampus) };
 }
 
-/* ------------------------------------------------------------------ chat (phase 4) */
+/* ------------------------------------------------------------------ chat */
 
+/** Open the น้องปลาทู panel (js/chat.js); voice = start listening straight away. */
 function openChat(voice) {
   window.dispatchEvent(new Event(voice ? "nongplatoo:voice" : "nongplatoo:open"));
-  if (!window.platooChatReady) toast("ผู้ช่วยแชตน้องปลาทูกำลังย้ายมาเวอร์ชันนี้ — ใช้หน้าเดิมไปก่อนครับ");
 }
 
 function toast(text) {
@@ -760,6 +761,8 @@ if (KIOSK) {
 
 async function start() {
   render();
+  // The chat panel lives outside #app, so re-drawing the screens never resets the conversation.
+  createChat({ atKiosk: KIOSK, onShowRoute: (id) => startNavigation(id), onOpenMap: () => go("map") });
   armIdle();
   startGpsWatch();
   if (params.get("voice") === "1") setTimeout(() => openChat(true), 600);

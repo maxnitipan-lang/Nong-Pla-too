@@ -13,9 +13,9 @@ export class ApiError extends Error {
   }
 }
 
-async function call(method, path, input) {
+async function call(method, path, input, signal) {
   let url = `/api/${path}`;
-  const options = { method, headers: {}, credentials: "same-origin" };
+  const options = { method, headers: {}, credentials: "same-origin", signal };
   if (method === "GET" && input !== undefined) url += `?input=${encodeURIComponent(JSON.stringify(input))}`;
   if (method === "POST") {
     options.headers["Content-Type"] = "application/json";
@@ -24,7 +24,8 @@ async function call(method, path, input) {
   let response;
   try {
     response = await fetch(url, options);
-  } catch {
+  } catch (error) {
+    if (signal?.aborted) throw error;
     throw new ApiError("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ — ตรวจสอบอินเทอร์เน็ต", "NETWORK", 0);
   }
   const body = await response.json().catch(() => null);
@@ -36,7 +37,8 @@ async function call(method, path, input) {
 }
 
 export const apiGet = (path, input) => call("GET", path, input);
-export const apiPost = (path, input) => call("POST", path, input);
+/** `signal` (optional) cancels the request, e.g. the chat's stop button. */
+export const apiPost = (path, input, signal) => call("POST", path, input, signal);
 
 // Same keys as the React app, so a kiosk keeps its saved copy across the switch.
 const CACHE = {

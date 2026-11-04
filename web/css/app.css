@@ -75,3 +75,29 @@
 /* ---------------- toast */
 .platoo-ui .platoo-toast { position: fixed; left: 50%; bottom: 96px; z-index: 3000; max-width: calc(100% - 32px); padding: 12px 18px; color: #fff; background: rgba(9,30,45,.92); border-radius: 14px; font-size: 14px; font-weight: 700; text-align: center; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
 .platoo-ui .platoo-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------------- chat panel (js/chat.js) — layout comes from platoo-extra.css (.platoo-chat …) */
+.platoo-chat { display: contents; }
+.platoo-chat .voice-orb .orb-ring { position: absolute; inset: 0; border-radius: 50%; opacity: .25; animation: platoo-ping 1.2s cubic-bezier(0, 0, .2, 1) infinite; }
+.platoo-chat .voice-orb .orb-ring.inner { inset: 6px; opacity: .3; animation: none; }
+.platoo-chat .voice-orb .orb-ring.listening { background: #e97967; }
+.platoo-chat .voice-orb .orb-ring.speaking { background: #21a7a0; }
+@keyframes platoo-ping { 75%, 100% { transform: scale(1.5); opacity: 0; } }
+.platoo-chat .voice-orb > button svg { width: 28px; height: 28px; }
+.platoo-chat .speaking-bars { height: 28px; display: flex; align-items: flex-end; gap: 4px; }
+.platoo-chat .speaking-bars i { width: 6px; height: 100%; background: #fff; border-radius: 99px; animation: platoo-eq .9s ease-in-out infinite; }
+.platoo-chat .speaking-bars i:nth-child(2) { animation-delay: .15s; }
+.platoo-chat .speaking-bars i:nth-child(3) { animation-delay: .3s; }
+.platoo-chat .speaking-bars i:nth-child(4) { animation-delay: .45s; }
+@keyframes platoo-eq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.platoo-chat .voice-stop svg, .platoo-chat .listen-again svg, .platoo-chat .try-voice svg { width: 12px; height: 12px; }
+.platoo-chat .suggestions svg { width: 13px; height: 13px; }
+.platoo-chat .said-by-voice { width: 12px; height: 12px; vertical-align: -1px; opacity: .75; }
+.platoo-chat .message ul, .platoo-chat .message ol { margin: 4px 0; padding-left: 20px; }
+.platoo-chat .message a { color: inherit; text-decoration: underline; }
+.platoo-chat .message code { padding: 1px 5px; background: rgba(0,0,0,.06); border-radius: 5px; }
+.platoo-chat .mic-help { margin-top: 4px; }
+.platoo-chat .mic-help > button { border: 0; background: none; color: #1f9e99; font-size: 12px; font-weight: 800; text-decoration: underline; }
+.platoo-chat .mic-help ol { margin: 6px 0 0; padding: 8px 12px 8px 26px; color: var(--ink); background: var(--soft); border-radius: 12px; font-size: 12px; font-weight: 600; line-height: 1.6; text-align: left; }
+.platoo-chat .mic-help .mic-help-note { list-style: none; margin-left: -14px; padding-top: 4px; color: var(--muted); font-size: 11px; }
+.platoo-chat .chat-warning .underline { text-decoration: underline; }
