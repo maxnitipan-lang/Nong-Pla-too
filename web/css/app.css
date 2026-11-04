@@ -101,3 +101,28 @@
 .platoo-chat .mic-help ol { margin: 6px 0 0; padding: 8px 12px 8px 26px; color: var(--ink); background: var(--soft); border-radius: 12px; font-size: 12px; font-weight: 600; line-height: 1.6; text-align: left; }
 .platoo-chat .mic-help .mic-help-note { list-style: none; margin-left: -14px; padding-top: 4px; color: var(--muted); font-size: 11px; }
 .platoo-chat .chat-warning .underline { text-decoration: underline; }
+
+/* ---------------- 2D / 3D switch (position from platoo-extra.css .map-mode-slot) */
+.platoo-ui .map-mode { display: flex; padding: 4px; background: rgba(255,255,255,.95); border-radius: 99px; box-shadow: 0 6px 16px rgba(8,44,74,.18); }
+.platoo-ui .map-mode button { min-height: 40px; padding: 0 16px; color: #287c78; background: none; border: 0; border-radius: 99px; font-size: 12px; font-weight: 800; }
+.platoo-ui .map-mode button[aria-pressed="true"] { color: #fff; background: var(--navy); }
+[data-theme='dark'].platoo-ui .map-mode button[aria-pressed="true"] { color: #08253b; }
+
+/* ---------------- 3D map (js/map3d.js) */
+.platoo-ui .campus-map3d { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
+.platoo-ui .map3d-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
+.platoo-ui .map3d-labels { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.platoo-ui .map3d-label { position: absolute; left: 0; top: 0; cursor: pointer; user-select: none; pointer-events: auto; transform-origin: 50% 100%; will-change: transform; }
+.platoo-ui .map3d-user { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; }
+.platoo-ui .map3d-user span { white-space: nowrap; padding: 4px 10px; color: #fff; background: #1a73e8; border-radius: 99px; font-size: 11px; font-weight: 800; box-shadow: 0 4px 10px rgba(26,115,232,.35); }
+.platoo-ui .map3d-controls { position: absolute; right: 16px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+.platoo-ui .map3d-controls button { width: 44px; height: 44px; display: grid; place-items: center; color: #082c4a; background: rgba(255,255,255,.95); border: 0; border-radius: 16px; font-size: 22px; font-weight: 700; line-height: 1; box-shadow: 0 6px 16px rgba(8,44,74,.18); }
+.platoo-ui .map3d-controls button:active { transform: scale(.95); }
+.platoo-ui .map3d-controls svg { width: 20px; height: 20px; }
+.platoo-ui .map3d-needle { position: relative; display: grid; place-items: center; transition: transform 75ms; }
+.platoo-ui .map3d-needle svg { width: 22px; height: 22px; }
+.platoo-ui .map3d-needle b { position: absolute; top: -11px; color: #e8563f; font-size: 9px; font-weight: 900; }
+.platoo-ui .map3d-credit { position: absolute; right: 8px; bottom: 4px; z-index: 1000; padding: 0 6px; color: #36566d; background: rgba(255,255,255,.7); border-radius: 4px; font-size: 9px; font-weight: 600; pointer-events: none; }
+.platoo-ui .map3d-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: #287c78; font-size: 13px; font-weight: 800; }
+/* The design's pin labels sit inside the 3D label boxes too. */
+.platoo-ui .map3d-label .leaflet-pin { transform: none; }

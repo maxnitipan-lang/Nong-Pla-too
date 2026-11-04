@@ -23,6 +23,10 @@
       <div id="attract"></div>
     </div>
     <noscript>ต้องเปิดใช้ JavaScript เพื่อใช้งานน้องปลาทู</noscript>
+    <!-- three.js for the 3D map (loaded only when 3D is shown). -->
+    <script type="importmap">
+      { "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+    </script>
     <script src="vendor/leaflet/leaflet.js"></script>
     <script type="module" src="js/app.js"></script>
   </body>

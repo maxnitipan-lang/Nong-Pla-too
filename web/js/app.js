@@ -268,6 +268,10 @@ function mapShellHtml() {
       </aside>
       <section class="map-canvas real-map" id="map-canvas">
         <div class="map-surface" id="map-surface"></div>
+        <div class="map-mode-slot"><div class="map-mode" role="group" aria-label="รูปแบบแผนที่">
+          <button type="button" data-action="map-mode" data-mode="2d" aria-pressed="${mapMode === "2d"}">2D</button>
+          <button type="button" data-action="map-mode" data-mode="3d" aria-pressed="${mapMode === "3d"}">3D</button>
+        </div></div>
         <div id="nav-banner"></div>
         <div class="mobile-map-controls" id="mobile-controls">
           <label class="map-search">
@@ -345,17 +349,55 @@ function markerHtml(b, active) {
   return `<div class="leaflet-pin ${active ? "active" : ""}" style="--pin:${esc(pinColor(b))}"><b><i>${numberOf(b.id)}</i></b><small>${esc(b.shortName || b.name)}</small></div>`;
 }
 
-function mountMap() {
+/** 2D (Leaflet) or 3D (three.js) — remembered on this device, same key as the React version. */
+const MAP_MODE_KEY = "nongplatoo.mapMode";
+let mapMode = localStorage.getItem(MAP_MODE_KEY) === "2d" ? "2d" : "3d";
+let mountId = 0;
+
+function setMapMode(mode) {
+  mapMode = mode;
+  try {
+    localStorage.setItem(MAP_MODE_KEY, mode);
+  } catch {
+    /* kiosk lockdown — just don't remember it */
+  }
+  mountMap();
+}
+
+async function mountMap() {
+  const id = ++mountId;
   map?.destroy();
-  map = new CampusMap($("#map-surface"), {
+  map = null;
+  for (const b of document.querySelectorAll("[data-action=map-mode]")) b.setAttribute("aria-pressed", String(b.dataset.mode === mapMode));
+  const surface = $("#map-surface");
+  const options = {
     buildings: places().map((p) => p.building),
     center: CAMPUS_OVERVIEW.mapCenter,
-    onSelect: (id) => selectBuilding(id),
+    onSelect: (buildingId) => selectBuilding(buildingId),
     markerHtml,
     markerSize: [120, 72],
     userLabel: KIOSK && state.kiosk ? "คุณอยู่ที่นี่" : undefined,
     controlsTop: KIOSK ? 70 : 120,
-  });
+    dark: state.theme === "dark",
+  };
+  if (mapMode === "3d") {
+    surface.innerHTML = '<p class="map3d-loading">กำลังโหลดแผนที่ 3D…</p>';
+    // three.js is big — only download it when the 3D map is actually shown.
+    const { createCampusMap3D } = await import("./map3d.js");
+    if (id !== mountId || !surface.isConnected) return;
+    surface.innerHTML = "";
+    const map3d = await createCampusMap3D(surface, { ...options, onUnsupported: () => toast("เครื่องนี้แสดงแผนที่ 3D ไม่ได้ — ใช้แผนที่ 2D แทน") });
+    if (id !== mountId || !surface.isConnected) {
+      map3d?.destroy();
+      return;
+    }
+    if (map3d) map = map3d;
+    else {
+      mapMode = "2d"; // no WebGL on this device
+      for (const b of document.querySelectorAll("[data-action=map-mode]")) b.setAttribute("aria-pressed", String(b.dataset.mode === "2d"));
+    }
+  }
+  if (!map) map = new CampusMap(surface, options);
   if (state.selectedId) map.setSelected(state.selectedId);
   updateMap();
 }
@@ -683,6 +725,7 @@ const actions = {
     $(".install-card")?.remove();
   },
   wake: () => wake(),
+  "map-mode": (el) => el.dataset.mode !== mapMode && setMapMode(el.dataset.mode),
 };
 
 document.addEventListener("click", (event) => {
