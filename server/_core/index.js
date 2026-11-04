@@ -9,6 +9,7 @@ import { registerImageRoutes } from "../images";
 import { registerVoiceRoutes } from "../voice";
 import { registerRestApi } from "../restApi";
 import { registerSharedFiles } from "../sharedFiles";
+import { registerWebPages } from "../webPages";
 import { createContext } from "./context";
 import { registerOAuthRoutes } from "./oauth";
 import { registerStorageProxy } from "./storageProxy";
@@ -50,6 +51,8 @@ async function startServer() {
   // The same procedures as plain JSON endpoints (/api/campus/buildings …) for the HTML/JS pages.
   registerRestApi(app);
   registerSharedFiles(app);
+  // New plain HTML/CSS/JS pages (preview at /new while the conversion is in progress).
+  registerWebPages(app);
 
   if (process.env.NODE_ENV === "development") {
     await setupVite(app, server);

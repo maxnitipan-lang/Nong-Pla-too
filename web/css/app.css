@@ -1,0 +1,77 @@
+/*
+ * Styles for the plain-JS pages that the Figma CSS (platoo-ui.css + platoo-extra.css)
+ * doesn't cover: the map's own controls, the turn banner, the route panel, QR boxes
+ * and small helpers. (In the React version these were Tailwind classes.)
+ */
+
+[hidden] { display: none !important; }
+.platoo-ui .loading { padding: 40px; text-align: center; color: var(--muted); }
+.platoo-ui .spin { animation: platoo-spin 0.9s linear infinite; }
+@keyframes platoo-spin { to { transform: rotate(360deg); } }
+
+/* ---------------- map */
+.platoo-ui .campus-map { position: absolute; inset: 0; }
+.platoo-ui .campus-map-canvas { position: absolute; inset: 0; }
+.platoo-ui .map-surface { position: absolute; inset: 0; }
+.platoo-ui .me-dot { display: block; width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(26,115,232,.35), 0 2px 6px rgba(0,0,0,.3); }
+.leaflet-tooltip.me-label { padding: 3px 10px; color: #fff; background: #1a73e8; border: 0; border-radius: 99px; font: 800 11px 'IBM Plex Sans Thai', sans-serif; box-shadow: 0 4px 10px rgba(26,115,232,.35); }
+.leaflet-tooltip.me-label::before { display: none; }
+.platoo-ui .map-locate { position: absolute; right: 10px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+.platoo-ui .map-locate-button { pointer-events: auto; width: 34px; height: 34px; display: grid; place-items: center; color: #1a73e8; background: #fff; border: 2px solid rgba(0,0,0,.2); border-radius: 4px; }
+.platoo-ui .map-locate-button svg { width: 17px; }
+.platoo-ui .map-locate-note { max-width: 220px; padding: 6px 10px; color: var(--ink); background: rgba(255,255,255,.95); border-radius: 8px; font-size: 11px; font-weight: 700; line-height: 1.4; text-align: right; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.platoo-ui .map-outside { position: absolute; left: 50%; bottom: 56px; z-index: 1000; max-width: calc(100% - 24px); transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 14px; color: var(--ink); background: rgba(255,255,255,.96); border-radius: 99px; font-size: 12px; font-weight: 800; box-shadow: 0 6px 18px rgba(0,0,0,.15); pointer-events: none; }
+.platoo-ui .map-outside > span { display: inline-block; color: #1a73e8; }
+
+/* ---------------- big "next turn" banner over the map */
+.platoo-ui .nav-banner { position: absolute; left: 12px; right: 56px; top: 12px; z-index: 1001; display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #fff; background: #1a73e8; border-radius: 16px; box-shadow: 0 10px 30px rgba(26,115,232,.35); pointer-events: none; }
+.platoo-ui .nav-banner > svg { width: 32px; height: 32px; flex: 0 0 auto; }
+.platoo-ui .nav-banner > div { min-width: 0; display: flex; flex-direction: column; }
+.platoo-ui .nav-banner strong { font-size: 18px; line-height: 1.2; }
+.platoo-ui .nav-banner span { font-size: 14px; font-weight: 700; line-height: 1.4; }
+
+/* ---------------- route panel (inside the building card) */
+.platoo-ui .route-panel { color: var(--ink); }
+.platoo-ui .route-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.platoo-ui .route-head > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.platoo-ui .route-head small { color: #1a73e8; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+.platoo-ui .route-head strong { font-size: 15px; }
+.platoo-ui .route-head span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.platoo-ui .route-close { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; color: var(--ink); background: var(--soft); border: 0; border-radius: 50%; }
+.platoo-ui .route-close svg { width: 16px; }
+.platoo-ui .route-message { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.platoo-ui .route-message svg { width: 16px; }
+.platoo-ui .route-message.error { color: #c46242; }
+.platoo-ui .route-retry, .platoo-ui .route-start, .platoo-ui .route-stop { height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; color: #fff; border: 0; border-radius: 12px; font-size: 14px; font-weight: 800; }
+.platoo-ui .route-retry { margin-top: 8px; background: var(--navy); }
+.platoo-ui .route-start { flex: 1; background: #1a73e8; }
+.platoo-ui .route-stop { flex: 1; background: #c46242; }
+.platoo-ui .route-retry svg, .platoo-ui .route-start svg, .platoo-ui .route-stop svg { width: 16px; }
+.platoo-ui .route-offcampus { margin-top: 10px; padding: 8px 12px; color: #8a6412; background: #fff6e5; border-radius: 12px; font-size: 12px; font-weight: 700; line-height: 1.6; }
+.platoo-ui .route-qr { display: flex; align-items: center; gap: 14px; margin-top: 10px; padding: 12px; background: #e8f0fe; border-radius: 16px; }
+.platoo-ui .route-qr strong { display: block; color: #1a4fa8; font-size: 14px; }
+.platoo-ui .route-qr span { color: var(--muted); font-size: 12px; font-weight: 600; line-height: 1.6; }
+.platoo-ui .route-controls { display: flex; gap: 8px; margin-top: 10px; }
+.platoo-ui .route-voice { width: 44px; height: 44px; display: grid; place-items: center; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.platoo-ui .route-voice svg { width: 18px; }
+.platoo-ui .route-steps { max-height: 300px; margin: 10px 0 0; padding: 0 4px 0 0; overflow-y: auto; list-style: none; display: grid; gap: 2px; }
+.platoo-ui .route-steps li { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; }
+.platoo-ui .route-steps li.active { background: #e8f0fe; }
+.platoo-ui .route-steps li.done { opacity: .45; }
+.platoo-ui .step-icon { width: 32px; height: 32px; flex: 0 0 auto; display: grid; place-items: center; color: #1a73e8; background: #e8f0fe; border-radius: 50%; }
+.platoo-ui .step-icon.arrive { color: #fff; background: #e8563f; }
+.platoo-ui .step-icon svg { width: 16px; }
+.platoo-ui .step-text { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.platoo-ui .step-dist { flex: 0 0 auto; color: var(--muted); font-size: 12px; font-weight: 800; }
+[data-theme='dark'].platoo-ui .route-qr, [data-theme='dark'].platoo-ui .route-steps li.active, [data-theme='dark'].platoo-ui .step-icon { background: #173a55; }
+
+/* ---------------- QR boxes */
+.platoo-ui .qr { aspect-ratio: 1; flex: 0 0 auto; padding: 4px; background: #fff; border-radius: 12px; }
+.platoo-ui .qr svg { display: block; width: 100%; height: 100%; }
+.platoo-ui .route-qr .qr { width: 128px; }
+.platoo-ui .qr-small { width: 80px; }
+.platoo-ui .qr-medium { width: 112px; }
+
+/* ---------------- toast */
+.platoo-ui .platoo-toast { position: fixed; left: 50%; bottom: 96px; z-index: 3000; max-width: calc(100% - 32px); padding: 12px 18px; color: #fff; background: rgba(9,30,45,.92); border-radius: 14px; font-size: 14px; font-weight: 700; text-align: center; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+.platoo-ui .platoo-toast.show { opacity: 1; transform: translate(-50%, 0); }
