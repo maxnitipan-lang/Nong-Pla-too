@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS } from "@shared/campus";
+import { CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS } from "../shared/campus";
 import faqData from "../shared/data/chatFaq.json";
 import { answerFromFaq, normalizeQuestion, similarity } from "./chatFaq";
 
