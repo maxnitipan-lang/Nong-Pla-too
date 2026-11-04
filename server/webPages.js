@@ -1,8 +1,8 @@
 // The plain HTML/CSS/JS pages in web/:
 //   /     → web/index.html (kiosk)
 //   /app  → web/app.html   (phone)
-// plus their files under /js, /css and /vendor. The admin panel (/admin…) is still
-// the React app until it is converted too.
+//   /admin, /admin/…  → web/admin.html (admin panel; it picks the page from the address)
+// plus their files under /js, /css and /vendor.
 
 import express from "express";
 import path from "path";
@@ -16,9 +16,12 @@ export function registerWebPages(app) {
   };
   app.get("/", page("index.html"));
   app.get(["/app", "/app/"], page("app.html"));
+  app.get(/^\/admin(\/[a-z]*)?\/?$/, page("admin.html"));
 
   // Page scripts, styles and the local copies of Leaflet / three.js / QR.
-  const files = express.static(WEB_DIR, { index: false, maxAge: "1h" });
+  // maxAge 0 = the browser re-checks each file (a quick 304 when unchanged), so a deploy never
+  // mixes a new page with old scripts.
+  const files = express.static(WEB_DIR, { index: false, maxAge: 0 });
   app.use(["/js", "/css", "/vendor"], (req, res, next) => {
     if (req.path.endsWith(".test.js")) return res.status(404).end();
     // express strips the mount path; give static the full path back.
