@@ -329,9 +329,39 @@ export type Listening = {
   engine: ListenEngine;
 };
 
-const MIC_DENIED = "ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน — กดอนุญาตไมโครโฟนที่แถบที่อยู่ของเบราว์เซอร์ แล้วลองใหม่";
+const MIC_DENIED = "ไม่ได้รับอนุญาตให้ใช้ไมโครโฟน — กดอนุญาตไมโครโฟนที่แถบที่อยู่ของเบราว์เซอร์ แล้วรีเฟรชหน้า (F5)";
+const MIC_BLOCKED_BY_SYSTEM =
+  "ระบบปฏิบัติการปิดไมโครโฟนไว้สำหรับเบราว์เซอร์ — Windows: Settings → Privacy & security → Microphone เปิด \"Microphone access\" และ \"Let desktop apps access your microphone\" แล้วรีเฟรชหน้า";
+const MIC_BUSY = "ไมโครโฟนถูกโปรแกรมอื่นใช้อยู่หรือเปิดไม่ได้ (เช่น Zoom, Teams, Discord) — ปิดโปรแกรมนั้น หรือเลือกไมค์ตัวอื่นในการตั้งค่าเบราว์เซอร์";
 const NO_MIC = "ไม่พบไมโครโฟนในอุปกรณ์นี้";
 const INSECURE = "เบราว์เซอร์อนุญาตให้ใช้ไมโครโฟนเฉพาะเว็บที่เป็น https (หรือ localhost)";
+
+/** A Thai explanation for a getUserMedia error that says what to fix. */
+function micErrorMessage(error: unknown): string {
+  const { name = "", message = "" } = (error ?? {}) as { name?: string; message?: string };
+  if (name === "NotAllowedError" || name === "SecurityError") {
+    // Chrome/Edge: "Permission denied by system" = blocked by Windows/macOS, not by the site setting.
+    return /system/i.test(message) ? MIC_BLOCKED_BY_SYSTEM : MIC_DENIED;
+  }
+  if (name === "NotReadableError" || name === "TrackStartError" || name === "AbortError") return MIC_BUSY;
+  return NO_MIC;
+}
+
+/**
+ * The browser recogniser only says "not-allowed" / "audio-capture" — open the mic
+ * ourselves to find the real reason. If the mic works, the recogniser itself is
+ * what is blocked: report it as a recogniser error so the caller can switch to
+ * the server engine.
+ */
+async function diagnoseMic(): Promise<string> {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    stream.getTracks().forEach((t) => t.stop());
+    return "recognizer:not-allowed";
+  } catch (error) {
+    return micErrorMessage(error);
+  }
+}
 
 /** Mic stream + analyser, for the level meter and for recording. */
 async function openMic(): Promise<{ stream: MediaStream; ctx: AudioContext; analyser: AnalyserNode; source: MediaStreamAudioSourceNode }> {
@@ -343,8 +373,7 @@ async function openMic(): Promise<{ stream: MediaStream; ctx: AudioContext; anal
       audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 },
     });
   } catch (error) {
-    const name = (error as { name?: string }).name;
-    throw new Error(name === "NotAllowedError" || name === "SecurityError" ? MIC_DENIED : NO_MIC);
+    throw new Error(micErrorMessage(error));
   }
   const ctx = audioContext();
   const source = ctx.createMediaStreamSource(stream);
@@ -382,6 +411,7 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
   let finalText = "";
   let interimText = "";
   let cancelled = false;
+  let failure: Promise<string> | null = null;
   let cleanupMeter = () => undefined as void;
   let mic: Awaited<ReturnType<typeof openMic>> | null = null;
 
@@ -397,14 +427,18 @@ function listenWithBrowser(cb: ListenCallbacks): Listening {
     };
     rec.onerror = (event) => {
       if (event.error === "no-speech" || event.error === "aborted") return; // onend resolves with ""
-      if (event.error === "not-allowed") reject(new Error(MIC_DENIED));
-      else if (event.error === "audio-capture") reject(new Error(NO_MIC));
+      // onend follows straight away — it waits for this diagnosis instead of resolving "".
+      if (event.error === "not-allowed" || event.error === "audio-capture") failure = diagnoseMic();
       else reject(new Error(`recognizer:${event.error}`)); // e.g. "network" → caller may retry with the server engine
     };
     rec.onend = () => {
       cleanupMeter();
       mic?.stream.getTracks().forEach((t) => t.stop());
       mic?.source.disconnect();
+      if (failure && !cancelled) {
+        void failure.then((message) => reject(new Error(message)));
+        return;
+      }
       resolve(cancelled ? "" : (finalText || interimText).trim());
     };
   });
