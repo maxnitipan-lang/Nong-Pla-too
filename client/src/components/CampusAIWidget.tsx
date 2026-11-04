@@ -19,17 +19,20 @@ import {
   type SpeakEngine,
 } from "@/lib/voice";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/contexts/ThemeContext";
+import "@/platoo/platoo-ui.css";
+import "@/platoo/platoo-extra.css";
 import {
   Building2,
   ChevronRight,
   Loader2,
+  Map as MapIcon,
   MapPin,
   MessageCircle,
   Mic,
   Navigation,
   Send,
   Settings2,
-  Sparkles,
   Square,
   Volume2,
   VolumeX,
@@ -95,6 +98,8 @@ type CampusAIWidgetProps = {
   hideLauncher?: boolean;
   /** On the kiosk: answers can say how far a building is from here. */
   atKiosk?: boolean;
+  /** Shows the "เปิดแผนที่วิทยาลัย" button in the panel. */
+  onOpenMap?: () => void;
 };
 
 /**
@@ -105,7 +110,8 @@ type CampusAIWidgetProps = {
  * browser recogniser → server transcription; AI voice → device voice.
  * Chat itself is `chat.ask` like the old app (stateless, full history each time).
  */
-export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = false }: CampusAIWidgetProps = {}) {
+export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = false, onOpenMap }: CampusAIWidgetProps = {}) {
+  const { theme } = useTheme();
   const utils = trpc.useUtils();
 
   const [open, setOpen] = useState(false);
@@ -378,126 +384,93 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
   const busy = phase === "thinking" || phase === "transcribing";
   const orbScale = phase === "listening" ? 1 + level * 0.35 : 1;
 
+  // Styled like the Figma assistant (platoo-ui.css: .assistant, .chat-content, .chat-input …).
+  // The panel stays mounted so it can slide in and out; `inert` keeps it out of reach while closed.
   return (
-    <>
-      {open && (
-        <div
-          role="dialog"
-          aria-label="ผู้ช่วยน้องปลาทู"
-          className={cn("fixed right-3 z-[1200] flex max-h-[calc(100dvh-7rem)] w-[min(440px,calc(100vw-1.5rem))] flex-col overflow-hidden rounded-[28px] border border-[var(--border)] bg-[var(--card)] shadow-[0_24px_80px_rgba(16,41,58,0.28)] sm:right-6", hideLauncher ? "bottom-20" : "bottom-24")}
-        >
-          {/* Header */}
-          <div className="flex items-center justify-between bg-[var(--deep)] px-5 py-3.5 text-white">
-            <div className="flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-2xl bg-[var(--aqua)] text-[var(--ink)]">
-                <Sparkles size={18} />
-              </span>
-              <div>
-                <p className="text-sm font-black">น้องปลาทู</p>
-                <p className="text-[10px] text-white/65">ผู้ช่วยประจำวิทยาลัย · คุยด้วยเสียงได้</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <button
-                type="button"
-                onClick={() => setSettings((s) => ({ ...s, speakReplies: !s.speakReplies }))}
-                className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10"
-                aria-label={settings.speakReplies ? "ปิดเสียงตอบ" : "เปิดเสียงตอบ"}
-                title={settings.speakReplies ? "ปิดเสียงตอบ" : "เปิดเสียงตอบ"}
-              >
-                {settings.speakReplies ? <Volume2 size={16} /> : <VolumeX size={16} />}
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowSettings((v) => !v)}
-                className={cn("flex h-9 w-9 items-center justify-center rounded-full", showSettings ? "bg-white/25" : "bg-white/10")}
-                aria-label="ตั้งค่าเสียง"
-                title="ตั้งค่าเสียง"
-              >
-                <Settings2 size={16} />
-              </button>
-              <button type="button" onClick={close} className="flex h-9 w-9 items-center justify-center rounded-full bg-white/10" aria-label="ปิดผู้ช่วย">
-                <X size={17} />
-              </button>
-            </div>
+    <div className="platoo-ui platoo-chat" data-theme={theme === "dark" ? "dark" : "light"}>
+      <button type="button" className={cn("ai-backdrop", open && "visible")} onClick={close} aria-label="ปิดผู้ช่วย" tabIndex={open ? 0 : -1} />
+      <aside role="dialog" aria-label="ผู้ช่วยน้องปลาทู" aria-hidden={!open} inert={!open} className={cn("assistant", open && "open")}>
+        {/* Header */}
+        <div className="assistant-header">
+          <div className="assistant-avatar">
+            <img src="/mascots/greeting.webp" alt="" aria-hidden="true" />
           </div>
+          <div>
+            <strong>น้องปลาทู</strong>
+            <small>
+              <i /> {phase === "idle" ? "พร้อมช่วยเหลือ · คุยด้วยเสียงได้" : PHASE_TEXT[phase]}
+            </small>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSettings((s) => ({ ...s, speakReplies: !s.speakReplies }))}
+            aria-label={settings.speakReplies ? "ปิดเสียงตอบ" : "เปิดเสียงตอบ"}
+            title={settings.speakReplies ? "ปิดเสียงตอบ" : "เปิดเสียงตอบ"}
+          >
+            {settings.speakReplies ? <Volume2 /> : <VolumeX />}
+          </button>
+          <button type="button" onClick={() => setShowSettings((v) => !v)} className={cn(showSettings && "is-on")} aria-label="ตั้งค่าเสียง" title="ตั้งค่าเสียง">
+            <Settings2 />
+          </button>
+          <button type="button" onClick={close} aria-label="ปิดผู้ช่วย">
+            <X />
+          </button>
+        </div>
 
-          {showSettings && (
-            <div className="space-y-3 border-b border-[var(--border)] bg-[var(--background)] px-5 py-4 text-xs">
-              <label className="flex items-center justify-between gap-3 font-bold">
-                <span>
-                  อ่านคำตอบออกเสียง
-                  <span className="block text-[10px] font-medium text-[var(--muted-foreground)]">ปิดได้ถ้าอยู่ในที่ที่ต้องเงียบ</span>
-                </span>
-                <input type="checkbox" checked={settings.speakReplies} onChange={(e) => setSettings((s) => ({ ...s, speakReplies: e.target.checked }))} className="h-4 w-4" />
-              </label>
-              <label className="flex items-center justify-between gap-3 font-bold">
-                <span>
-                  สนทนาต่อเนื่อง (ไม่ต้องกดไมค์ซ้ำ)
-                  <span className="block text-[10px] font-medium text-[var(--muted-foreground)]">ตอบจบแล้วฟังต่อทันที — เงียบ 2 รอบจะหยุดเอง</span>
-                </span>
-                <input type="checkbox" checked={settings.handsFree} onChange={(e) => setSettings((s) => ({ ...s, handsFree: e.target.checked }))} className="h-4 w-4" />
-              </label>
-              <div>
-                <p className="mb-1.5 font-bold">เสียงพูด</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {(["ai", "device"] as const).map((e) => (
-                    <button
-                      key={e}
-                      type="button"
-                      disabled={e === "ai" && !aiVoice}
-                      onClick={() => setSettings((s) => ({ ...s, engine: e }))}
-                      className={cn(
-                        "rounded-xl border px-3 py-2 text-left disabled:opacity-40",
-                        engine === e ? "border-[var(--ink)] bg-[var(--secondary)]" : "border-[var(--border)]",
-                      )}
-                    >
-                      <span className="block font-bold">{e === "ai" ? "เสียง AI (ธรรมชาติ)" : "เสียงของเครื่อง"}</span>
-                      <span className="block truncate text-[10px] text-[var(--muted-foreground)]">
-                        {e === "ai" ? (aiVoice ? "Gemini · ต้องต่ออินเทอร์เน็ต" : "ยังไม่พร้อมใช้") : deviceVoiceName ?? "ไม่พบเสียงภาษาไทยในเครื่อง"}
-                      </span>
-                    </button>
-                  ))}
-                </div>
+        {showSettings && (
+          <div className="chat-settings">
+            <label>
+              <span>
+                อ่านคำตอบออกเสียง
+                <small>ปิดได้ถ้าอยู่ในที่ที่ต้องเงียบ</small>
+              </span>
+              <input type="checkbox" checked={settings.speakReplies} onChange={(e) => setSettings((s) => ({ ...s, speakReplies: e.target.checked }))} />
+            </label>
+            <label>
+              <span>
+                สนทนาต่อเนื่อง (ไม่ต้องกดไมค์ซ้ำ)
+                <small>ตอบจบแล้วฟังต่อทันที — เงียบ 2 รอบจะหยุดเอง</small>
+              </span>
+              <input type="checkbox" checked={settings.handsFree} onChange={(e) => setSettings((s) => ({ ...s, handsFree: e.target.checked }))} />
+            </label>
+            <div>
+              <p>เสียงพูด</p>
+              <div className="voice-engines">
+                {(["ai", "device"] as const).map((e) => (
+                  <button key={e} type="button" disabled={e === "ai" && !aiVoice} onClick={() => setSettings((s) => ({ ...s, engine: e }))} className={cn(engine === e && "is-on")}>
+                    <strong>{e === "ai" ? "เสียง AI (ธรรมชาติ)" : "เสียงของเครื่อง"}</strong>
+                    <small>{e === "ai" ? (aiVoice ? "Gemini · ต้องต่ออินเทอร์เน็ต" : "ยังไม่พร้อมใช้") : deviceVoiceName ?? "ไม่พบเสียงภาษาไทยในเครื่อง"}</small>
+                  </button>
+                ))}
               </div>
-              <label className="block font-bold">
-                ความเร็วเสียง {settings.rate.toFixed(1)}×
-                <input
-                  type="range"
-                  min={0.8}
-                  max={1.2}
-                  step={0.1}
-                  value={settings.rate}
-                  onChange={(e) => setSettings((s) => ({ ...s, rate: Number(e.target.value) }))}
-                  className="mt-1 w-full"
-                />
-              </label>
-              <button
-                type="button"
-                onClick={() => unlockAudio() ?? speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", { engine, rate: settings.rate })}
-                className="flex items-center gap-1.5 font-bold text-[#1a73e8]"
-              >
-                <Volume2 size={13} /> ทดลองฟังเสียง
-              </button>
             </div>
-          )}
+            <label className="rate">
+              ความเร็วเสียง {settings.rate.toFixed(1)}×
+              <input type="range" min={0.8} max={1.2} step={0.1} value={settings.rate} onChange={(e) => setSettings((s) => ({ ...s, rate: Number(e.target.value) }))} />
+            </label>
+            <button
+              type="button"
+              className="try-voice"
+              onClick={() => unlockAudio() ?? speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", { engine, rate: settings.rate })}
+            >
+              <Volume2 size={13} /> ทดลองฟังเสียง
+            </button>
+          </div>
+        )}
 
-          {/* Conversation */}
-          <div ref={scrollRef} className="min-h-[120px] flex-1 space-y-3 overflow-y-auto bg-[var(--background)] p-4">
-            {messages.map((message, index) => (
-              <div
-                key={`${message.role}-${index}`}
-                className={
-                  message.role === "user"
-                    ? "ml-8 rounded-2xl rounded-br-md bg-[var(--primary)] px-4 py-3 text-sm leading-6 text-white"
-                    : "group relative mr-4 rounded-2xl rounded-bl-md bg-[var(--card)] px-4 py-3 text-sm leading-6 text-[var(--card-foreground)] shadow-sm ring-1 ring-[var(--border)]"
-                }
-              >
+        {/* Conversation */}
+        <div ref={scrollRef} className="chat-content">
+          <p className="chat-date">วันนี้</p>
+          {messages.map((message, index) => (
+            <div key={`${message.role}-${index}`} className={cn("message-row", message.role === "user" ? "user" : "bot")}>
+              {message.role === "assistant" && <img className="message-mascot" src="/mascots/greeting.webp" alt="" aria-hidden="true" />}
+              <div className={cn("message", message.role === "user" ? "user" : "bot")}>
                 {message.role === "user" && message.spoken && <Mic size={11} className="mb-1 inline opacity-70" />}{" "}
                 <Streamdown>{message.content}</Streamdown>
                 {message.role === "assistant" && index > 0 && canSpeakOut && (
                   <button
                     type="button"
+                    className="listen-again"
                     onClick={() => {
                       const session = sessionRef.current;
                       setPhase("speaking");
@@ -506,143 +479,136 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
                         if (session === sessionRef.current) setPhase("idle");
                       });
                     }}
-                    className="mt-1 flex items-center gap-1 text-[10px] font-bold text-[var(--muted-foreground)] hover:text-[var(--ink)]"
                   >
                     <Volume2 size={11} /> ฟังอีกครั้ง
                   </button>
                 )}
               </div>
-            ))}
-            {phase === "listening" && interim && (
-              <div className="ml-8 rounded-2xl rounded-br-md border-2 border-dashed border-[var(--primary)] px-4 py-3 text-sm leading-6 text-[var(--primary)]">
-                {interim}…
-              </div>
-            )}
-          </div>
+            </div>
+          ))}
+          {phase === "listening" && interim && (
+            <div className="message-row user">
+              <div className="message user interim">{interim}…</div>
+            </div>
+          )}
+        </div>
 
-          {/* Voice stage */}
-          <div className="border-t border-[var(--border)] bg-[var(--card)] px-4 pb-4 pt-3">
-            {inAppBrowser() && (
-              <div className="mb-3 rounded-xl bg-[#fff6e5] px-3 py-2 text-center text-[11px] font-bold leading-5 text-[#8a6412]">
-                เบราว์เซอร์ในแอป {inAppBrowser() === "line" ? "LINE" : "Facebook/IG"} มักใช้ไมโครโฟนไม่ได้
-                {inAppBrowser() === "line" ? (
-                  <a
-                    href={`${window.location.pathname}${window.location.search ? window.location.search + "&" : "?"}openExternalBrowser=1`}
-                    className="ml-1 underline"
-                  >
-                    เปิดใน Chrome/Safari
-                  </a>
-                ) : (
-                  " — แตะ ⋯ แล้วเลือกเปิดในเบราว์เซอร์"
+        {/* Voice: the big mic (kiosk visitors mostly talk rather than type). */}
+        <div className="voice-stage">
+          {inAppBrowser() && (
+            <div className="chat-warning">
+              เบราว์เซอร์ในแอป {inAppBrowser() === "line" ? "LINE" : "Facebook/IG"} มักใช้ไมโครโฟนไม่ได้
+              {inAppBrowser() === "line" ? (
+                <a href={`${window.location.pathname}${window.location.search ? window.location.search + "&" : "?"}openExternalBrowser=1`} className="ml-1 underline">
+                  เปิดใน Chrome/Safari
+                </a>
+              ) : (
+                " — แตะ ⋯ แล้วเลือกเปิดในเบราว์เซอร์"
+              )}
+            </div>
+          )}
+          {canListen ? (
+            <div className="voice-orb-row">
+              <div className="voice-orb">
+                {(phase === "listening" || phase === "speaking") && (
+                  <>
+                    <span className={cn("absolute inset-0 animate-ping rounded-full opacity-25", phase === "listening" ? "bg-[#e97967]" : "bg-[#21a7a0]")} />
+                    <span className={cn("absolute inset-1.5 rounded-full opacity-30", phase === "listening" ? "bg-[#e97967]" : "bg-[#21a7a0]")} />
+                  </>
                 )}
+                <button
+                  type="button"
+                  onClick={onMic}
+                  style={{ transform: `scale(${orbScale})` }}
+                  className={cn(phase === "listening" ? "is-listening" : phase === "speaking" ? "is-speaking" : busy ? "is-busy" : "")}
+                  aria-label={phase === "listening" ? "พูดจบแล้ว" : phase === "speaking" ? "พูดแทรก" : busy ? "หยุด" : "แตะเพื่อพูด"}
+                >
+                  {busy ? <Loader2 size={26} className="animate-spin" /> : phase === "speaking" ? <SpeakingBars /> : <Mic size={28} />}
+                </button>
               </div>
-            )}
-            {canListen ? (
-              <div className="flex flex-col items-center">
-                <div className="relative flex h-24 w-24 items-center justify-center">
-                  {(phase === "listening" || phase === "speaking") && (
-                    <>
-                      <span className={cn("absolute inset-0 animate-ping rounded-full opacity-25", phase === "listening" ? "bg-[#e97967]" : "bg-[var(--aqua)]")} />
-                      <span className={cn("absolute inset-2 rounded-full opacity-30", phase === "listening" ? "bg-[#e97967]" : "bg-[var(--aqua)]")} />
-                    </>
-                  )}
-                  <button
-                    type="button"
-                    onClick={onMic}
-                    style={{ transform: `scale(${orbScale})` }}
-                    className={cn(
-                      "relative flex h-20 w-20 items-center justify-center rounded-full text-white shadow-lg transition-[transform,background-color] duration-100",
-                      phase === "listening" ? "bg-[#e0533d]" : phase === "speaking" ? "bg-[#1a8f8a]" : busy ? "bg-[var(--muted-foreground)]" : "bg-[var(--deep)]",
-                    )}
-                    aria-label={phase === "listening" ? "พูดจบแล้ว" : phase === "speaking" ? "พูดแทรก" : busy ? "หยุด" : "แตะเพื่อพูด"}
-                  >
-                    {busy ? <Loader2 size={30} className="animate-spin" /> : phase === "speaking" ? <SpeakingBars /> : <Mic size={32} />}
-                  </button>
-                </div>
-                <p className="mt-2 text-center text-xs font-black text-[var(--ink)]">{PHASE_TEXT[phase]}</p>
-                {phase === "listening" && <p className="text-[10px] text-[var(--muted-foreground)]">พูดจบแล้วรอสักครู่ หรือแตะปุ่มอีกครั้ง</p>}
-                {notice && <p className="mt-1 text-center text-[11px] font-bold text-[#c46242]">{notice}</p>}
-                {(notice || micState === "denied") && (
-                  <MicHelpToggle open={showMicHelp} onToggle={() => setShowMicHelp((v) => !v)} state={micState} />
-                )}
+              <div className="voice-copy">
+                <strong>{PHASE_TEXT[phase]}</strong>
+                {phase === "listening" && <small>พูดจบแล้วรอสักครู่ หรือแตะปุ่มอีกครั้ง</small>}
+                {notice && <small className="voice-notice">{notice}</small>}
+                {(notice || micState === "denied") && <MicHelpToggle open={showMicHelp} onToggle={() => setShowMicHelp((v) => !v)} state={micState} />}
                 {(phase !== "idle" || settings.handsFree) && phase !== "listening" && (
-                  <button type="button" onClick={stopAll} className="mt-1 flex items-center gap-1 text-[10px] font-bold text-[var(--muted-foreground)] hover:text-[var(--ink)]">
+                  <button type="button" onClick={stopAll} className="voice-stop">
                     <Square size={10} /> {phase === "idle" ? "โหมดสนทนาต่อเนื่องเปิดอยู่" : "หยุดทั้งหมด"}
                   </button>
                 )}
               </div>
-            ) : (
-              <div className="mb-2 rounded-xl bg-[#fff6e5] px-3 py-2 text-center text-[11px] font-bold text-[#8a6412]">
-                {!isSecureForMic()
-                  ? "ใช้ไมโครโฟนได้เฉพาะเว็บ https (หรือ localhost) — พิมพ์คำถามแทนได้ครับ"
-                  : micState === "none" || !hasMicrophone()
-                    ? "เครื่องนี้ยังไม่มีไมโครโฟนที่ใช้ได้ — พิมพ์ หรือแตะคำถามด้านล่างได้เลยครับ"
-                    : "เบราว์เซอร์นี้ฟังเสียงไม่ได้ — ใช้ Chrome/Edge หรือพิมพ์คำถามแทน"}
-                {isSecureForMic() && micState === "none" && (
-                  <MicHelpToggle open={showMicHelp} onToggle={() => setShowMicHelp((v) => !v)} state="none" />
-                )}
-              </div>
-            )}
-
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {QUICK_QUESTIONS.map(({ icon: Icon, label }) => (
-                <button
-                  key={label}
-                  type="button"
-                  onClick={() => {
-                    unlockAudio();
-                    void ask(label, false);
-                  }}
-                  disabled={busy}
-                  className="flex shrink-0 items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--card)] px-3 py-2 text-[11px] font-black text-[var(--foreground)] hover:border-[var(--aqua)] disabled:opacity-50"
-                >
-                  <Icon size={13} className="text-[var(--aqua)]" /> {label}
-                  <ChevronRight size={12} className="text-[var(--muted-foreground)]" />
-                </button>
-              ))}
             </div>
-
-            <form onSubmit={submitText} className="mt-2 flex gap-2">
-              <input
-                value={textInput}
-                onChange={(event) => setTextInput(event.target.value)}
-                placeholder="หรือพิมพ์คำถาม เช่น ห้องน้ำอยู่ไหน"
-                className="min-w-0 flex-1 rounded-2xl border border-[var(--border)] bg-[var(--background)] px-4 py-3 text-sm text-[var(--foreground)] outline-none focus:ring-2 focus:ring-[var(--ring)]"
-                aria-label="พิมพ์คำถาม"
-              />
-              <button
-                type="submit"
-                disabled={!textInput.trim() || phase === "thinking"}
-                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[var(--primary)] text-white disabled:opacity-40"
-                aria-label="ส่งข้อความ"
-              >
-                <Send size={17} />
-              </button>
-            </form>
-          </div>
+          ) : (
+            <div className="chat-warning">
+              {!isSecureForMic()
+                ? "ใช้ไมโครโฟนได้เฉพาะเว็บ https (หรือ localhost) — พิมพ์คำถามแทนได้ครับ"
+                : micState === "none" || !hasMicrophone()
+                  ? "เครื่องนี้ยังไม่มีไมโครโฟนที่ใช้ได้ — พิมพ์ หรือแตะคำถามด้านล่างได้เลยครับ"
+                  : "เบราว์เซอร์นี้ฟังเสียงไม่ได้ — ใช้ Chrome/Edge หรือพิมพ์คำถามแทน"}
+              {isSecureForMic() && micState === "none" && <MicHelpToggle open={showMicHelp} onToggle={() => setShowMicHelp((v) => !v)} state="none" />}
+            </div>
+          )}
         </div>
-      )}
 
-      {!hideLauncher && <button
-        type="button"
-        onClick={() => {
-          unlockAudio();
-          if (open) close();
-          else setOpen(true);
-        }}
-        className="fixed bottom-5 right-3 z-[1200] flex h-14 items-center gap-2 rounded-full bg-[var(--deep)] px-4 text-white shadow-[0_14px_35px_rgba(16,41,58,0.3)] transition-all hover:-translate-y-1 sm:right-6"
-        aria-label={open ? "ปิด Nong Platoo AI" : "เปิด Nong Platoo AI"}
-      >
-        <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[var(--aqua)] text-[var(--ink)]">
-          {phase === "listening" ? <Mic size={17} className="animate-pulse" /> : <MessageCircle size={17} />}
-        </span>
-        <span className="hidden text-xs font-extrabold sm:inline">{open ? "ปิดผู้ช่วย" : "ถามน้องปลาทู"}</span>
-      </button>}
-    </>
+        <div className="suggestions">
+          {QUICK_QUESTIONS.map(({ icon: Icon, label }) => (
+            <button
+              key={label}
+              type="button"
+              onClick={() => {
+                unlockAudio();
+                void ask(label, false);
+              }}
+              disabled={busy}
+            >
+              <Icon size={13} className="inline" /> {label}
+            </button>
+          ))}
+        </div>
+
+        {onOpenMap && (
+          <button
+            type="button"
+            className="assistant-map-action"
+            onClick={() => {
+              onOpenMap();
+              close();
+            }}
+          >
+            <MapIcon /> เปิดแผนที่วิทยาลัย
+          </button>
+        )}
+
+        <form onSubmit={submitText} className="chat-input">
+          <img className="chat-perch" src="/mascots/point.webp" alt="" aria-hidden="true" />
+          <input value={textInput} onChange={(event) => setTextInput(event.target.value)} placeholder="พิมพ์คำถามที่นี่ เช่น ห้องน้ำอยู่ไหน" aria-label="พิมพ์คำถาม" />
+          <button type="submit" disabled={!textInput.trim() || phase === "thinking"} aria-label="ส่งข้อความ">
+            <Send />
+          </button>
+        </form>
+      </aside>
+
+      {!hideLauncher && (
+        <button
+          type="button"
+          onClick={() => {
+            unlockAudio();
+            if (open) close();
+            else setOpen(true);
+          }}
+          className="fixed bottom-5 right-3 z-[1200] flex h-14 items-center gap-2 rounded-full bg-[var(--deep)] px-4 text-white shadow-[0_14px_35px_rgba(16,41,58,0.3)] transition-all hover:-translate-y-1 sm:right-6"
+          aria-label={open ? "ปิด Nong Platoo AI" : "เปิด Nong Platoo AI"}
+        >
+          <span className="relative flex h-8 w-8 items-center justify-center rounded-full bg-[var(--aqua)] text-[var(--ink)]">
+            {phase === "listening" ? <Mic size={17} className="animate-pulse" /> : <MessageCircle size={17} />}
+          </span>
+          <span className="hidden text-xs font-extrabold sm:inline">{open ? "ปิดผู้ช่วย" : "ถามน้องปลาทู"}</span>
+        </button>
+      )}
+    </div>
   );
 }
 
-/** "วิธีเปิดไมค์" link that expands into short steps for this kind of device. */
 function MicHelpToggle({ open, onToggle, state }: { open: boolean; onToggle: () => void; state: MicState }) {
   return (
     <div className="mt-1 w-full text-left">
