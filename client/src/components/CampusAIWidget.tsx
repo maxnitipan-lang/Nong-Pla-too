@@ -1,6 +1,10 @@
 import { trpc } from "@/lib/trpc";
 import {
   aiVoiceAvailable,
+  checkMicrophone,
+  devicePlatform,
+  onMicrophoneMaybeChanged,
+  type MicState,
   hasBrowserRecognition,
   inAppBrowser,
   preferredListenEngine,
@@ -115,6 +119,8 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
   const [settings, setSettings] = useState<VoiceSettings>(DEFAULT_SETTINGS);
   const [aiVoice, setAiVoice] = useState(false);
   const [deviceVoiceName, setDeviceVoiceName] = useState<string | null>(null);
+  const [micState, setMicState] = useState<MicState>("prompt");
+  const [showMicHelp, setShowMicHelp] = useState(false);
 
   const listeningRef = useRef<Listening | null>(null);
   const abortRef = useRef<AbortController | null>(null);
@@ -141,13 +147,33 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
     window.speechSynthesis?.addEventListener?.("voiceschanged", pick);
     return () => window.speechSynthesis?.removeEventListener?.("voiceschanged", pick);
   }, []);
+  // Check the microphone when the panel opens, and again when one is plugged in / turned on
+  // or the person comes back from their settings — so nobody hits a dead mic button.
+  useEffect(() => {
+    if (!open) return;
+    let alive = true;
+    const check = () =>
+      void checkMicrophone().then((state) => {
+        if (!alive) return;
+        setMicState((prev) => {
+          if (prev !== "ok" && state === "ok") setNotice(null); // fixed while we were waiting
+          return state;
+        });
+      });
+    check();
+    const off = onMicrophoneMaybeChanged(check);
+    return () => {
+      alive = false;
+      off();
+    };
+  }, [open]);
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages, interim, phase]);
 
   const engine: SpeakEngine = settings.engine === "ai" && aiVoice ? "ai" : "device";
   const canSpeakOut = engine === "ai" || Boolean(deviceVoiceName) || typeof window !== "undefined" && "speechSynthesis" in window;
-  const canListen = hasMicrophone() && (hasBrowserRecognition() || aiVoice);
+  const canListen = micState !== "none" && hasMicrophone() && (hasBrowserRecognition() || aiVoice);
 
   /** Stop listening, thinking and talking. */
   const stopAll = useCallback(() => {
@@ -272,6 +298,7 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
             return;
           }
           setNotice(error.message.startsWith("recognizer:") ? "ระบบฟังเสียงของเบราว์เซอร์ใช้ไม่ได้ — พิมพ์คำถามแทนได้ครับ" : error.message);
+          void checkMicrophone().then(setMicState);
         });
     },
     [aiVoice, ask],
@@ -297,7 +324,13 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
       unlockAudio();
       setOpen(true);
       setSettings((s) => ({ ...s, handsFree: true }));
-      setTimeout(() => startListeningRef.current(), 250);
+      // No microphone → open in typing mode instead of starting to listen and failing.
+      setTimeout(() => {
+        void checkMicrophone().then((state) => {
+          setMicState(state);
+          if (state !== "none") startListeningRef.current();
+        });
+      }, 250);
     };
     window.addEventListener(OPEN_VOICE_EVENT, onVoice);
     return () => window.removeEventListener(OPEN_VOICE_EVENT, onVoice);
@@ -529,6 +562,9 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
                 <p className="mt-2 text-center text-xs font-black text-[var(--ink)]">{PHASE_TEXT[phase]}</p>
                 {phase === "listening" && <p className="text-[10px] text-[var(--muted-foreground)]">พูดจบแล้วรอสักครู่ หรือแตะปุ่มอีกครั้ง</p>}
                 {notice && <p className="mt-1 text-center text-[11px] font-bold text-[#c46242]">{notice}</p>}
+                {(notice || micState === "denied") && (
+                  <MicHelpToggle open={showMicHelp} onToggle={() => setShowMicHelp((v) => !v)} state={micState} />
+                )}
                 {(phase !== "idle" || settings.handsFree) && phase !== "listening" && (
                   <button type="button" onClick={stopAll} className="mt-1 flex items-center gap-1 text-[10px] font-bold text-[var(--muted-foreground)] hover:text-[var(--ink)]">
                     <Square size={10} /> {phase === "idle" ? "โหมดสนทนาต่อเนื่องเปิดอยู่" : "หยุดทั้งหมด"}
@@ -536,13 +572,16 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
                 )}
               </div>
             ) : (
-              <p className="mb-2 rounded-xl bg-[#fff6e5] px-3 py-2 text-center text-[11px] font-bold text-[#8a6412]">
+              <div className="mb-2 rounded-xl bg-[#fff6e5] px-3 py-2 text-center text-[11px] font-bold text-[#8a6412]">
                 {!isSecureForMic()
                   ? "ใช้ไมโครโฟนได้เฉพาะเว็บ https (หรือ localhost) — พิมพ์คำถามแทนได้ครับ"
-                  : !hasMicrophone()
-                    ? "ไม่พบไมโครโฟน — พิมพ์คำถามแทนได้ครับ"
+                  : micState === "none" || !hasMicrophone()
+                    ? "เครื่องนี้ยังไม่มีไมโครโฟนที่ใช้ได้ — พิมพ์ หรือแตะคำถามด้านล่างได้เลยครับ"
                     : "เบราว์เซอร์นี้ฟังเสียงไม่ได้ — ใช้ Chrome/Edge หรือพิมพ์คำถามแทน"}
-              </p>
+                {isSecureForMic() && micState === "none" && (
+                  <MicHelpToggle open={showMicHelp} onToggle={() => setShowMicHelp((v) => !v)} state="none" />
+                )}
+              </div>
             )}
 
             <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
@@ -600,6 +639,52 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
         <span className="hidden text-xs font-extrabold sm:inline">{open ? "ปิดผู้ช่วย" : "ถามน้องปลาทู"}</span>
       </button>}
     </>
+  );
+}
+
+/** "วิธีเปิดไมค์" link that expands into short steps for this kind of device. */
+function MicHelpToggle({ open, onToggle, state }: { open: boolean; onToggle: () => void; state: MicState }) {
+  return (
+    <div className="mt-1 w-full text-left">
+      <button type="button" onClick={onToggle} className="mx-auto block text-[11px] font-black text-[var(--aqua)] underline">
+        {open ? "ซ่อนวิธีเปิดไมค์" : "วิธีเปิดไมโครโฟน"}
+      </button>
+      {open && <MicHelp state={state} />}
+    </div>
+  );
+}
+
+function MicHelp({ state }: { state: MicState }) {
+  const platform = devicePlatform();
+  const blocked = state === "denied";
+  const steps: Record<ReturnType<typeof devicePlatform>, string[]> = {
+    ios: blocked
+      ? ["แตะ aA ที่แถบที่อยู่เว็บ", "การตั้งค่าเว็บไซต์ → ไมโครโฟน → อนุญาต", "รีเฟรชหน้านี้"]
+      : ["ตั้งค่า (Settings) → Safari → ไมโครโฟน → ถาม หรือ อนุญาต", "กลับมาที่หน้านี้แล้วแตะไมค์อีกครั้ง"],
+    android: blocked
+      ? ["แตะไอคอนหน้าที่อยู่เว็บ (🔒 หรือ ⚙)", "สิทธิ์ → ไมโครโฟน → อนุญาต", "รีเฟรชหน้านี้"]
+      : ["การตั้งค่าโทรศัพท์ → แอป → Chrome → สิทธิ์ → ไมโครโฟน → อนุญาต", "กลับมาที่หน้านี้แล้วแตะไมค์อีกครั้ง"],
+    windows: blocked
+      ? ["คลิกไอคอนหน้าที่อยู่เว็บ (ซ้ายของชื่อเว็บ)", "เปิดสวิตช์ Microphone", "กด F5 เพื่อรีเฟรช"]
+      : [
+          "เสียบไมค์/หูฟัง หรือกดปุ่มเปิดไมค์บนคีย์บอร์ด (โน้ตบุ๊กหลายรุ่นคือ F4)",
+          "Settings → System → Sound → All sound devices → เลือกไมค์ → Allow",
+          "Settings → Privacy & security → Microphone → เปิดทุกข้อ",
+        ],
+    mac: blocked
+      ? ["คลิกไอคอนหน้าที่อยู่เว็บ → อนุญาตไมโครโฟน", "รีเฟรชหน้านี้"]
+      : ["System Settings → Privacy & Security → Microphone → เปิดให้เบราว์เซอร์", "เปิดเบราว์เซอร์ใหม่แล้วลองอีกครั้ง"],
+    other: ["อนุญาตไมโครโฟนให้เว็บนี้ในการตั้งค่าเบราว์เซอร์", "รีเฟรชหน้านี้แล้วลองอีกครั้ง"],
+  };
+  return (
+    <ol className="mt-2 list-decimal space-y-1 rounded-xl bg-[var(--card)] py-2 pl-7 pr-3 text-[11px] font-semibold leading-5 text-[var(--foreground)]">
+      {steps[platform].map((step) => (
+        <li key={step}>{step}</li>
+      ))}
+      <li className="list-none -ml-4 pt-1 text-[10px] text-[var(--muted-foreground)]">
+        ระหว่างนี้พิมพ์ หรือแตะคำถามด้านล่างแทนได้เลยครับ
+      </li>
+    </ol>
   );
 }
 

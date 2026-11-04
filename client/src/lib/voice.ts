@@ -98,6 +98,59 @@ export function unlockAudio(): void {
 export const hasMicrophone = () => typeof navigator !== "undefined" && Boolean(navigator.mediaDevices?.getUserMedia);
 export const isSecureForMic = () => typeof window === "undefined" || window.isSecureContext;
 
+/**
+ * Can this device use a microphone right now — without opening it or asking?
+ *   ok      permission already granted and a mic is present
+ *   prompt  the browser will ask the first time (normal on a new device)
+ *   denied  the user or the browser blocked it for this site
+ *   none    no microphone at all (unplugged, or turned off in Windows/macOS)
+ */
+export type MicState = "ok" | "prompt" | "denied" | "none";
+
+export async function checkMicrophone(): Promise<MicState> {
+  if (!isSecureForMic() || !hasMicrophone()) return "none";
+  let permission: PermissionState | "unknown" = "unknown";
+  try {
+    permission = (await navigator.permissions.query({ name: "microphone" as PermissionName })).state;
+  } catch {
+    /* Firefox and older Safari can't query the microphone permission */
+  }
+  if (permission === "denied") return "denied";
+  try {
+    // Lists devices (without names) even before permission is given.
+    const inputs = (await navigator.mediaDevices.enumerateDevices()).filter((d) => d.kind === "audioinput");
+    if (inputs.length === 0) return "none";
+  } catch {
+    /* can't tell — assume there is one */
+  }
+  return permission === "granted" ? "ok" : "prompt";
+}
+
+/** Fires when a mic is plugged in / enabled / removed, or the user comes back from settings. */
+export function onMicrophoneMaybeChanged(callback: () => void): () => void {
+  if (typeof window === "undefined") return () => undefined;
+  const onVisible = () => {
+    if (document.visibilityState === "visible") callback();
+  };
+  navigator.mediaDevices?.addEventListener?.("devicechange", callback);
+  window.addEventListener("focus", callback);
+  document.addEventListener("visibilitychange", onVisible);
+  return () => {
+    navigator.mediaDevices?.removeEventListener?.("devicechange", callback);
+    window.removeEventListener("focus", callback);
+    document.removeEventListener("visibilitychange", onVisible);
+  };
+}
+
+/** The kind of device, for showing the right "how to turn the mic on" steps. */
+export function devicePlatform(): "ios" | "android" | "windows" | "mac" | "other" {
+  if (isIOS()) return "ios";
+  if (/Android/i.test(ua())) return "android";
+  if (/Windows/i.test(ua())) return "windows";
+  if (/Macintosh|Mac OS X/i.test(ua())) return "mac";
+  return "other";
+}
+
 let aiVoiceStatus: Promise<boolean> | null = null;
 /** Whether the server can do AI voice (has a Gemini key). Cached for the page. */
 export function aiVoiceAvailable(): Promise<boolean> {
