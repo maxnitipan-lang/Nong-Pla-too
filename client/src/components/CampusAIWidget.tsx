@@ -102,7 +102,6 @@ type CampusAIWidgetProps = {
  * Chat itself is `chat.ask` like the old app (stateless, full history each time).
  */
 export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = false }: CampusAIWidgetProps = {}) {
-  const { data: configured } = trpc.chat.configured.useQuery(undefined, { staleTime: Infinity });
   const utils = trpc.useUtils();
 
   const [open, setOpen] = useState(false);
@@ -340,8 +339,8 @@ export function CampusAIWidget({ onShowRoute, hideLauncher = false, atKiosk = fa
     void ask(q, false);
   };
 
-  // Like the old app: no AI key on the server → no assistant.
-  if (!configured) return null;
+  // Always shown: greetings, common questions and "where is X" are answered from the
+  // ready-made set even without an AI key; other questions then explain what is missing.
 
   const busy = phase === "thinking" || phase === "transcribing";
   const orbScale = phase === "listening" ? 1 + level * 0.35 : 1;
