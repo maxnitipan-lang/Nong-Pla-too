@@ -64,13 +64,13 @@ export function routePanelHtml(nav) {
       <div>
         <small>เส้นทางเดินในวิทยาลัย</small>
         <strong>ไป ${target?.name ?? "…"}</strong>
-        ${kiosk ? raw(html`<span>เริ่มจาก: ${kiosk.name} (คุณอยู่ที่นี่)</span>`) : ""}
+        ${kiosk ? raw(html`<span>เริ่มจาก: ${kiosk.name}${kiosk.fallback ? "" : " (คุณอยู่ที่นี่)"}</span>`) : nav.state.startName ? raw(html`<span>เริ่มจาก: ${nav.state.startName}</span>`) : ""}
         ${route && !busy ? raw(html`<span>${progress?.arrived ? "ถึงแล้ว 🎉" : `เดิน ~${formatDistance(remaining)} · ~${walkMinutes(remaining)} นาที`}</span>`) : ""}
       </div>
       <button type="button" class="route-close" data-action="nav-clear" aria-label="ปิดเส้นทาง">${raw(icon("close"))}</button>
     </div>
     ${busy || message ? raw(html`<p class="route-message ${status === "error" ? "error" : ""}">${busy ? raw(icon("spinner", "spin")) : ""} ${message ?? ""}</p>`) : ""}
-    ${status === "error" && targetId ? raw(html`<button type="button" class="route-retry" data-action="nav-retry">${raw(icon("navigate"))} ลองอีกครั้ง</button>`) : ""}
+    ${status === "error" && targetId ? raw(html`<div class="route-error-actions"><button type="button" class="route-retry" data-action="nav-retry">${raw(icon("navigate"))} ลองอีกครั้ง</button>${!kiosk ? raw(html`<button type="button" class="route-retry alt" data-action="nav-from-gate">${raw(icon("route"))} ดูเส้นทางจากประตูวิทยาลัย</button>`) : ""}</div>`) : ""}
     ${route?.offCampus && !busy
       ? raw(html`<p class="route-offcampus">คุณอยู่นอกวิทยาลัย — เดินมาที่${route.offCampus.gateName ?? "ทางเข้าวิทยาลัย"}ก่อน (~${formatDistance(approachDistance)}, เส้นประบนแผนที่) แล้วเส้นทางในวิทยาลัยจะเริ่มนำทางให้อัตโนมัติ</p>`)
       : ""}

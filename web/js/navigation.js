@@ -152,6 +152,16 @@ export class CampusNavigation {
     await this.plan(here, buildingId, requestId);
   }
 
+  /** No GPS on the phone: still show the route, starting at the college gate. */
+  async routeFromGate(buildingId) {
+    const gate = this.network?.nodes?.find((n) => n.gate);
+    if (!gate) return;
+    const requestId = ++this.request;
+    this.stopWatch();
+    this.set({ ...IDLE, targetId: buildingId, startName: gate.name || "ประตูวิทยาลัย", status: "routing", message: "กำลังคำนวณเส้นทาง…" });
+    await this.plan({ lat: gate.lat, lng: gate.lng, accuracy: 3 }, buildingId, requestId);
+  }
+
   clear() {
     this.request++;
     this.stopWatch();

@@ -294,3 +294,26 @@
   .platoo-ui .kiosk-card-icon { width: 56px; height: 56px; }
   .platoo-ui .kiosk-card-icon svg { width: 28px; }
 }
+
+/* Mid-size screens (641–900px) had neither the top menu nor the phone tab bar — keep the top menu. */
+@media (min-width: 641px) and (max-width: 900px) {
+  .platoo-ui .desktop-nav { display: flex; gap: 16px; }
+  .platoo-ui .desktop-nav button { font-size: 15px; }
+  .platoo-ui .online-status { display: none; }
+  .platoo-ui .install-button span { display: none; }
+}
+/* The floating "ask" button stays out of the way of an open building card or route. */
+.platoo-ui:has(.building-card) .floating-ai { display: none; }
+/* Route error: retry + "from the gate" side by side. */
+.platoo-ui .route-error-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.platoo-ui .route-retry.alt { background: var(--surface); color: var(--blue); border: 1px solid var(--border); }
+.platoo-ui .card-icon-button.maps-link { width: auto; padding: 0 14px; gap: 6px; font-weight: 600; font-size: 14px; }
+/* Phones: the circle behind น้องปลาทู fits its 145px space instead of covering the label above. */
+@media (max-width: 640px) {
+  .platoo-ui .kiosk-mascot-wrap::before { width: 146px; height: 146px; top: 56%; }
+}
+/* Kiosk news: stories are buttons that open a QR dialog. */
+.platoo-ui button.featured-news, .platoo-ui button.news-card { width: 100%; text-align: left; font: inherit; cursor: pointer; }
+.platoo-ui .news-detail h2 { margin: 10px 0 6px; }
+.platoo-ui .news-detail .card-qr { margin-top: 16px; }
+.platoo-ui .news-more-qr { max-width: 460px; margin: 22px auto 0; }

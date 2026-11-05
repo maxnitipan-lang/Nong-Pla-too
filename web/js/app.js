@@ -5,6 +5,7 @@
 // Same screens for both: home, map, news, departments (the Figma design).
 
 import { CAMPUS_BUILDINGS, CAMPUS_CATEGORIES, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS } from "/shared/campus.js";
+import { withDepartmentInfo } from "/shared/departmentInfo.js";
 import { distanceM, planCampusRoute } from "/shared/walkNetwork.js";
 import { loadBuildings, loadNews, loadSettings, loadWalkNetwork, savedBuildings, savedNews } from "./api.js";
 import { buildingLatLng, buildingSearchText, formatDistance, hasCoords, phoneRouteUrl, walkMinutes, walkingDeepLink } from "./directions.js";
@@ -61,6 +62,7 @@ const state = {
   theme: localStorage.getItem("theme") === "dark" ? "dark" : "light",
   online: navigator.onLine,
   openDepartment: null,
+  openNews: null, // kiosk: index of the story shown with its QR code
   installPrompt: null,
   installDismissed: readStore(INSTALL_DISMISSED_KEY) === 1 || window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true,
 };
@@ -83,7 +85,7 @@ function collectDepartments() {
     for (const department of departmentsOf(building)) {
       // Codes ("01", "02"…) are only unique inside one building, so match by name.
       const key = (department.name || department.code || "").trim();
-      if (key && !seen.has(key)) seen.set(key, { department, building });
+      if (key && !seen.has(key)) seen.set(key, { department: withDepartmentInfo(department), building });
     }
   }
   // Offices (ฝ่ายวิชาการ, งานทะเบียน…) are rooms too; show only real departments when there are any.
@@ -172,10 +174,14 @@ function headerHtml() {
 }
 
 function chromeHtml() {
-  return html`<button class="floating-ai" data-action="chat" aria-label="เปิดผู้ช่วยน้องปลาทู">
+  // The home screen already has the mic and the "ถามด้วยเสียง" card, so no floating button there.
+  const floating = state.view === "home"
+    ? ""
+    : html`<button class="floating-ai" data-action="chat" aria-label="เปิดผู้ช่วยน้องปลาทู">
       <img class="floating-platoo" src="/mascots/jump.webp" alt="" aria-hidden="true" />
       <span class="floating-ai-copy"><strong>ถามน้องปลาทู</strong><small>แตะเพื่อเริ่มถาม</small></span>
-    </button>
+    </button>`;
+  return html`${raw(floating)}
     <nav class="mobile-nav" aria-label="เมนูสำหรับมือถือ">${NAV_ITEMS.map((item) =>
       raw(html`<button class="${state.view === item.id ? "active" : ""}" data-action="go" data-view="${item.id}">${raw(icon(item.icon))}<span>${item.label}</span></button>`))}</nav>`;
 }
@@ -198,7 +204,7 @@ function homeHtml() {
       </div>
       <div class="kiosk-greeting">
         <strong>สวัสดีครับ ผมน้องปลาทู</strong>
-        <span>แตะเมนูด้านข้าง หรือกดไมค์เพื่อพูดได้เลยครับ</span>
+        <span>เลือกเมนูที่ต้องการ หรือกดไมค์เพื่อพูดกับผมได้เลยครับ</span>
       </div>
       <div class="kiosk-stats">
         <div><strong>${state.buildings.length}</strong><span>สถานที่ในวิทยาลัย</span></div>
@@ -314,8 +320,15 @@ function buildingCardHtml() {
   const b = selected();
   if (!b) return "";
   if (nav.state.status !== "idle") return html`<article class="building-card"><div class="route-panel-wrap">${raw(routePanelHtml(nav))}</div></article>`;
-  const rooms = (b.floorsDetail ?? []).flatMap((f) => f.rooms).slice(0, 10);
   const depts = departmentsOf(b);
+  // Built-in data repeats the same names in the description, departments and rooms — show each once.
+  // "· 2 ห้อง" on a hall or office says nothing useful, so a count that small is dropped.
+  let description = String(b.description ?? "").replace(/\s*·\s*[12]\s*(ห้อง|หลัง)\s*$/, "");
+  // "สาขาวิชาช่างยนต์ · 18 ห้อง" under the heading "สาขาวิชาช่างยนต์" → just "18 ห้อง".
+  if (description.startsWith(b.name)) description = description.slice(b.name.length).replace(/^\s*[·,]\s*/, "");
+  const deptNames = depts.map((d) => d.name).filter((n) => n !== b.name && !description.includes(n));
+  const shown = new Set([b.name, ...depts.map((d) => d.name)]);
+  const rooms = (b.floorsDetail ?? []).flatMap((f) => f.rooms).filter((r) => !shown.has(r) && !description.includes(r)).slice(0, 10);
   const walk = KIOSK ? null : walkEstimate();
   const walkText = walk
     ? `🚶 เดิน ${formatDistance(walk.distance)} · ~${walk.minutes} นาที${walk.offCampus ? " (จากนอกวิทยาลัย)" : ""}`
@@ -327,10 +340,10 @@ function buildingCardHtml() {
       <span class="place-number" style="background:${pinColor(b)}">${numberOf(b.id)}</span>
       <div><span class="building-category">${b.category}</span><h2>${b.name}</h2></div>
     </div>
-    ${b.description ? raw(html`<p>${b.description}</p>`) : ""}
+    ${description && description !== b.name ? raw(html`<p>${description}</p>`) : ""}
     <div class="building-meta">
       <span>${raw(icon("building"))} ${b.floors} ชั้น</span>
-      ${depts.length ? raw(html`<span>${raw(icon("school"))} ${depts.map((d) => d.name).join(", ")}</span>`) : ""}
+      ${deptNames.length ? raw(html`<span>${raw(icon("school"))} ${deptNames.join(", ")}</span>`) : ""}
     </div>
     ${rooms.length ? raw(html`<div class="room-chips">${rooms.map((r) => raw(html`<span>${r}</span>`))}</div>`) : ""}
     ${!KIOSK ? raw(html`<p class="walk-line">${walkText}</p>`) : ""}
@@ -338,7 +351,7 @@ function buildingCardHtml() {
       ${hasCoords(b)
         ? raw(html`<button class="route-button" data-action="route">${raw(icon("route"))} ${routeLabel}</button>`)
         : raw(html`<a class="route-button" href="${walkingDeepLink(b)}" target="_blank" rel="noreferrer">${raw(icon("route"))} นำทาง (Google Maps)</a>`)}
-      <a class="card-icon-button" href="${walkingDeepLink(b)}" target="_blank" rel="noreferrer" aria-label="เปิดใน Google Maps">${raw(icon("map"))}</a>
+      ${!KIOSK ? raw(html`<a class="card-icon-button maps-link" href="${walkingDeepLink(b)}" target="_blank" rel="noreferrer" aria-label="เปิดใน Google Maps">${raw(icon("map"))} Google Maps</a>`) : ""}
       ${!KIOSK ? raw(html`<button class="card-icon-button" data-action="share" aria-label="แชร์สถานที่">${raw(icon("share"))}</button>`) : ""}
     </div>
     ${KIOSK
@@ -453,8 +466,26 @@ const $$filters = () => [...document.querySelectorAll("[data-action=filter]")];
 
 function newsHtml() {
   const [featured, ...rest] = state.news;
+  // Kiosk: a story opens a QR code to read it on a phone, so visitors don't leave the kiosk for another website.
   const link = (item, cls, inner) =>
-    item.link ? html`<a class="${cls}" href="${item.link}" target="_blank" rel="noreferrer">${raw(inner)}</a>` : html`<article class="${cls}">${raw(inner)}</article>`;
+    !item.link
+      ? html`<article class="${cls}">${raw(inner)}</article>`
+      : KIOSK
+        ? html`<button type="button" class="${cls}" data-action="news-open" data-index="${state.news.indexOf(item)}">${raw(inner)}</button>`
+        : html`<a class="${cls}" href="${item.link}" target="_blank" rel="noreferrer">${raw(inner)}</a>`;
+  const opened = KIOSK && state.openNews !== null ? state.news[state.openNews] : null;
+  const newsDialog = opened
+    ? html`<button class="ai-backdrop visible" data-action="news-close" aria-label="ปิดข่าว"></button>
+      <section class="dept-detail news-detail" role="dialog" aria-label="${opened.title}">
+        <button class="card-close" data-action="news-close" aria-label="ปิด">${raw(icon("close"))}</button>
+        <span class="news-pill">${opened.tag || "ข่าวสาร"}</span>
+        <h2>${opened.title}</h2>
+        ${opened.date ? raw(html`<p>${opened.date}</p>`) : ""}
+        ${opened.excerpt ? raw(html`<p>${opened.excerpt}</p>`) : ""}
+        <div class="card-qr"><div class="qr qr-small" data-qr="${opened.link}" role="img" aria-label="QR อ่านข่าวบนมือถือ"></div>
+          <p><strong>อ่านข่าวนี้บนมือถือ</strong>สแกนด้วยกล้องมือถือเพื่อเปิดข่าวเต็มบนเว็บวิทยาลัย</p></div>
+      </section>`
+    : "";
   const featuredHtml = featured
     ? link(
         featured,
@@ -488,11 +519,17 @@ function newsHtml() {
     </div>
     ${raw(featuredHtml)}
     ${cards.length ? raw(html`<div class="news-grid">${cards}</div>`) : ""}
-    <a class="news-more" href="${COLLEGE_NEWS_URL}" target="_blank" rel="noreferrer">ดูข่าวทั้งหมดบนเว็บวิทยาลัย ${raw(icon("arrow"))}</a>
+    ${KIOSK
+      ? raw(html`<div class="card-qr news-more-qr"><div class="qr qr-small" data-qr="${COLLEGE_NEWS_URL}" role="img" aria-label="QR ข่าวทั้งหมด"></div><p><strong>ดูข่าวทั้งหมดบนมือถือ</strong>สแกนเพื่อเปิดหน้าข่าวของเว็บวิทยาลัย</p></div>`)
+      : raw(html`<a class="news-more" href="${COLLEGE_NEWS_URL}" target="_blank" rel="noreferrer">ดูข่าวทั้งหมดบนเว็บวิทยาลัย ${raw(icon("arrow"))}</a>`)}
+    ${raw(newsDialog)}
   </main>`;
 }
 
 /* ------------------------------------------------------------------ departments */
+
+/** The built-in data lists every department on floor 1 — only say a floor once real per-floor data exists. */
+const floorKnown = (d, b) => Boolean(d?.floor) && ((b?.floorsDetail?.length ?? 0) > 1 || d.floor > 1);
 
 function departmentsHtml() {
   const entries = collectDepartments();
@@ -505,7 +542,7 @@ function departmentsHtml() {
       ${raw(logoBox(d))}
       <span class="dept-code">${String(i + 1).padStart(2, "0")}</span>
       <strong>${d.name}</strong>
-      <small>${b ? `${b.shortName || b.name} · ชั้น ${d.floor}` : `ชั้น ${d.floor}`}</small>
+      <small>${[b?.shortName || b?.name, floorKnown(d, b) ? `ชั้น ${d.floor}` : ""].filter(Boolean).join(" · ")}</small>
       <span class="dept-link">ดูข้อมูลสาขา ${raw(icon("arrow"))}</span>
     </button>`));
 
@@ -522,7 +559,7 @@ function departmentsHtml() {
         ${chips("อาชีพในอนาคต", open.department.careers)}
         ${chips("กิจกรรม", open.department.activities)}
         ${open.building
-          ? raw(html`<button class="route-button" data-action="department-show" data-id="${open.building.id}">${raw(icon("pin"))} ดูที่ตั้ง ${open.building.shortName || open.building.name} ชั้น ${open.department.floor}</button>`)
+          ? raw(html`<button class="route-button" data-action="department-show" data-id="${open.building.id}">${raw(icon("pin"))} ดูที่ตั้ง ${open.building.shortName || open.building.name}${floorKnown(open.department, open.building) ? ` ชั้น ${open.department.floor}` : ""}</button>`)
           : ""}
       </section>`)
     : "";
@@ -708,11 +745,20 @@ const actions = {
   share: () => void share(),
   "nav-clear": () => nav.clear(),
   "nav-retry": () => nav.state.targetId && void nav.routeTo(nav.state.targetId),
+  "nav-from-gate": () => nav.state.targetId && void nav.routeFromGate(nav.state.targetId),
   "nav-start": () => nav.startLive(),
   "nav-stop": () => nav.stopLive(),
   "nav-voice": () => nav.setVoice(!nav.voice),
   department: (el) => {
     state.openDepartment = Number(el.dataset.index);
+    render();
+  },
+  "news-open": (el) => {
+    state.openNews = Number(el.dataset.index);
+    render();
+  },
+  "news-close": () => {
+    state.openNews = null;
     render();
   },
   "department-close": () => {
@@ -799,7 +845,7 @@ function goIdle() {
   // Wipe the visitor's session for the next person.
   nav.clear();
   window.dispatchEvent(new Event("nongplatoo:reset"));
-  Object.assign(state, { idle: true, selectedId: null, query: "", filter: "ทั้งหมด", listOpen: false, openDepartment: null, view: "home" });
+  Object.assign(state, { idle: true, selectedId: null, query: "", filter: "ทั้งหมด", listOpen: false, openDepartment: null, openNews: null, view: "home" });
   render();
   window.scrollTo({ top: 0 });
   void reloadData(); // fresh news / admin edits for the next visitor
