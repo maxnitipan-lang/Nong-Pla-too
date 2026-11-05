@@ -433,3 +433,19 @@
   .platoo-ui .featured-copy { padding: 14px 18px 34px; }
   .platoo-ui .featured-photo { height: 190px; }
 }
+
+/* Department logos (round badges with white edges) */
+.platoo-ui .department-icon:has(img) { background: white !important; padding: 2px; border: 1px solid var(--border); border-radius: 50%; }
+.platoo-ui .department-icon img { object-fit: contain; border-radius: 50%; }
+.platoo-ui .department-card .department-icon:has(img) { width: 68px; height: 68px; }
+.platoo-ui .dept-detail > .department-icon:has(img) { width: 96px; height: 96px; }
+.platoo-ui .building-logo { width: 56px; height: 56px; flex: none; object-fit: contain; background: white; border: 1px solid var(--border); border-radius: 50%; padding: 2px; }
+/* Map pin with a logo: round logo inside the pin, the list number as a small badge. */
+.platoo-ui .leaflet-pin > b.has-logo { width: 50px; height: 50px; position: relative; background: white; border-color: var(--pin); }
+.platoo-ui .leaflet-pin > b.has-logo > i { width: 100%; height: 100%; display: block; }
+.platoo-ui .leaflet-pin > b.has-logo img { width: 100%; height: 100%; object-fit: contain; border-radius: 50%; }
+.platoo-ui .leaflet-pin > b.has-logo > em { position: absolute; top: -8px; left: -8px; min-width: 20px; height: 20px; display: grid; place-items: center; transform: rotate(45deg); font-style: normal; font-size: 11px; font-weight: 800; color: white; background: var(--pin); border: 2px solid white; border-radius: 99px; }
+@media (min-width: 1024px) {
+  .platoo-ui .leaflet-pin > b.has-logo { width: 58px; height: 58px; }
+  .platoo-ui .department-card .department-icon:has(img) { width: 80px; height: 80px; }
+}

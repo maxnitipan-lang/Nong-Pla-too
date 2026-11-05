@@ -24,14 +24,6 @@ const INSTALL_DISMISSED_KEY = "nong-platoo-install-dismissed";
 const COLLEGE_NEWS_URL = "https://www.sstc.ac.th/news_325_1";
 const DEFAULT_WALK_NETWORK_URL = "/shared/data/campusWalkNetwork.json";
 
-/** Department logos stored with the app, by department code (an uploaded logo wins). */
-const DEPARTMENT_LOGOS = {
-  AUT: "/images/departments/AUT.png",
-  DBT: "/images/departments/DBT.png",
-  ELEC: "/images/departments/ELEC.png",
-  MEC: "/images/departments/MEC.png",
-  ACC: "/images/departments/ACC.png",
-};
 
 const NAV_ITEMS = [
   { id: "home", label: "หน้าหลัก", icon: "home" },
@@ -76,7 +68,10 @@ let map = null; // CampusMap while the map screen is open
 /* ------------------------------------------------------------------ data helpers */
 
 const departmentsOf = (b) => (b.departments ?? []).filter((d) => d.floor <= b.floors);
-const logoOf = (d) => d.logo || DEPARTMENT_LOGOS[d.code];
+/** A department's logo: uploaded in admin, else the one stored with the app (matched by name). */
+const logoOf = (d) => d.logo || withDepartmentInfo(d).logo;
+/** A building's logo: the logo of the first department inside it that has one. */
+const buildingLogo = (b) => departmentsOf(b).map(logoOf).find(Boolean) ?? null;
 const pinColor = (b) => departmentsOf(b)[0]?.accent ?? b.accent;
 const numberOf = (id) => state.buildings.findIndex((b) => b.id === id) + 1;
 const selected = () => state.buildings.find((b) => b.id === state.selectedId) ?? null;
@@ -334,7 +329,7 @@ function buildingCardHtml() {
   return html`<article class="building-card">
     <button class="card-close" data-action="card-close" aria-label="ปิดรายละเอียด">${raw(icon("close"))}</button>
     <div class="building-card-head">
-      <span class="place-number" style="background:${pinColor(b)}">${numberOf(b.id)}</span>
+      ${buildingLogo(b) ? raw(html`<img class="building-logo" src="${buildingLogo(b)}" alt="" />`) : raw(html`<span class="place-number" style="background:${pinColor(b)}">${numberOf(b.id)}</span>`)}
       <div><span class="building-category">${b.category}</span><h2>${b.name}</h2></div>
     </div>
     ${description && description !== b.name ? raw(html`<p>${description}</p>`) : ""}
@@ -360,7 +355,11 @@ function buildingCardHtml() {
 
 /** Leaflet pin in the design's style: numbered drop + name label. */
 function markerHtml(b, active) {
-  return `<div class="leaflet-pin ${active ? "active" : ""}" style="--pin:${esc(pinColor(b))}"><b><i>${numberOf(b.id)}</i></b><small>${esc(b.shortName || b.name)}</small></div>`;
+  const logo = buildingLogo(b);
+  const head = logo
+    ? `<b class="has-logo"><i><img src="${esc(logo)}" alt="" /></i><em>${numberOf(b.id)}</em></b>`
+    : `<b><i>${numberOf(b.id)}</i></b>`;
+  return `<div class="leaflet-pin ${active ? "active" : ""}" style="--pin:${esc(pinColor(b))}">${head}<small>${esc(b.shortName || b.name)}</small></div>`;
 }
 
 /** 2D (Leaflet) or 3D (three.js) — remembered on this device, same key as the React version. */

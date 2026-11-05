@@ -53,6 +53,7 @@ export function suggestDepartments(departments, answers, limit = 3) {
 const INFO = [
   {
     match: /ช่างยนต์/,
+    logo: "/images/departments/automotive.jpg",
     icon: "🚗",
     group: "industry",
     tags: ["machine"],
@@ -63,6 +64,7 @@ const INFO = [
   },
   {
     match: /อิเล็กทรอนิกส์|เทคโนโลยีสารสนเทศ/,
+    logo: "/images/departments/electronics.jpg",
     icon: "🔌",
     group: "industry",
     tags: ["electric","computer"],
@@ -83,6 +85,7 @@ const INFO = [
   },
   {
     match: /ไฟฟ้ากำลัง/,
+    logo: "/images/departments/electrical-power.jpg",
     icon: "⚡",
     group: "industry",
     tags: ["electric"],
@@ -133,6 +136,7 @@ const INFO = [
   },
   {
     match: /บัญชี/,
+    logo: "/images/departments/accounting.jpg",
     icon: "🧮",
     group: "business",
     tags: ["business","office"],
@@ -143,6 +147,7 @@ const INFO = [
   },
   {
     match: /คหกรรม/,
+    logo: "/images/departments/home-economics.jpg",
     icon: "🧵",
     group: "home",
     tags: ["cook","creative"],
@@ -163,6 +168,7 @@ const INFO = [
   },
   {
     match: /ธุรกิจดิจิทัล/,
+    logo: "/images/departments/digital-business.jpg",
     icon: "📱",
     group: "business",
     tags: ["computer","creative","business"],
@@ -173,6 +179,7 @@ const INFO = [
   },
   {
     match: /เขียนแบบเครื่องกล/,
+    logo: "/images/departments/mechanical-drafting.jpg",
     icon: "📐",
     group: "industry",
     tags: ["build","creative"],
@@ -183,6 +190,7 @@ const INFO = [
   },
   {
     match: /ช่างก่อสร้าง|ก่อสร้าง/,
+    logo: "/images/departments/construction.jpg",
     icon: "🏗️",
     group: "industry",
     tags: ["build"],
@@ -213,6 +221,7 @@ export function withDepartmentInfo(department) {
     description: department.description || info.description,
     skills: department.skills?.length ? department.skills : info.skills,
     careers: department.careers?.length ? department.careers : info.careers,
+    logo: department.logo || info.logo,
     icon: department.icon || info.icon,
     group: department.group || info.group,
     tags: info.tags,
