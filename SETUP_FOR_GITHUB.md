@@ -4,21 +4,22 @@
 
 ## เริ่มต้นใช้งาน
 
-ต้องใช้ Node.js 20+ และ pnpm 10+
+ต้องใช้ Node.js 22+ และ pnpm 10+
 
 ```bash
 pnpm install
-pnpm check
+pnpm test
 pnpm dev
 ```
 
 จากนั้นเปิด `http://localhost:3000`
 
-## สร้าง Production Build
+## รันแบบ Production
+
+ไม่มีขั้นตอน build — หน้าเว็บใน `web/` และเซิร์ฟเวอร์เป็น JavaScript ธรรมดา
 
 ```bash
-pnpm build
-pnpm start
+NODE_ENV=production pnpm start
 ```
 
 ## ก่อน Deploy

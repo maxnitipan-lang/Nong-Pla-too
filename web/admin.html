@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="th">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <title>ผู้ดูแลระบบ | Nong Platoo Ontour</title>
+    <link rel="icon" type="image/png" sizes="192x192" href="/icons/icon-192.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
+    <!-- The admin forms check input with the same rules as the server (shared/adminSchemas.js, zod). -->
+    <script type="importmap">
+      { "imports": { "zod": "/vendor/zod.js" } }
+    </script>
+  </head>
+  <!-- Admin panel (/admin, /admin/buildings, /admin/walkways, /admin/news, /admin/users, /admin/settings). -->
+  <body>
+    <div id="admin-root"><p class="adm-center">กำลังตรวจสอบสิทธิ์…</p></div>
+    <noscript>ต้องเปิดใช้ JavaScript เพื่อใช้หน้าผู้ดูแล</noscript>
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <script type="module" src="/js/admin/main.js"></script>
+  </body>
+</html>

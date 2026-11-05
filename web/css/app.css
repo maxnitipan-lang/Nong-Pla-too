@@ -1,0 +1,291 @@
+/*
+ * Styles for the plain-JS pages that the Figma CSS (platoo-ui.css + platoo-extra.css)
+ * doesn't cover: the map's own controls, the turn banner, the route panel, QR boxes
+ * and small helpers. (In the React version these were Tailwind classes.)
+ */
+
+[hidden] { display: none !important; }
+.platoo-ui .loading { padding: 40px; text-align: center; color: var(--muted); }
+.platoo-ui .spin { animation: platoo-spin 0.9s linear infinite; }
+@keyframes platoo-spin { to { transform: rotate(360deg); } }
+
+/* ---------------- map */
+.platoo-ui .campus-map { position: absolute; inset: 0; }
+.platoo-ui .campus-map-canvas { position: absolute; inset: 0; }
+.platoo-ui .map-surface { position: absolute; inset: 0; }
+.platoo-ui .me-dot { display: block; width: 18px; height: 18px; border-radius: 50%; background: #1a73e8; border: 3px solid #fff; box-shadow: 0 0 0 2px rgba(26,115,232,.35), 0 2px 6px rgba(0,0,0,.3); }
+.leaflet-tooltip.me-label { padding: 3px 10px; color: #fff; background: #1a73e8; border: 0; border-radius: 99px; font: 800 11px 'IBM Plex Sans Thai', sans-serif; box-shadow: 0 4px 10px rgba(26,115,232,.35); }
+.leaflet-tooltip.me-label::before { display: none; }
+.platoo-ui .map-locate { position: absolute; right: 10px; z-index: 1000; display: flex; flex-direction: column; align-items: flex-end; gap: 8px; pointer-events: none; }
+.platoo-ui .map-locate-button { pointer-events: auto; width: 34px; height: 34px; display: grid; place-items: center; color: #1a73e8; background: #fff; border: 2px solid rgba(0,0,0,.2); border-radius: 4px; }
+.platoo-ui .map-locate-button svg { width: 17px; }
+.platoo-ui .map-locate-note { max-width: 220px; padding: 6px 10px; color: var(--ink); background: rgba(255,255,255,.95); border-radius: 8px; font-size: 11px; font-weight: 700; line-height: 1.4; text-align: right; box-shadow: 0 2px 8px rgba(0,0,0,.12); }
+.platoo-ui .map-outside { position: absolute; left: 50%; bottom: 56px; z-index: 1000; max-width: calc(100% - 24px); transform: translateX(-50%); display: flex; align-items: center; gap: 8px; padding: 8px 14px; color: var(--ink); background: rgba(255,255,255,.96); border-radius: 99px; font-size: 12px; font-weight: 800; box-shadow: 0 6px 18px rgba(0,0,0,.15); pointer-events: none; }
+.platoo-ui .map-outside > span { display: inline-block; color: #1a73e8; }
+
+/* ---------------- big "next turn" banner over the map */
+.platoo-ui .nav-banner { position: absolute; left: 12px; right: 56px; top: 12px; z-index: 1001; display: flex; align-items: center; gap: 12px; padding: 12px 16px; color: #fff; background: #1a73e8; border-radius: 16px; box-shadow: 0 10px 30px rgba(26,115,232,.35); pointer-events: none; }
+.platoo-ui .nav-banner > svg { width: 32px; height: 32px; flex: 0 0 auto; }
+.platoo-ui .nav-banner > div { min-width: 0; display: flex; flex-direction: column; }
+.platoo-ui .nav-banner strong { font-size: 18px; line-height: 1.2; }
+.platoo-ui .nav-banner span { font-size: 14px; font-weight: 700; line-height: 1.4; }
+
+/* ---------------- route panel (inside the building card) */
+.platoo-ui .route-panel { color: var(--ink); }
+.platoo-ui .route-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.platoo-ui .route-head > div { min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.platoo-ui .route-head small { color: #1a73e8; font-size: 10px; font-weight: 800; letter-spacing: .14em; }
+.platoo-ui .route-head strong { font-size: 15px; }
+.platoo-ui .route-head span { color: var(--muted); font-size: 12px; font-weight: 700; }
+.platoo-ui .route-close { width: 34px; height: 34px; flex: 0 0 auto; display: grid; place-items: center; color: var(--ink); background: var(--soft); border: 0; border-radius: 50%; }
+.platoo-ui .route-close svg { width: 16px; }
+.platoo-ui .route-message { display: flex; align-items: center; gap: 8px; margin-top: 10px; color: var(--muted); font-size: 13px; font-weight: 700; }
+.platoo-ui .route-message svg { width: 16px; }
+.platoo-ui .route-message.error { color: #c46242; }
+.platoo-ui .route-retry, .platoo-ui .route-start, .platoo-ui .route-stop { height: 44px; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 0 16px; color: #fff; border: 0; border-radius: 12px; font-size: 14px; font-weight: 800; }
+.platoo-ui .route-retry { margin-top: 8px; background: var(--navy); }
+.platoo-ui .route-start { flex: 1; background: #1a73e8; }
+.platoo-ui .route-stop { flex: 1; background: #c46242; }
+.platoo-ui .route-retry svg, .platoo-ui .route-start svg, .platoo-ui .route-stop svg { width: 16px; }
+.platoo-ui .route-offcampus { margin-top: 10px; padding: 8px 12px; color: #8a6412; background: #fff6e5; border-radius: 12px; font-size: 12px; font-weight: 700; line-height: 1.6; }
+.platoo-ui .route-qr { display: flex; align-items: center; gap: 14px; margin-top: 10px; padding: 12px; background: #e8f0fe; border-radius: 16px; }
+.platoo-ui .route-qr strong { display: block; color: #1a4fa8; font-size: 14px; }
+.platoo-ui .route-qr span { color: var(--muted); font-size: 12px; font-weight: 600; line-height: 1.6; }
+.platoo-ui .route-controls { display: flex; gap: 8px; margin-top: 10px; }
+.platoo-ui .route-voice { width: 44px; height: 44px; display: grid; place-items: center; color: var(--ink); background: var(--surface); border: 1px solid var(--border); border-radius: 12px; }
+.platoo-ui .route-voice svg { width: 18px; }
+.platoo-ui .route-steps { max-height: 300px; margin: 10px 0 0; padding: 0 4px 0 0; overflow-y: auto; list-style: none; display: grid; gap: 2px; }
+.platoo-ui .route-steps li { display: flex; align-items: center; gap: 12px; padding: 8px 10px; border-radius: 12px; }
+.platoo-ui .route-steps li.active { background: #e8f0fe; }
+.platoo-ui .route-steps li.done { opacity: .45; }
+.platoo-ui .step-icon { width: 32px; height: 32px; flex: 0 0 auto; display: grid; place-items: center; color: #1a73e8; background: #e8f0fe; border-radius: 50%; }
+.platoo-ui .step-icon.arrive { color: #fff; background: #e8563f; }
+.platoo-ui .step-icon svg { width: 16px; }
+.platoo-ui .step-text { flex: 1; min-width: 0; font-size: 13px; font-weight: 700; line-height: 1.5; }
+.platoo-ui .step-dist { flex: 0 0 auto; color: var(--muted); font-size: 12px; font-weight: 800; }
+[data-theme='dark'].platoo-ui .route-qr, [data-theme='dark'].platoo-ui .route-steps li.active, [data-theme='dark'].platoo-ui .step-icon { background: #173a55; }
+
+/* ---------------- QR boxes */
+.platoo-ui .qr { aspect-ratio: 1; flex: 0 0 auto; padding: 4px; background: #fff; border-radius: 12px; }
+.platoo-ui .qr svg { display: block; width: 100%; height: 100%; }
+.platoo-ui .route-qr .qr { width: 128px; }
+.platoo-ui .qr-small { width: 80px; }
+.platoo-ui .qr-medium { width: 112px; }
+
+/* ---------------- toast */
+.platoo-ui .platoo-toast { position: fixed; left: 50%; bottom: 96px; z-index: 3000; max-width: calc(100% - 32px); padding: 12px 18px; color: #fff; background: rgba(9,30,45,.92); border-radius: 14px; font-size: 14px; font-weight: 700; text-align: center; transform: translate(-50%, 20px); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; }
+.platoo-ui .platoo-toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------------- chat panel (js/chat.js) — layout comes from platoo-extra.css (.platoo-chat …) */
+.platoo-chat { display: contents; }
+.platoo-chat .voice-orb .orb-ring { position: absolute; inset: 0; border-radius: 50%; opacity: .25; animation: platoo-ping 1.2s cubic-bezier(0, 0, .2, 1) infinite; }
+.platoo-chat .voice-orb .orb-ring.inner { inset: 6px; opacity: .3; animation: none; }
+.platoo-chat .voice-orb .orb-ring.listening { background: #e97967; }
+.platoo-chat .voice-orb .orb-ring.speaking { background: #21a7a0; }
+@keyframes platoo-ping { 75%, 100% { transform: scale(1.5); opacity: 0; } }
+.platoo-chat .voice-orb > button svg { width: 28px; height: 28px; }
+.platoo-chat .speaking-bars { height: 28px; display: flex; align-items: flex-end; gap: 4px; }
+.platoo-chat .speaking-bars i { width: 6px; height: 100%; background: #fff; border-radius: 99px; animation: platoo-eq .9s ease-in-out infinite; }
+.platoo-chat .speaking-bars i:nth-child(2) { animation-delay: .15s; }
+.platoo-chat .speaking-bars i:nth-child(3) { animation-delay: .3s; }
+.platoo-chat .speaking-bars i:nth-child(4) { animation-delay: .45s; }
+@keyframes platoo-eq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.platoo-chat .voice-stop svg, .platoo-chat .listen-again svg, .platoo-chat .try-voice svg { width: 12px; height: 12px; }
+.platoo-chat .suggestions svg { width: 13px; height: 13px; }
+.platoo-chat .said-by-voice { width: 12px; height: 12px; vertical-align: -1px; opacity: .75; }
+.platoo-chat .message ul, .platoo-chat .message ol { margin: 4px 0; padding-left: 20px; }
+.platoo-chat .message a { color: inherit; text-decoration: underline; }
+.platoo-chat .message code { padding: 1px 5px; background: rgba(0,0,0,.06); border-radius: 5px; }
+.platoo-chat .mic-help { margin-top: 4px; }
+.platoo-chat .mic-help > button { border: 0; background: none; color: #1f9e99; font-size: 12px; font-weight: 800; text-decoration: underline; }
+.platoo-chat .mic-help ol { margin: 6px 0 0; padding: 8px 12px 8px 26px; color: var(--ink); background: var(--soft); border-radius: 12px; font-size: 12px; font-weight: 600; line-height: 1.6; text-align: left; }
+.platoo-chat .mic-help .mic-help-note { list-style: none; margin-left: -14px; padding-top: 4px; color: var(--muted); font-size: 11px; }
+.platoo-chat .chat-warning .underline { text-decoration: underline; }
+
+/* ---------------- 2D / 3D switch (position from platoo-extra.css .map-mode-slot) */
+.platoo-ui .map-mode { display: flex; padding: 4px; background: rgba(255,255,255,.95); border-radius: 99px; box-shadow: 0 6px 16px rgba(8,44,74,.18); }
+.platoo-ui .map-mode button { min-height: 40px; padding: 0 16px; color: #287c78; background: none; border: 0; border-radius: 99px; font-size: 12px; font-weight: 800; }
+.platoo-ui .map-mode button[aria-pressed="true"] { color: #fff; background: var(--navy); }
+[data-theme='dark'].platoo-ui .map-mode button[aria-pressed="true"] { color: #08253b; }
+
+/* ---------------- 3D map (js/map3d.js) */
+.platoo-ui .campus-map3d { position: absolute; inset: 0; overflow: hidden; isolation: isolate; }
+.platoo-ui .map3d-canvas { position: absolute; inset: 0; display: block; width: 100%; height: 100%; touch-action: none; outline: none; }
+.platoo-ui .map3d-labels { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.platoo-ui .map3d-label { position: absolute; left: 0; top: 0; cursor: pointer; user-select: none; pointer-events: auto; transform-origin: 50% 100%; will-change: transform; }
+.platoo-ui .map3d-user { position: absolute; left: 0; top: 0; z-index: 1; pointer-events: none; }
+.platoo-ui .map3d-user span { white-space: nowrap; padding: 4px 10px; color: #fff; background: #1a73e8; border-radius: 99px; font-size: 11px; font-weight: 800; box-shadow: 0 4px 10px rgba(26,115,232,.35); }
+.platoo-ui .map3d-controls { position: absolute; right: 16px; z-index: 1000; display: flex; flex-direction: column; gap: 8px; }
+.platoo-ui .map3d-controls button { width: 44px; height: 44px; display: grid; place-items: center; color: #082c4a; background: rgba(255,255,255,.95); border: 0; border-radius: 16px; font-size: 22px; font-weight: 700; line-height: 1; box-shadow: 0 6px 16px rgba(8,44,74,.18); }
+.platoo-ui .map3d-controls button:active { transform: scale(.95); }
+.platoo-ui .map3d-controls svg { width: 20px; height: 20px; }
+.platoo-ui .map3d-needle { position: relative; display: grid; place-items: center; transition: transform 75ms; }
+.platoo-ui .map3d-needle svg { width: 22px; height: 22px; }
+.platoo-ui .map3d-needle b { position: absolute; top: -11px; color: #e8563f; font-size: 9px; font-weight: 900; }
+.platoo-ui .map3d-credit { position: absolute; right: 8px; bottom: 4px; z-index: 1000; padding: 0 6px; color: #36566d; background: rgba(255,255,255,.7); border-radius: 4px; font-size: 9px; font-weight: 600; pointer-events: none; }
+.platoo-ui .map3d-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: #287c78; font-size: 13px; font-weight: 800; }
+/* The design's pin labels sit inside the 3D label boxes too. */
+.platoo-ui .map3d-label .leaflet-pin { transform: none; }
+
+/* ---------------- map page fits the screen (desktop / kiosk)
+ * The design sized the map as 100vh − 182px but forgot the page's bottom padding, so the page
+ * was a little taller than the screen. Instead: the page is exactly the screen below the header
+ * (78px) and the map takes whatever height is left after the heading. */
+@media (min-width: 641px) {
+  .platoo-ui .map-page { height: calc(100dvh - 78px); min-height: 0; display: flex; flex-direction: column; padding-bottom: 16px; }
+  .platoo-ui .map-page .map-layout { flex: 1; height: auto; min-height: 420px; }
+}
+
+/* ---------------- bigger text and controls on large screens (kiosk / laptop)
+ * The design's text is 9–12px in many places — too small to read standing at a kiosk.
+ * Phones (≤ 640px) keep the design's own sizes. */
+@media (min-width: 1024px) {
+  /* header */
+  .platoo-ui .app-header { height: 88px; }
+  .platoo-ui .header-platoo { height: 66px; }
+  .platoo-ui .header-brand-text { font-size: 24px; }
+  .platoo-ui .desktop-nav button { font-size: 18px; }
+  .platoo-ui .online-status { padding: 9px 14px; font-size: 15px; }
+  .platoo-ui .icon-button { width: 46px; height: 46px; }
+  .platoo-ui .icon-button svg { width: 22px; }
+  .platoo-ui .install-button { padding: 13px 18px; font-size: 16px; }
+  .platoo-ui .install-button svg { width: 18px; }
+
+  /* kiosk home */
+  .platoo-ui .assistant-label { min-height: 40px; padding: 0 18px; font-size: 14px; }
+  .platoo-ui .kiosk-greeting { width: min(420px, 100%); padding: 22px 26px; }
+  .platoo-ui .kiosk-greeting strong { font-size: 22px; }
+  .platoo-ui .kiosk-greeting span { font-size: 16px; }
+  .platoo-ui .kiosk-mic { width: 76px; height: 76px; }
+  .platoo-ui .kiosk-mic svg { width: 32px; }
+  .platoo-ui .kiosk-stats strong { font-size: 34px; }
+  .platoo-ui .kiosk-stats span { font-size: 15px; }
+  .platoo-ui .kiosk-menu-heading > span { font-size: 15px; letter-spacing: 2px; }
+  .platoo-ui .kiosk-menu-heading h1 { font-size: clamp(36px, 3.4vw, 52px); }
+  .platoo-ui .kiosk-card-icon { width: 72px; height: 72px; }
+  .platoo-ui .kiosk-card-icon svg { width: 34px; }
+  .platoo-ui .kiosk-card-copy strong { font-size: clamp(26px, 2.2vw, 34px); }
+  .platoo-ui .kiosk-card-copy small { font-size: clamp(16px, 1.25vw, 20px); }
+  .platoo-ui .button-mascot { height: 140px; }
+  .platoo-ui .kiosk-menu-card:has(.button-mascot) { padding-right: 120px; }
+  .platoo-ui .kiosk-map-button { font-size: 19px; }
+  .platoo-ui .kiosk-map-button svg { width: 22px; }
+  .platoo-ui .floating-ai { width: 230px; height: 72px; padding-left: 82px; }
+  .platoo-ui .floating-ai-copy strong { font-size: 17px; }
+  .platoo-ui .floating-ai-copy small { font-size: 13px; }
+  .platoo-ui .floating-platoo { height: 92px; }
+
+  /* map screen */
+  .platoo-ui .map-page-heading h1 { font-size: 36px; }
+  .platoo-ui .map-page-heading p, .platoo-ui .map-kicker { font-size: 15px; }
+  .platoo-ui .locate-button { height: 48px; font-size: 16px; }
+  .platoo-ui .panel-heading strong { font-size: 19px; }
+  .platoo-ui .panel-heading small, .platoo-ui .place-list > p { font-size: 14px; }
+  .platoo-ui .search-box { height: 52px; }
+  .platoo-ui .search-box input { font-size: 17px; }
+  .platoo-ui .filters button { min-height: 42px; padding: 8px 14px; font-size: 15px; }
+  .platoo-ui .place-item { padding: 14px 10px; }
+  .platoo-ui .place-number { width: 44px; height: 44px; font-size: 18px; }
+  .platoo-ui .place-item strong { font-size: 17px; }
+  .platoo-ui .place-item small { font-size: 14px; }
+  .platoo-ui .map-guide strong { font-size: 15px; }
+  .platoo-ui .map-guide small { font-size: 13px; }
+  .platoo-ui .building-card { width: min(440px, calc(100% - 30px)); padding: 24px; }
+  .platoo-ui .building-card h2 { font-size: 24px; }
+  .platoo-ui .building-category { font-size: 13px; }
+  .platoo-ui .building-card > p, .platoo-ui .building-meta { font-size: 16px; }
+  .platoo-ui .room-chips span { font-size: 14px; padding: 5px 10px; }
+  .platoo-ui .card-actions .route-button { height: 54px; font-size: 18px; }
+  .platoo-ui .card-icon-button { width: 54px; height: 54px; }
+  .platoo-ui .card-qr p { font-size: 14px; }
+  .platoo-ui .card-qr strong { font-size: 16px; }
+  .platoo-ui .leaflet-pin > b { width: 44px; height: 44px; font-size: 15px; }
+  .platoo-ui .leaflet-pin > small { font-size: 13px; }
+  .platoo-ui .nav-banner strong { font-size: 24px; }
+  .platoo-ui .nav-banner span { font-size: 18px; }
+  .platoo-ui .route-head strong { font-size: 19px; }
+  .platoo-ui .route-head span, .platoo-ui .route-message { font-size: 15px; }
+  .platoo-ui .step-text { font-size: 16px; }
+  .platoo-ui .step-dist { font-size: 15px; }
+  .platoo-ui .map-mode button { min-height: 46px; padding: 0 20px; font-size: 16px; }
+
+  /* news + departments */
+  .platoo-ui .page-title h1 { font-size: 36px; }
+  .platoo-ui .page-title > div > span { font-size: 14px; }
+  .platoo-ui .page-intro { font-size: 17px; }
+  .platoo-ui .featured-news h2 { font-size: 36px; }
+  .platoo-ui .featured-news p { font-size: 17px; }
+  .platoo-ui .news-pill { font-size: 14px; padding: 6px 12px; }
+  .platoo-ui .news-card .tag { font-size: 13px; }
+  .platoo-ui .news-card h3 { font-size: 19px; }
+  .platoo-ui .news-card p { font-size: 15px; }
+  .platoo-ui .date-block { width: 62px; height: 70px; }
+  .platoo-ui .date-block strong { font-size: 24px; }
+  .platoo-ui .news-more { font-size: 17px; }
+  .platoo-ui .department-card > strong { font-size: 21px; }
+  .platoo-ui .department-card > small, .platoo-ui .dept-link { font-size: 15px; }
+  .platoo-ui .dept-code { font-size: 13px; }
+  .platoo-ui .department-icon { width: 60px; height: 60px; }
+  .platoo-ui .dept-detail h2 { font-size: 28px; }
+  .platoo-ui .dept-detail > p { font-size: 17px; }
+
+  /* chat panel */
+  .platoo-chat .assistant { width: min(520px, 100%); }
+  .platoo-chat .assistant-header strong { font-size: 20px; }
+  .platoo-chat .assistant-header small { font-size: 14px; }
+  .platoo-chat .message { font-size: 17px; }
+  .platoo-chat .voice-copy strong { font-size: 18px; }
+  .platoo-chat .voice-copy small { font-size: 14px; }
+  .platoo-chat .suggestions button { font-size: 15px; padding: 9px 14px; }
+  .platoo-chat .assistant-map-action { min-height: 52px; font-size: 17px; }
+  .platoo-chat .chat-input input { height: 52px; font-size: 17px; }
+  .platoo-chat .chat-input button { width: 48px; height: 48px; }
+
+  /* kiosk idle screen */
+  .platoo-ui .attract .attract-qr span { font-size: 16px; max-width: 300px; }
+}
+/* The map page and home size themselves from the header height. */
+@media (min-width: 1024px) {
+  .platoo-ui .kiosk-home { min-height: calc(100vh - 120px); }
+  .platoo-ui .map-page { height: calc(100dvh - 88px); }
+}
+@media (min-width: 1024px) and (min-height: 820px) {
+  /* Bigger น้องปลาทู in the home card (there's room for it). */
+  .platoo-ui .kiosk-mascot-wrap { width: 440px; height: 330px; }
+  .platoo-ui .platoo-main-image { height: 320px; }
+}
+/* Short laptop screens (≈768px tall): still bigger than the design, but tighter so the home fits. */
+@media (min-width: 1024px) and (max-height: 900px) {
+  .platoo-ui .app-header { height: 76px; }
+  .platoo-ui .header-platoo { height: 56px; }
+  .platoo-ui .header-brand-text { font-size: 21px; }
+  .platoo-ui .kiosk-home { min-height: calc(100vh - 104px); padding-top: 14px; padding-bottom: 14px; }
+  .platoo-ui .map-page { height: calc(100dvh - 76px); }
+  .platoo-ui .kiosk-assistant, .platoo-ui .kiosk-menu { min-height: 0; }
+  .platoo-ui .kiosk-assistant { padding: 20px 24px; }
+  .platoo-ui .kiosk-menu { padding-top: 22px; padding-bottom: 18px; }
+  .platoo-ui .kiosk-mascot-wrap { height: 200px; }
+  .platoo-ui .platoo-main-image { height: 190px; }
+  .platoo-ui .kiosk-greeting { padding: 14px 20px; }
+  .platoo-ui .kiosk-greeting strong { font-size: 19px; }
+  .platoo-ui .kiosk-greeting span { font-size: 14px; }
+  .platoo-ui .kiosk-stats div { padding-top: 10px; padding-bottom: 10px; }
+  .platoo-ui .kiosk-stats strong { font-size: 28px; }
+  .platoo-ui .kiosk-menu-heading h1 { font-size: 34px; }
+  .platoo-ui .kiosk-menu-grid { margin-top: 14px; gap: 12px; }
+  .platoo-ui .kiosk-menu-card { min-height: 0; padding-top: 16px; padding-bottom: 16px; }
+  .platoo-ui .kiosk-card-icon { width: 60px; height: 60px; }
+  .platoo-ui .kiosk-card-copy strong { font-size: 24px; }
+  .platoo-ui .kiosk-card-copy small { font-size: 15px; }
+  .platoo-ui .button-mascot { height: 112px; }
+  .platoo-ui .kiosk-map-button { min-height: 50px; margin-top: 12px; }
+}
+/* Medium-wide screens (laptops): keep each menu title on one line next to the mascot. */
+@media (min-width: 1024px) and (max-width: 1500px) {
+  .platoo-ui .kiosk-menu-card:has(.button-mascot) { padding-right: 96px; }
+  .platoo-ui .kiosk-card-copy strong { font-size: 23px; white-space: nowrap; }
+  .platoo-ui .kiosk-card-copy small { font-size: 15px; }
+  .platoo-ui .button-mascot { height: 104px; }
+  .platoo-ui .kiosk-card-icon { width: 56px; height: 56px; }
+  .platoo-ui .kiosk-card-icon svg { width: 28px; }
+}

@@ -1,50 +1,32 @@
-# Frontend Asset Guide — Nong Platoo Ontour Kiosk
+# คู่มือรูปภาพหน้าเว็บ — Nong Platoo Ontour
 
-รอบนี้จัดโค้ดเป็น **Frontend-only** สำหรับทำหน้าจอ Kiosk และเตรียมช่องใส่ภาพจริงไว้แล้ว โดยไม่ต้องแก้ Backend เพื่อเปลี่ยนภาพหรือตัวละคร
+หน้าเว็บเป็นไฟล์ HTML/CSS/JS ในโฟลเดอร์ `web/` วางรูปแล้วรีเฟรชหน้าได้เลย ไม่ต้อง build
 
-## จุดที่ต้องแก้ไฟล์เดียว
-
-เปิดไฟล์ `client/src/config/kioskAssets.ts` แล้วเปลี่ยน path ใน `KIOSK_ASSETS` และ `DEPARTMENT_LOGOS` ได้ทันที
-
-## ตำแหน่งไฟล์ภาพที่แนะนำ
+## รูปอยู่ที่ไหน
 
 ```text
-client/public/images/
-├── kiosk/
-│   ├── nong-platu-idle.png
-│   ├── nong-platu-greeting.png
-│   ├── nong-platu-listening.png
-│   ├── nong-platu-thinking.png
-│   ├── nong-platu-speaking.png
-│   ├── campus-welcome.webp
-│   └── campus-map-overlay.png
-└── departments/
-    ├── AUT.png
-    ├── DBT.png
-    ├── ELEC.png
-    ├── MEC.png
-    └── ACC.png
+web/
+├── mascots/        น้องปลาทู 6 ท่า (greeting, search, point, globe, jump, map) จากแบบ Figma
+├── branding/       โลโก้หัวเว็บ
+├── icons/          ไอคอนแอปมือถือ (PWA)
+└── images/
+    ├── kiosk/      รูปเสริมของตู้
+    └── departments/   โลโก้แผนกตามรหัส เช่น AUT.png, DBT.png, ELEC.png, MEC.png, ACC.png
 ```
 
-เมื่อวางไฟล์ไว้ตามนี้ ไม่ต้องแก้ `KioskHome.tsx` ระบบจะอ่านภาพเอง หากไฟล์ยังไม่มี ระบบจะแสดง fallback เป็นรหัสแผนกหรือหน้าตา placeholder แทน จึงยังเปิดหน้าเว็บได้ตามปกติ
+โลโก้แผนกที่อัปโหลดในหน้า `/admin/buildings` จะใช้ก่อนไฟล์ใน `images/departments/` เสมอ
+ถ้าไม่มีทั้งสองแบบ หน้าเว็บจะแสดงไอคอนแทน
 
 ## ขนาดไฟล์ที่แนะนำ
 
 | ประเภท | ขนาดแนะนำ | รูปแบบ |
 |---|---:|---|
-| ตัวละครน้องปลาทู | 800×1000 px | PNG/WebP |
-| โลโก้แผนก | 512×512 px | PNG/WebP พื้นหลังโปร่งใส |
-| ภาพพื้นหลังต้อนรับ | 1600×900 px | WebP/JPG |
-| Overlay แผนที่ | ตามอัตราส่วนแผนที่ | PNG โปร่งใส |
+| ท่าน้องปลาทู | สูง 400–600 px | WebP พื้นหลังโปร่งใส |
+| โลโก้แผนก | 256–512 px สี่เหลี่ยมจัตุรัส | PNG/WebP |
+| รูปอาคาร | ด้านยาว 1280 px | WebP/JPG (อัปโหลดผ่านหน้า admin ระบบย่อให้เอง) |
 
-## จุดที่ใช้แก้ข้อมูลการแสดงผล
+## จุดที่แก้ข้อความหรือหน้าตา
 
-- เมนูหน้าแรก: `client/src/pages/KioskHome.tsx` ส่วน `menuItems`
-- สีและตำแหน่งหมุด: ข้อมูล `CampusBuilding` ใน `shared/campus.ts`
-- โลโก้แผนก: `client/src/config/kioskAssets.ts`
-- ภาพตัวละครแต่ละสถานะ: `client/src/config/kioskAssets.ts`
-- ข้อความต้อนรับและคำอธิบาย: `client/src/pages/KioskHome.tsx`
-
-## หมายเหตุเรื่อง Backend
-
-หน้า Kiosk ใช้ข้อมูลอาคารและข่าวสารผ่าน query ที่มีอยู่เพื่อแสดงผล แต่การเปลี่ยนหน้าตา สี ไอคอน ตัวละคร และภาพทั้งหมดทำได้จาก Frontend โดยไม่ต้องแก้ router หรือ schema หากต้องการทำ Frontend mockup แบบไม่ใช้ข้อมูล backend ให้เปลี่ยนตัวแปร `buildings` และ `news` ใน `KioskHome.tsx` เป็นข้อมูลตัวอย่าง local ได้
+- เมนูหน้าแรก ข้อความต้อนรับ และรายชื่อไฟล์โลโก้แผนก (`DEPARTMENT_LOGOS`): `web/js/app.js`
+- สีและหน้าตา: `web/css/platoo-ui.css` (จากแบบ Figma) และ `web/css/platoo-extra.css`
+- ข้อมูลอาคาร ห้อง สาขา ข่าว: แก้ในหน้า `/admin` (ไม่ต้องแก้โค้ด)

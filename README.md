@@ -20,7 +20,7 @@
 
 ```mermaid
 flowchart LR
-    U[ผู้ใช้<br>พิมพ์หรือพูด] --> W[หน้าเว็บ<br>React]
+    U[ผู้ใช้<br>พิมพ์หรือพูด] --> W[หน้าเว็บ<br>HTML/CSS/JS]
     W --> S[เซิร์ฟเวอร์<br>Express + tRPC]
     S --> DB[(ฐานข้อมูล<br>อาคาร ข่าว เส้นทาง)]
     S --> G[Gemini API<br>แชต + เสียง]
@@ -54,8 +54,8 @@ flowchart LR
 
 | ส่วน | เทคโนโลยี |
 | --- | --- |
-| Frontend | React, Vite, TypeScript, Tailwind CSS, Leaflet (OpenStreetMap) |
-| Backend | Node.js, Express, tRPC, TypeScript |
+| Frontend | HTML, CSS, JavaScript ล้วน (ไม่ต้อง build) · Leaflet (แผนที่ 2D) · three.js (แผนที่ 3D) |
+| Backend | Node.js (JavaScript), Express, tRPC + JSON API |
 | ฐานข้อมูล | MySQL / TiDB ผ่าน Drizzle ORM |
 | AI | Google Gemini API (แชต, แปลงเสียงเป็นข้อความ, สังเคราะห์เสียง) |
 | แผนที่ | OpenRouteService (เส้นทางเดินเท้า) |
@@ -64,21 +64,31 @@ flowchart LR
 ## โครงสร้างโค้ด
 
 ```
-client/    หน้าเว็บ (React) — หน้า Kiosk, หน้ามือถือ, หน้า admin
+web/       หน้าเว็บ HTML/CSS/JS (เปิดได้เลย ไม่ต้อง build)
+  index.html       หน้าตู้ Kiosk ( / )
+  app.html         แอปมือถือ ( /app )
+  admin.html       หลังบ้าน ( /admin )
+  js/              โค้ดหน้าเว็บ: app.js (หน้าจอ), map.js / map3d.js (แผนที่), navigation.js (นำทาง),
+                   chat.js + voice.js (แชตและเสียง), admin/ (หน้าหลังบ้าน)
+  css/             สไตล์ (หน้าตาจาก Figma อยู่ใน platoo-ui.css)
+  vendor/          Leaflet, three.js, QR, zod แบบไฟล์ในเครื่อง (ใช้ได้แม้เน็ตหลุด)
+  mascots/ images/ icons/   รูปน้องปลาทู รูปอาคาร ไอคอนแอป
 server/    ระบบหลังบ้าน (Express + tRPC)
-  chat.ts          แชตบอต: ส่งคำถามให้ Gemini พร้อมข้อมูลวิทยาลัย และเครื่องมือแสดงเส้นทาง
-  voice.ts         เสียงพูด/ฟังภาษาไทย พร้อมจำกัดจำนวนคำขอและแคชผลลัพธ์
-  walkingRoute.ts  ขอเส้นทางเดินจาก OpenRouteService
-  newsScraper.ts   ดึงข่าวจากเว็บไซต์วิทยาลัย
-  adminRouter.ts   API สำหรับเจ้าหน้าที่ และระบบล็อกอิน
-  db.ts            คำสั่งฐานข้อมูล
+  chat.js          แชตบอต: ส่งคำถามให้ Gemini พร้อมข้อมูลวิทยาลัย และเครื่องมือแสดงเส้นทาง
+  voice.js         เสียงพูด/ฟังภาษาไทย พร้อมจำกัดจำนวนคำขอและแคชผลลัพธ์
+  walkingRoute.js  ขอเส้นทางเดินจาก OpenRouteService
+  newsScraper.js   ดึงข่าวจากเว็บไซต์วิทยาลัย
+  adminRouter.js   API สำหรับเจ้าหน้าที่ และระบบล็อกอิน
+  restApi.js       API แบบ JSON ธรรมดา (/api/campus/buildings …) ที่หน้าเว็บเรียกใช้
+  webPages.js      ส่งไฟล์ใน web/ ให้เบราว์เซอร์
+  db.js            คำสั่งฐานข้อมูล
 drizzle/   โครงสร้างตารางและ migration
-shared/    ข้อมูลและชนิดข้อมูลที่ใช้ร่วมกันทั้งสองฝั่ง
+shared/    โค้ดที่ใช้ร่วมกันทั้งเซิร์ฟเวอร์และเบราว์เซอร์ (คำนวณเส้นทาง ข้อมูลวิทยาลัย สิทธิ์)
 ```
 
 ## วิธีรันบนเครื่อง
 
-ต้องมี Node.js 20 ขึ้นไป และ pnpm
+ต้องมี Node.js 22 ขึ้นไป และ pnpm
 
 ```bash
 pnpm install
@@ -86,7 +96,7 @@ cp .env.example .env   # แล้วเติมค่าของตัวเ�
 pnpm dev
 ```
 
-จากนั้นเปิด http://localhost:3000
+จากนั้นเปิด http://localhost:3000 (แก้ไฟล์ใน `web/` แล้วรีเฟรชหน้าได้เลย ไม่ต้อง build) · รันเทสต์ด้วย `pnpm test`
 
 ค่าหลักใน `.env`
 
