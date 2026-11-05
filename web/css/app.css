@@ -126,3 +126,12 @@
 .platoo-ui .map3d-loading { position: absolute; inset: 0; display: grid; place-items: center; margin: 0; color: #287c78; font-size: 13px; font-weight: 800; }
 /* The design's pin labels sit inside the 3D label boxes too. */
 .platoo-ui .map3d-label .leaflet-pin { transform: none; }
+
+/* ---------------- map page fits the screen (desktop / kiosk)
+ * The design sized the map as 100vh − 182px but forgot the page's bottom padding, so the page
+ * was a little taller than the screen. Instead: the page is exactly the screen below the header
+ * (78px) and the map takes whatever height is left after the heading. */
+@media (min-width: 641px) {
+  .platoo-ui .map-page { height: calc(100dvh - 78px); min-height: 0; display: flex; flex-direction: column; padding-bottom: 16px; }
+  .platoo-ui .map-page .map-layout { flex: 1; height: auto; min-height: 420px; }
+}
