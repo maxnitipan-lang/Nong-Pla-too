@@ -64,6 +64,7 @@ const state = {
   openDepartment: null,
   deptGroup: "", // departments page filter ("" = all)
   deptQuiz: null, // { step, answers } while the "help me choose" quiz is open
+  newsKind: "", // news page filter ("" = all)
   openNews: null, // kiosk: index of the story shown with its QR code
   installPrompt: null,
   installDismissed: readStore(INSTALL_DISMISSED_KEY) === 1 || window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true,
@@ -94,12 +95,6 @@ function collectDepartments() {
   const real = [...seen.values()].filter(({ department }) => /^สาขา/.test(String(department.name).trim()));
   if (real.length) return real;
   return seen.size ? [...seen.values()] : DEFAULT_DEPARTMENTS.map((department) => ({ department }));
-}
-
-/** "18 ก.ย. 2569" → { day: "18", month: "ก.ย." } */
-function splitThaiDate(date) {
-  const m = String(date ?? "").match(/(\d{1,2})\s+([ก-๙]{1,3}\.[ก-๙]{1,2}\.?)/);
-  return m ? { day: m[1].padStart(2, "0"), month: m[2] } : null;
 }
 
 /** Where the walker is (phone only). */
@@ -466,8 +461,65 @@ const $$filters = () => [...document.querySelectorAll("[data-action=filter]")];
 
 /* ------------------------------------------------------------------ news */
 
+/** What a story is about, from words in its title — the college site tags every story the same. */
+const NEWS_KINDS = [
+  { id: "apply", label: "รับสมัคร", emoji: "📝", color: "#2f7fc1", match: /รับสมัคร|สมัครเรียน|รับนักเรียน|โควตา/ },
+  { id: "award", label: "รางวัล", emoji: "🏆", color: "#c0892b", match: /รางวัล|คว้า|เกียรติบัตร|เชิดชู|ชนะเลิศ|โล่/ },
+  { id: "notice", label: "ประกาศ", emoji: "📢", color: "#d0604a", match: /ประกาศ|แจ้ง|กำหนดการ|หยุด/ },
+  { id: "activity", label: "กิจกรรม", emoji: "🎉", color: "#138b8f", match: /./ },
+];
+const newsKind = (item) => NEWS_KINDS.find((k) => k.match.test(item.title ?? "")) ?? NEWS_KINDS[NEWS_KINDS.length - 1];
+
+const THAI_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+/** "19 ต.ค. 69" (Buddhist year) → Date, or null. */
+function parseThaiDate(text) {
+  const m = String(text ?? "").match(/(\d{1,2})\s+([ก-๙.]+)\s+(\d{2,4})/);
+  if (!m) return null;
+  const month = THAI_MONTHS.indexOf(m[2].endsWith(".") ? m[2] : `${m[2]}.`);
+  if (month < 0) return null;
+  let year = Number(m[3]);
+  if (year < 100) year += 2500;
+  return new Date(year - 543, month, Number(m[1]));
+}
+/** Published within the last 7 days. */
+const isFreshNews = (item) => {
+  const d = parseThaiDate(item.date);
+  return Boolean(d) && Date.now() - d.getTime() < 7 * 86400000 && d.getTime() <= Date.now() + 86400000;
+};
+/** "ข่าวจากเว็บวิทยาลัย" is on every story, so it is not shown. */
+const newsWhen = (item) => [item.date, item.time && item.time !== "ข่าวจากเว็บวิทยาลัย" ? item.time : ""].filter(Boolean).join(" · ");
+
+/** Featured stories rotate every 7 s while the news page is open. */
+let featuredTimer = null;
+function startFeaturedRotation() {
+  clearInterval(featuredTimer);
+  featuredTimer = null;
+  const slides = [...document.querySelectorAll(".featured-slide")];
+  if (slides.length < 2) return;
+  const dots = [...document.querySelectorAll(".featured-dots button")];
+  let index = 0;
+  const show = (i) => {
+    index = i;
+    slides.forEach((s, n) => s.classList.toggle("active", n === i));
+    dots.forEach((b, n) => b.classList.toggle("active", n === i));
+  };
+  featuredTimer = setInterval(() => {
+    if (!document.body.contains(slides[0])) {
+      clearInterval(featuredTimer);
+      return;
+    }
+    show((index + 1) % slides.length);
+  }, 7000);
+  dots.forEach((b, n) =>
+    b.addEventListener("click", (e) => {
+      e.stopPropagation();
+      e.preventDefault();
+      show(n);
+    }),
+  );
+}
+
 function newsHtml() {
-  const [featured, ...rest] = state.news;
   // Kiosk: a story opens a QR code to read it on a phone, so visitors don't leave the kiosk for another website.
   const link = (item, cls, inner) =>
     !item.link
@@ -475,52 +527,89 @@ function newsHtml() {
       : KIOSK
         ? html`<button type="button" class="${cls}" data-action="news-open" data-index="${state.news.indexOf(item)}">${raw(inner)}</button>`
         : html`<a class="${cls}" href="${item.link}" target="_blank" rel="noreferrer">${raw(inner)}</a>`;
+  const badges = (item) => {
+    const k = newsKind(item);
+    return html`<span class="news-badges"><span class="news-kind" style="--kind:${k.color}">${k.emoji} ${k.label}</span>${isFreshNews(item) ? raw('<span class="news-new">ใหม่</span>') : ""}</span>`;
+  };
+
+  // Admissions and announcements first; otherwise the site's order (newest first).
+  const kindsPresent = NEWS_KINDS.filter((k) => state.news.some((n) => newsKind(n).id === k.id));
+  const order = (n) => (["apply", "notice"].includes(newsKind(n).id) ? 0 : 1);
+  const list = state.news
+    .filter((n) => !state.newsKind || newsKind(n).id === state.newsKind)
+    .map((n, i) => ({ n, i }))
+    .sort((a, b) => order(a.n) - order(b.n) || a.i - b.i)
+    .map((x) => x.n);
+
+  // Up to 3 stories rotate in the featured spot; keep at least 3 for the grid when there are few.
+  const featuredCount = list.length >= 6 ? 3 : 1;
+  const featuredItems = list.slice(0, featuredCount);
+  const rest = list.slice(featuredCount);
+  const featuredHtml = featuredItems.length
+    ? html`<div class="featured-carousel">
+        ${featuredItems.map((item, i) =>
+          raw(link(
+            item,
+            `featured-news featured-slide ${i === 0 ? "active" : ""}`,
+            // Picture on top, then the badges, title and the first lines of the story.
+            html`${item.image
+              ? raw(html`<span class="featured-photo"><img src="${item.image}" alt="" /></span>`)
+              : raw('<span class="featured-photo no-photo"><img src="/mascots/jump.webp" alt="" aria-hidden="true" /></span>')}
+            <span class="featured-copy">
+              ${raw(badges(item))}
+              <h2>${item.title}</h2>
+              ${item.excerpt ? raw(html`<p class="news-excerpt">${item.excerpt}</p>`) : ""}
+              ${newsWhen(item) ? raw(html`<small class="news-when">${newsWhen(item)}</small>`) : ""}
+            </span>`,
+          )))}
+        ${featuredItems.length > 1
+          ? raw(html`<div class="featured-dots">${featuredItems.map((_, i) => raw(html`<button type="button" class="${i === 0 ? "active" : ""}" aria-label="ข่าวเด่น ${i + 1}"></button>`))}</div>`)
+          : ""}
+      </div>`
+    : html`<div class="empty-state">ยังไม่มีข่าวในตอนนี้ — ลองเปิดหน้านี้ใหม่อีกครั้งภายหลังครับ</div>`;
+
+  const cards = rest.map((item) =>
+    raw(link(
+      item,
+      "news-card news-card-photo",
+      html`<span class="news-thumb">${item.image
+        ? raw(html`<img src="${item.image}" alt="" loading="lazy" />`)
+        : raw('<img class="news-thumb-mascot" src="/mascots/point.webp" alt="" aria-hidden="true" />')}</span>
+      <span class="news-card-body">${raw(badges(item))}<h3>${item.title}</h3>${item.excerpt ? raw(html`<p class="news-excerpt">${item.excerpt}</p>`) : ""}${newsWhen(item) ? raw(html`<small class="news-when">${newsWhen(item)}</small>`) : ""}</span>`,
+    )));
+
+  const latest = state.news.map((n) => parseThaiDate(n.date)).filter(Boolean).sort((a, b) => b - a)[0];
+  const filterBar = kindsPresent.length > 1
+    ? raw(html`<div class="dept-filters news-filters">
+        <button class="${state.newsKind ? "" : "active"}" data-action="news-kind" data-kind="">ทั้งหมด <b>${state.news.length}</b></button>
+        ${kindsPresent.map((k) => raw(html`<button class="${state.newsKind === k.id ? "active" : ""}" data-action="news-kind" data-kind="${k.id}" style="--dept:${k.color}">${k.emoji} ${k.label} <b>${state.news.filter((n) => newsKind(n).id === k.id).length}</b></button>`))}
+      </div>`)
+    : "";
+
   const opened = KIOSK && state.openNews !== null ? state.news[state.openNews] : null;
   const newsDialog = opened
     ? html`<button class="ai-backdrop visible" data-action="news-close" aria-label="ปิดข่าว"></button>
       <section class="dept-detail news-detail" role="dialog" aria-label="${opened.title}">
         <button class="card-close" data-action="news-close" aria-label="ปิด">${raw(icon("close"))}</button>
-        <span class="news-pill">${opened.tag || "ข่าวสาร"}</span>
+        ${opened.image ? raw(html`<img class="news-detail-photo" src="${opened.image}" alt="" />`) : ""}
+        ${raw(badges(opened))}
         <h2>${opened.title}</h2>
-        ${opened.date ? raw(html`<p>${opened.date}</p>`) : ""}
+        ${newsWhen(opened) ? raw(html`<p>${newsWhen(opened)}</p>`) : ""}
         ${opened.excerpt ? raw(html`<p>${opened.excerpt}</p>`) : ""}
         <div class="card-qr"><div class="qr qr-small" data-qr="${opened.link}" role="img" aria-label="QR อ่านข่าวบนมือถือ"></div>
           <p><strong>อ่านข่าวนี้บนมือถือ</strong>สแกนด้วยกล้องมือถือเพื่อเปิดข่าวเต็มบนเว็บวิทยาลัย</p></div>
       </section>`
     : "";
-  const featuredHtml = featured
-    ? link(
-        featured,
-        "featured-news",
-        html`<div>
-          <span class="news-pill">${featured.tag || "ข่าวเด่น"}</span>
-          <h2>${featured.title}</h2>
-          ${featured.excerpt ? raw(html`<p>${featured.excerpt}</p>`) : ""}
-          ${featured.date || featured.time ? raw(html`<p>${[featured.date, featured.time].filter(Boolean).join(" · ")}</p>`) : ""}
-        </div>
-        ${featured.image
-          ? raw(html`<div class="feature-art photo"><img src="${featured.image}" alt="" loading="lazy" /></div>`)
-          : raw('<img class="featured-news-mascot" src="/mascots/jump.webp" alt="" aria-hidden="true" />')}`,
-      )
-    : html`<div class="empty-state">ยังไม่มีข่าวในตอนนี้ — ลองเปิดหน้านี้ใหม่อีกครั้งภายหลังครับ</div>`;
-  const cards = rest.map((item) => {
-    const date = splitThaiDate(item.date);
-    return raw(
-      link(
-        item,
-        "news-card",
-        html`<div class="date-block ${date ? "" : "no-date"}">${date ? raw(html`<strong>${date.day}</strong><span>${date.month}</span>`) : raw(icon("news"))}</div>
-        <div><span class="tag">${item.tag}</span><h3>${item.title}</h3><p>${item.excerpt || [item.date, item.time].filter(Boolean).join(" · ")}</p></div>`,
-      ),
-    );
-  });
+
   return html`<main class="page-shell content-page">
     <div class="page-title">
       <span class="title-icon yellow">${raw(icon("news"))}</span>
       <div><span>อัปเดตจากวิทยาลัย</span><h1>ข่าวสารและกิจกรรม</h1></div>
     </div>
+    ${latest ? raw(html`<p class="page-intro">ข่าวล่าสุดเมื่อ ${latest.getDate()} ${THAI_MONTHS[latest.getMonth()]} ${String(latest.getFullYear() + 543).slice(-2)}</p>`) : ""}
+    ${filterBar}
     ${raw(featuredHtml)}
-    ${cards.length ? raw(html`<div class="news-grid">${cards}</div>`) : ""}
+    ${cards.length ? raw(html`<div class="news-grid news-grid-photo">${cards}</div>`) : ""}
     ${KIOSK
       ? raw(html`<div class="card-qr news-more-qr"><div class="qr qr-small" data-qr="${COLLEGE_NEWS_URL}" role="img" aria-label="QR ข่าวทั้งหมด"></div><p><strong>ดูข่าวทั้งหมดบนมือถือ</strong>สแกนเพื่อเปิดหน้าข่าวของเว็บวิทยาลัย</p></div>`)
       : raw(html`<a class="news-more" href="${COLLEGE_NEWS_URL}" target="_blank" rel="noreferrer">ดูข่าวทั้งหมดบนเว็บวิทยาลัย ${raw(icon("arrow"))}</a>`)}
@@ -663,6 +752,7 @@ function render() {
   if (state.view === "map") mountMap();
   $("#attract").innerHTML = KIOSK && state.idle ? attractHtml() : "";
   void fillQrCodes(root);
+  if (state.view === "news") startFeaturedRotation();
 }
 
 /** Small updates that don't rebuild the screen (keeps the map and typing focus). */
@@ -818,6 +908,10 @@ const actions = {
     state.openNews = Number(el.dataset.index);
     render();
   },
+  "news-kind": (el) => {
+    state.newsKind = el.dataset.kind ?? "";
+    render();
+  },
   "news-close": () => {
     state.openNews = null;
     render();
@@ -934,7 +1028,7 @@ function goIdle() {
   // Wipe the visitor's session for the next person.
   nav.clear();
   window.dispatchEvent(new Event("nongplatoo:reset"));
-  Object.assign(state, { idle: true, selectedId: null, query: "", filter: "ทั้งหมด", listOpen: false, openDepartment: null, openNews: null, deptGroup: "", deptQuiz: null, view: "home" });
+  Object.assign(state, { idle: true, selectedId: null, query: "", filter: "ทั้งหมด", listOpen: false, openDepartment: null, openNews: null, newsKind: "", deptGroup: "", deptQuiz: null, view: "home" });
   render();
   window.scrollTo({ top: 0 });
   void reloadData(); // fresh news / admin edits for the next visitor

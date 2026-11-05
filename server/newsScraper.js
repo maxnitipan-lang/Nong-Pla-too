@@ -94,7 +94,27 @@ export async function scrapeCollegeNews(limit = DEFAULT_LIMIT) {
     throw new Error("ไม่พบรายการข่าวในหน้าเว็บวิทยาลัย — โครงสร้างหน้าเว็บอาจเปลี่ยน ต้องปรับ newsScraper.js");
   }
 
+  // The list page has no summary, so read the first lines of each story (all at once; a story
+  // that fails just keeps an empty excerpt).
+  const headers = attempts[0];
+  await Promise.all(
+    items.map(async (item) => {
+      item.excerpt = await fetchExcerpt(item.link, headers).catch(() => "");
+    })
+  );
+
   return items;
+}
+
+/** First ~180 characters of a story page's text (cut at a space), or "". */
+async function fetchExcerpt(url, headers) {
+  const res = await fetch(url, { headers, signal: AbortSignal.timeout(10_000) });
+  if (!res.ok) return "";
+  const $ = cheerio.load(await res.text());
+  const text = $("table.textData").first().text().replace(/\s+/g, " ").trim();
+  if (text.length <= 180) return text;
+  const cut = text.slice(0, 180);
+  return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 120))}…`;
 }
 
 /** Scrape and upsert. Returns how many items were written. */
