@@ -135,3 +135,157 @@
   .platoo-ui .map-page { height: calc(100dvh - 78px); min-height: 0; display: flex; flex-direction: column; padding-bottom: 16px; }
   .platoo-ui .map-page .map-layout { flex: 1; height: auto; min-height: 420px; }
 }
+
+/* ---------------- bigger text and controls on large screens (kiosk / laptop)
+ * The design's text is 9–12px in many places — too small to read standing at a kiosk.
+ * Phones (≤ 640px) keep the design's own sizes. */
+@media (min-width: 1024px) {
+  /* header */
+  .platoo-ui .app-header { height: 88px; }
+  .platoo-ui .header-platoo { height: 66px; }
+  .platoo-ui .header-brand-text { font-size: 24px; }
+  .platoo-ui .desktop-nav button { font-size: 18px; }
+  .platoo-ui .online-status { padding: 9px 14px; font-size: 15px; }
+  .platoo-ui .icon-button { width: 46px; height: 46px; }
+  .platoo-ui .icon-button svg { width: 22px; }
+  .platoo-ui .install-button { padding: 13px 18px; font-size: 16px; }
+  .platoo-ui .install-button svg { width: 18px; }
+
+  /* kiosk home */
+  .platoo-ui .assistant-label { min-height: 40px; padding: 0 18px; font-size: 14px; }
+  .platoo-ui .kiosk-greeting { width: min(420px, 100%); padding: 22px 26px; }
+  .platoo-ui .kiosk-greeting strong { font-size: 22px; }
+  .platoo-ui .kiosk-greeting span { font-size: 16px; }
+  .platoo-ui .kiosk-mic { width: 76px; height: 76px; }
+  .platoo-ui .kiosk-mic svg { width: 32px; }
+  .platoo-ui .kiosk-stats strong { font-size: 34px; }
+  .platoo-ui .kiosk-stats span { font-size: 15px; }
+  .platoo-ui .kiosk-menu-heading > span { font-size: 15px; letter-spacing: 2px; }
+  .platoo-ui .kiosk-menu-heading h1 { font-size: clamp(36px, 3.4vw, 52px); }
+  .platoo-ui .kiosk-card-icon { width: 72px; height: 72px; }
+  .platoo-ui .kiosk-card-icon svg { width: 34px; }
+  .platoo-ui .kiosk-card-copy strong { font-size: clamp(26px, 2.2vw, 34px); }
+  .platoo-ui .kiosk-card-copy small { font-size: clamp(16px, 1.25vw, 20px); }
+  .platoo-ui .button-mascot { height: 140px; }
+  .platoo-ui .kiosk-menu-card:has(.button-mascot) { padding-right: 120px; }
+  .platoo-ui .kiosk-map-button { font-size: 19px; }
+  .platoo-ui .kiosk-map-button svg { width: 22px; }
+  .platoo-ui .floating-ai { width: 230px; height: 72px; padding-left: 82px; }
+  .platoo-ui .floating-ai-copy strong { font-size: 17px; }
+  .platoo-ui .floating-ai-copy small { font-size: 13px; }
+  .platoo-ui .floating-platoo { height: 92px; }
+
+  /* map screen */
+  .platoo-ui .map-page-heading h1 { font-size: 36px; }
+  .platoo-ui .map-page-heading p, .platoo-ui .map-kicker { font-size: 15px; }
+  .platoo-ui .locate-button { height: 48px; font-size: 16px; }
+  .platoo-ui .panel-heading strong { font-size: 19px; }
+  .platoo-ui .panel-heading small, .platoo-ui .place-list > p { font-size: 14px; }
+  .platoo-ui .search-box { height: 52px; }
+  .platoo-ui .search-box input { font-size: 17px; }
+  .platoo-ui .filters button { min-height: 42px; padding: 8px 14px; font-size: 15px; }
+  .platoo-ui .place-item { padding: 14px 10px; }
+  .platoo-ui .place-number { width: 44px; height: 44px; font-size: 18px; }
+  .platoo-ui .place-item strong { font-size: 17px; }
+  .platoo-ui .place-item small { font-size: 14px; }
+  .platoo-ui .map-guide strong { font-size: 15px; }
+  .platoo-ui .map-guide small { font-size: 13px; }
+  .platoo-ui .building-card { width: min(440px, calc(100% - 30px)); padding: 24px; }
+  .platoo-ui .building-card h2 { font-size: 24px; }
+  .platoo-ui .building-category { font-size: 13px; }
+  .platoo-ui .building-card > p, .platoo-ui .building-meta { font-size: 16px; }
+  .platoo-ui .room-chips span { font-size: 14px; padding: 5px 10px; }
+  .platoo-ui .card-actions .route-button { height: 54px; font-size: 18px; }
+  .platoo-ui .card-icon-button { width: 54px; height: 54px; }
+  .platoo-ui .card-qr p { font-size: 14px; }
+  .platoo-ui .card-qr strong { font-size: 16px; }
+  .platoo-ui .leaflet-pin > b { width: 44px; height: 44px; font-size: 15px; }
+  .platoo-ui .leaflet-pin > small { font-size: 13px; }
+  .platoo-ui .nav-banner strong { font-size: 24px; }
+  .platoo-ui .nav-banner span { font-size: 18px; }
+  .platoo-ui .route-head strong { font-size: 19px; }
+  .platoo-ui .route-head span, .platoo-ui .route-message { font-size: 15px; }
+  .platoo-ui .step-text { font-size: 16px; }
+  .platoo-ui .step-dist { font-size: 15px; }
+  .platoo-ui .map-mode button { min-height: 46px; padding: 0 20px; font-size: 16px; }
+
+  /* news + departments */
+  .platoo-ui .page-title h1 { font-size: 36px; }
+  .platoo-ui .page-title > div > span { font-size: 14px; }
+  .platoo-ui .page-intro { font-size: 17px; }
+  .platoo-ui .featured-news h2 { font-size: 36px; }
+  .platoo-ui .featured-news p { font-size: 17px; }
+  .platoo-ui .news-pill { font-size: 14px; padding: 6px 12px; }
+  .platoo-ui .news-card .tag { font-size: 13px; }
+  .platoo-ui .news-card h3 { font-size: 19px; }
+  .platoo-ui .news-card p { font-size: 15px; }
+  .platoo-ui .date-block { width: 62px; height: 70px; }
+  .platoo-ui .date-block strong { font-size: 24px; }
+  .platoo-ui .news-more { font-size: 17px; }
+  .platoo-ui .department-card > strong { font-size: 21px; }
+  .platoo-ui .department-card > small, .platoo-ui .dept-link { font-size: 15px; }
+  .platoo-ui .dept-code { font-size: 13px; }
+  .platoo-ui .department-icon { width: 60px; height: 60px; }
+  .platoo-ui .dept-detail h2 { font-size: 28px; }
+  .platoo-ui .dept-detail > p { font-size: 17px; }
+
+  /* chat panel */
+  .platoo-chat .assistant { width: min(520px, 100%); }
+  .platoo-chat .assistant-header strong { font-size: 20px; }
+  .platoo-chat .assistant-header small { font-size: 14px; }
+  .platoo-chat .message { font-size: 17px; }
+  .platoo-chat .voice-copy strong { font-size: 18px; }
+  .platoo-chat .voice-copy small { font-size: 14px; }
+  .platoo-chat .suggestions button { font-size: 15px; padding: 9px 14px; }
+  .platoo-chat .assistant-map-action { min-height: 52px; font-size: 17px; }
+  .platoo-chat .chat-input input { height: 52px; font-size: 17px; }
+  .platoo-chat .chat-input button { width: 48px; height: 48px; }
+
+  /* kiosk idle screen */
+  .platoo-ui .attract .attract-qr span { font-size: 16px; max-width: 300px; }
+}
+/* The map page and home size themselves from the header height. */
+@media (min-width: 1024px) {
+  .platoo-ui .kiosk-home { min-height: calc(100vh - 120px); }
+  .platoo-ui .map-page { height: calc(100dvh - 88px); }
+}
+@media (min-width: 1024px) and (min-height: 820px) {
+  /* Bigger น้องปลาทู in the home card (there's room for it). */
+  .platoo-ui .kiosk-mascot-wrap { width: 440px; height: 330px; }
+  .platoo-ui .platoo-main-image { height: 320px; }
+}
+/* Short laptop screens (≈768px tall): still bigger than the design, but tighter so the home fits. */
+@media (min-width: 1024px) and (max-height: 900px) {
+  .platoo-ui .app-header { height: 76px; }
+  .platoo-ui .header-platoo { height: 56px; }
+  .platoo-ui .header-brand-text { font-size: 21px; }
+  .platoo-ui .kiosk-home { min-height: calc(100vh - 104px); padding-top: 14px; padding-bottom: 14px; }
+  .platoo-ui .map-page { height: calc(100dvh - 76px); }
+  .platoo-ui .kiosk-assistant, .platoo-ui .kiosk-menu { min-height: 0; }
+  .platoo-ui .kiosk-assistant { padding: 20px 24px; }
+  .platoo-ui .kiosk-menu { padding-top: 22px; padding-bottom: 18px; }
+  .platoo-ui .kiosk-mascot-wrap { height: 200px; }
+  .platoo-ui .platoo-main-image { height: 190px; }
+  .platoo-ui .kiosk-greeting { padding: 14px 20px; }
+  .platoo-ui .kiosk-greeting strong { font-size: 19px; }
+  .platoo-ui .kiosk-greeting span { font-size: 14px; }
+  .platoo-ui .kiosk-stats div { padding-top: 10px; padding-bottom: 10px; }
+  .platoo-ui .kiosk-stats strong { font-size: 28px; }
+  .platoo-ui .kiosk-menu-heading h1 { font-size: 34px; }
+  .platoo-ui .kiosk-menu-grid { margin-top: 14px; gap: 12px; }
+  .platoo-ui .kiosk-menu-card { min-height: 0; padding-top: 16px; padding-bottom: 16px; }
+  .platoo-ui .kiosk-card-icon { width: 60px; height: 60px; }
+  .platoo-ui .kiosk-card-copy strong { font-size: 24px; }
+  .platoo-ui .kiosk-card-copy small { font-size: 15px; }
+  .platoo-ui .button-mascot { height: 112px; }
+  .platoo-ui .kiosk-map-button { min-height: 50px; margin-top: 12px; }
+}
+/* Medium-wide screens (laptops): keep each menu title on one line next to the mascot. */
+@media (min-width: 1024px) and (max-width: 1500px) {
+  .platoo-ui .kiosk-menu-card:has(.button-mascot) { padding-right: 96px; }
+  .platoo-ui .kiosk-card-copy strong { font-size: 23px; white-space: nowrap; }
+  .platoo-ui .kiosk-card-copy small { font-size: 15px; }
+  .platoo-ui .button-mascot { height: 104px; }
+  .platoo-ui .kiosk-card-icon { width: 56px; height: 56px; }
+  .platoo-ui .kiosk-card-icon svg { width: 28px; }
+}
