@@ -1,6 +1,6 @@
 import express from "express";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { registerRestApi } from "./restApi";
+import { registerRestApi } from "./restApi.js";
 
 // No DATABASE_URL in tests: the campus data comes from the built-in defaults.
 let server;

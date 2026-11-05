@@ -8,8 +8,8 @@
 
 import { createHash } from "node:crypto";
 import { eq, sql } from "drizzle-orm";
-import { campusImages } from "../drizzle/schema";
-import { getDb } from "./db";
+import { campusImages } from "../drizzle/schema.js";
+import { getDb } from "./db.js";
 
 /** Largest picture accepted after the browser has shrunk it. */
 export const MAX_IMAGE_BYTES = 1_500_000;

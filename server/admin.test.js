@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { appRouter } from "./routers";
+import { appRouter } from "./routers.js";
 
 function contextFor(role) {
   const user =

@@ -1,6 +1,6 @@
 import express from "express";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { registerWebPages } from "./webPages";
+import { registerWebPages } from "./webPages.js";
 
 let server;
 let base;

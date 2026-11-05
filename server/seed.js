@@ -6,8 +6,8 @@
 // admin panel read from the database instead of the built-in demo data.
 
 import "dotenv/config";
-import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_SETTINGS_DEFAULTS } from "@shared/campus";
-import { getDb, updateCampusSettings, upsertCampusBuilding, upsertCampusNews } from "./db";
+import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_SETTINGS_DEFAULTS } from "../shared/campus.js";
+import { getDb, updateCampusSettings, upsertCampusBuilding, upsertCampusNews } from "./db.js";
 
 async function main() {
   const db = await getDb();

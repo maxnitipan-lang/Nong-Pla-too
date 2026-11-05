@@ -1,4 +1,4 @@
-import { ENV } from "./env";
+import { ENV } from "./env.js";
 
 export function registerStorageProxy(app) {
   app.get("/manus-storage/*", async (req, res) => {

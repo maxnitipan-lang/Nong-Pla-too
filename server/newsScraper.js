@@ -6,7 +6,7 @@
 // the admin sees it, hand-entered news keeps working, and nothing else breaks.
 
 import * as cheerio from "cheerio";
-import { upsertCampusNews } from "./db";
+import { upsertCampusNews } from "./db.js";
 
 const SITE_BASE = "https://www.sstc.ac.th/";
 const NEWSLETTER_LIST_URL = "https://www.sstc.ac.th/news_325_1";

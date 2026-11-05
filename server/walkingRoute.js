@@ -8,7 +8,7 @@
 // Returns null when there is no key, the start point is far from campus, or ORS
 // fails — the client then falls back to a dashed straight line (like before).
 
-import { CAMPUS_OVERVIEW } from "@shared/campus";
+import { CAMPUS_OVERVIEW } from "../shared/campus.js";
 
 const ORS_URL = "https://api.heigit.org/openrouteservice/v2/directions/foot-walking";
 const ORS_API_KEY = process.env.ORS_API_KEY || process.env.VITE_ORS_API_KEY || "";

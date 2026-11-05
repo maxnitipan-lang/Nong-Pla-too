@@ -9,7 +9,7 @@ import {
   resetPasswordSchema,
   settingsInputSchema,
   setRoleSchema,
-} from "@shared/adminSchemas";
+} from "../shared/adminSchemas.js";
 import {
   deleteCampusBuilding,
   deleteCampusNews,
@@ -29,10 +29,10 @@ import {
   updateCampusSettings,
   upsertCampusBuilding,
   upsertCampusNews,
-} from "./db";
-import { saveImage } from "./images";
-import { syncCollegeNews } from "./newsScraper";
-import { adminProcedure, editorProcedure, router, staffProcedure } from "./_core/trpc";
+} from "./db.js";
+import { saveImage } from "./images.js";
+import { syncCollegeNews } from "./newsScraper.js";
+import { adminProcedure, editorProcedure, router, staffProcedure } from "./_core/trpc.js";
 
 const idInput = z.object({ id: z.string().trim().min(1).max(64) });
 

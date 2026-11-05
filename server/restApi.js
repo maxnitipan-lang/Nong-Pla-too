@@ -11,8 +11,8 @@
 
 import { TRPCError } from "@trpc/server";
 import { getHTTPStatusCodeFromError } from "@trpc/server/http";
-import { appRouter } from "./routers";
-import { createContext } from "./_core/context";
+import { appRouter } from "./routers.js";
+import { createContext } from "./_core/context.js";
 
 const procedures = appRouter._def.procedures;
 

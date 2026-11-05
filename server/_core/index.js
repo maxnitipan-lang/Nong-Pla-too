@@ -3,17 +3,16 @@ import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
-import { appRouter } from "../routers";
-import { startNewsAutoSync } from "../newsScraper";
-import { registerImageRoutes } from "../images";
-import { registerVoiceRoutes } from "../voice";
-import { registerRestApi } from "../restApi";
-import { registerSharedFiles } from "../sharedFiles";
-import { registerWebPages } from "../webPages";
-import { createContext } from "./context";
-import { registerOAuthRoutes } from "./oauth";
-import { registerStorageProxy } from "./storageProxy";
-import { serveStatic, setupVite } from "./vite";
+import { appRouter } from "../routers.js";
+import { startNewsAutoSync } from "../newsScraper.js";
+import { registerImageRoutes } from "../images.js";
+import { registerVoiceRoutes } from "../voice.js";
+import { registerRestApi } from "../restApi.js";
+import { registerSharedFiles } from "../sharedFiles.js";
+import { registerNotFound, registerWebPages } from "../webPages.js";
+import { createContext } from "./context.js";
+import { registerOAuthRoutes } from "./oauth.js";
+import { registerStorageProxy } from "./storageProxy.js";
 
 function isPortAvailable(port) {
   return new Promise(resolve => {
@@ -51,14 +50,9 @@ async function startServer() {
   // The same procedures as plain JSON endpoints (/api/campus/buildings …) for the HTML/JS pages.
   registerRestApi(app);
   registerSharedFiles(app);
-  // Kiosk ( / ) and phone app ( /app ) — plain HTML/CSS/JS pages in web/.
+  // Kiosk ( / ), phone app ( /app ), admin ( /admin ) and their files — plain HTML/CSS/JS in web/.
   registerWebPages(app);
-
-  if (process.env.NODE_ENV === "development") {
-    await setupVite(app, server);
-  } else {
-    serveStatic(app);
-  }
+  registerNotFound(app);
 
   const preferredPort = parseInt(process.env.PORT || "3000", 10);
   // In production (a host like Render/Railway) bind to the assigned $PORT exactly;

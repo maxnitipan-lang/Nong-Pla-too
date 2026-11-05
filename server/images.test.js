@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { appRouter } from "./routers";
-import { MAX_IMAGE_BYTES, parseImageDataUrl } from "./images";
+import { appRouter } from "./routers.js";
+import { MAX_IMAGE_BYTES, parseImageDataUrl } from "./images.js";
 
 const PNG_1PX =
   "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";

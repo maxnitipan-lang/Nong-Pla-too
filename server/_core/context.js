@@ -1,9 +1,9 @@
 import { parse as parseCookieHeader } from "cookie";
-import { getUserByOpenId, getUserRowByOpenId, toSafeUser, upsertUser } from "../db";
-import { USER_COOKIE_NAME, isLocalAccount, readUserToken, verifyUserToken } from "./localAccounts";
-import { ADMIN_COOKIE_NAME, verifyAdminToken } from "./adminSession";
-import { ENV } from "./env";
-import { sdk } from "./sdk";
+import { getUserByOpenId, getUserRowByOpenId, toSafeUser, upsertUser } from "../db.js";
+import { USER_COOKIE_NAME, isLocalAccount, readUserToken, verifyUserToken } from "./localAccounts.js";
+import { ADMIN_COOKIE_NAME, verifyAdminToken } from "./adminSession.js";
+import { ENV } from "./env.js";
+import { sdk } from "./sdk.js";
 
 const DEV_ADMIN_OPEN_ID = "local-dev-admin";
 

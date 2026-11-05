@@ -1,12 +1,12 @@
 import { beforeAll, describe, expect, it } from "vitest";
-import { appRouter } from "./routers";
+import { appRouter } from "./routers.js";
 
 beforeAll(() => {
   process.env.JWT_SECRET ||= "test-secret-for-vitest";
 });
 
 const { hashPassword, verifyPassword, mintUserToken, verifyUserToken, usernameToOpenId } = await import(
-  "./_core/localAccounts"
+  "./_core/localAccounts.js"
 );
 
 describe("local admin accounts", () => {

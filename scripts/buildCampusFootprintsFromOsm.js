@@ -11,7 +11,7 @@
 // Map data © OpenStreetMap contributors (ODbL) — keep the credit on the map.
 
 import fs from "node:fs";
-import { CAMPUS_BUILDINGS } from "../shared/campus";
+import { CAMPUS_BUILDINGS } from "../shared/campus.js";
 
 /** How far around the outermost campus pins to keep OSM ways (metres). */
 const PAD_M = 160;

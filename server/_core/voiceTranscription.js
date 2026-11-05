@@ -25,7 +25,7 @@
  * });
  * ```
  */
-import { ENV } from "./env";
+import { ENV } from "./env.js";
 
 /**
  * Transcribe audio to text using the internal Speech-to-Text service

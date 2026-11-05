@@ -1,10 +1,10 @@
 import { asc, eq } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_SETTINGS_DEFAULTS } from "@shared/campus";
-import { campusBuildings, campusNews, siteSettings, users, walkNetworks } from "../drizzle/schema";
-import DEFAULT_WALK_NETWORK from "@shared/data/campusWalkNetwork.json";
-import { ENV } from "./_core/env";
-import { LOCAL_PREFIX, hashPassword, isLocalAccount, usernameToOpenId } from "./_core/localAccounts";
+import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_SETTINGS_DEFAULTS } from "../shared/campus.js";
+import { campusBuildings, campusNews, siteSettings, users, walkNetworks } from "../drizzle/schema.js";
+import DEFAULT_WALK_NETWORK from "../shared/data/campusWalkNetwork.json" with { type: "json" };
+import { ENV } from "./_core/env.js";
+import { LOCAL_PREFIX, hashPassword, isLocalAccount, usernameToOpenId } from "./_core/localAccounts.js";
 
 let _db = null;
 

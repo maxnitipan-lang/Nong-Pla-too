@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS } from "../shared/campus";
-import { describeLocation, locateBuilding } from "./buildingLocation";
-import { answerFromFaq } from "./chatFaq";
+import { CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS } from "../shared/campus.js";
+import { describeLocation, locateBuilding } from "./buildingLocation.js";
+import { answerFromFaq } from "./chatFaq.js";
 
 // Three buildings on a line, ~78 m apart (7e-4° of latitude): south, middle, north.
 const make = (id, lat) => ({

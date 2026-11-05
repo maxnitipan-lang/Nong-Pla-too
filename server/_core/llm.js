@@ -1,4 +1,4 @@
-import { ENV } from "./env";
+import { ENV } from "./env.js";
 
 const ensureArray = value => (Array.isArray(value) ? value : [value]);
 

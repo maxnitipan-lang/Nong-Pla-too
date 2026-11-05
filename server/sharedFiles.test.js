@@ -1,6 +1,6 @@
 import express from "express";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
-import { registerSharedFiles } from "./sharedFiles";
+import { registerSharedFiles } from "./sharedFiles.js";
 
 let server;
 let base;

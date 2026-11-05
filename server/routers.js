@@ -1,8 +1,8 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { COOKIE_NAME } from "@shared/const";
-import { adminRouter } from "./adminRouter";
-import { askCampusChat, isChatConfigured } from "./chat";
+import { COOKIE_NAME } from "../shared/const.js";
+import { adminRouter } from "./adminRouter.js";
+import { askCampusChat, isChatConfigured } from "./chat.js";
 import {
   getCampusBuildings,
   getCampusNews,
@@ -10,7 +10,7 @@ import {
   getUserRowByOpenId,
   getWalkNetwork,
   upsertUser,
-} from "./db";
+} from "./db.js";
 import {
   USER_COOKIE_MAX_AGE_MS,
   USER_COOKIE_NAME,
@@ -21,19 +21,19 @@ import {
   recordLoginFailure,
   usernameToOpenId,
   verifyPassword,
-} from "./_core/localAccounts";
-import { getWalkingRoute } from "./walkingRoute";
+} from "./_core/localAccounts.js";
+import { getWalkingRoute } from "./walkingRoute.js";
 import {
   ADMIN_COOKIE_MAX_AGE_MS,
   ADMIN_COOKIE_NAME,
   isPasswordAdminEnabled,
   mintAdminToken,
   verifyAdminPassword,
-} from "./_core/adminSession";
-import { getSessionCookieOptions } from "./_core/cookies";
-import { isStaff } from "@shared/roles";
-import { systemRouter } from "./_core/systemRouter";
-import { publicProcedure, router } from "./_core/trpc";
+} from "./_core/adminSession.js";
+import { getSessionCookieOptions } from "./_core/cookies.js";
+import { isStaff } from "../shared/roles.js";
+import { systemRouter } from "./_core/systemRouter.js";
+import { publicProcedure, router } from "./_core/trpc.js";
 
 /** Username of the built-in owner account (password = ADMIN_PASSWORD). */
 const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase();

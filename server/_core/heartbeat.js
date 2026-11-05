@@ -1,5 +1,5 @@
 import { TRPCError } from "@trpc/server";
-import { ENV } from "./env";
+import { ENV } from "./env.js";
 
 const SERVICE = "webdevtoken.v1.WebDevService";
 

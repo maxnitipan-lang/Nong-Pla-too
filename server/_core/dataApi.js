@@ -4,7 +4,7 @@
  *     query: { gl: "US", hl: "en", q: "manus" },
  *   })
  */
-import { ENV } from "./env";
+import { ENV } from "./env.js";
 
 export async function callDataApi(apiId, options = {}) {
   if (!ENV.forgeApiUrl) {

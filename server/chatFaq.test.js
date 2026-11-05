@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS } from "../shared/campus";
-import faqData from "../shared/data/chatFaq.json";
-import { answerFromFaq, normalizeQuestion, similarity } from "./chatFaq";
+import { CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS } from "../shared/campus.js";
+import faqData from "../shared/data/chatFaq.json" with { type: "json" };
+import { answerFromFaq, normalizeQuestion, similarity } from "./chatFaq.js";
 
 const ask = question => answerFromFaq(question, CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS);
 

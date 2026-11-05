@@ -9,9 +9,9 @@
 //   CHAT_BASE_URL    (optional) default Gemini's OpenAI-compatible base
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
-import { describeLocation, locateBuilding } from "./buildingLocation";
-import { answerFromFaq } from "./chatFaq";
-import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db";
+import { describeLocation, locateBuilding } from "./buildingLocation.js";
+import { answerFromFaq } from "./chatFaq.js";
+import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
 const CHAT_BASE_URL = process.env.CHAT_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
 // A pinned flash-lite model: generous free-tier quota AND consistently fast

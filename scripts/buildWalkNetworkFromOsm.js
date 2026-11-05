@@ -9,8 +9,8 @@
 // point: the admin "ทางเดิน" editor is where the real walkways get drawn/fixed.
 
 import fs from "node:fs";
-import { CAMPUS_BUILDINGS } from "../shared/campus";
-import { connectBuildingEntrance, distanceM } from "../shared/walkNetwork";
+import { CAMPUS_BUILDINGS } from "../shared/campus.js";
+import { connectBuildingEntrance, distanceM } from "../shared/walkNetwork.js";
 
 const WALKABLE = new Set([
   "service",

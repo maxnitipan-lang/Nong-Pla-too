@@ -9,8 +9,8 @@
 //      still hit.
 // Anything else goes to the AI as before.
 
-import faqData from "../shared/data/chatFaq.json";
-import { describeLocation, locateBuilding } from "./buildingLocation";
+import faqData from "../shared/data/chatFaq.json" with { type: "json" };
+import { describeLocation, locateBuilding } from "./buildingLocation.js";
 
 const ENTRIES = faqData.entries;
 
