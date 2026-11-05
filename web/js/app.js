@@ -320,7 +320,7 @@ function buildingCardHtml() {
   const walkText = walk
     ? `🚶 เดิน ${formatDistance(walk.distance)} · ~${walk.minutes} นาที${walk.offCampus ? " (จากนอกวิทยาลัย)" : ""}`
     : here() ? "กำลังคำนวณระยะทาง…" : "เปิดตำแหน่งเพื่อดูระยะทาง";
-  const routeLabel = KIOSK ? (state.kiosk ? "ดูเส้นทางจากตู้นี้" : "ดูเส้นทาง") : "เริ่มนำทาง";
+  const routeLabel = KIOSK ? (state.kiosk && !state.kiosk.fallback ? "ดูเส้นทางจากตู้นี้" : "ดูเส้นทาง") : "เริ่มนำทาง";
   return html`<article class="building-card">
     <button class="card-close" data-action="card-close" aria-label="ปิดรายละเอียด">${raw(icon("close"))}</button>
     <div class="building-card-head">
@@ -380,7 +380,7 @@ async function mountMap() {
     onSelect: (buildingId) => selectBuilding(buildingId),
     markerHtml,
     markerSize: [120, 72],
-    userLabel: KIOSK && state.kiosk ? "คุณอยู่ที่นี่" : undefined,
+    userLabel: KIOSK && state.kiosk ? (state.kiosk.fallback ? state.kiosk.name : "คุณอยู่ที่นี่") : undefined,
     controlsTop: KIOSK ? 70 : 120,
     dark: state.theme === "dark",
   };
@@ -850,8 +850,13 @@ async function loadData() {
   ]);
   state.buildings = buildings?.length ? buildings : CAMPUS_BUILDINGS;
   state.news = news ?? [];
-  state.kiosk = KIOSK ? settings?.kiosk ?? null : null;
-  nav.setNetwork(network ?? fallbackNetwork);
+  const walkNet = network ?? fallbackNetwork;
+  // A kiosk PC has no GPS: with no spot saved in admin, start routes at the main gate.
+  const gate = walkNet?.nodes?.find((n) => n.gate);
+  state.kiosk = KIOSK
+    ? settings?.kiosk ?? (gate ? { name: gate.name || "ประตูวิทยาลัย", lat: gate.lat, lng: gate.lng, fallback: true } : null)
+    : null;
+  nav.setNetwork(walkNet);
   nav.setFixedStart(state.kiosk);
 }
 

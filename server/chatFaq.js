@@ -171,14 +171,23 @@ function buildingAnswer(question, buildings, kiosk) {
 
 // ---------------------------------------------------------------- Q&A set
 
+/** What the question is about: the question minus "where / how / go / room…" words. */
+const QUESTION_WORDS = /ห้อง|อยู่|ไหน|ยังไง|ไหม|อยาก|ต้องการ|ขอ|บอก|ทางไป|พาไป|ไป|ที่|มี|คือ|อะไร|เมื่อไร|กี่/g;
+const topicOf = text => text.replace(QUESTION_WORDS, "");
+
 /** Best-matching Q&A entry and its score. */
 export function bestFaqMatch(question) {
   const text = normalizeQuestion(question);
   if (!text) return null;
   let best = null;
+  const subject = topicOf(text);
   for (const entry of ENTRIES) {
     for (const q of entry.questions) {
-      const score = similarity(text, normalizeQuestion(q));
+      const other = normalizeQuestion(q);
+      // "ห้องน้ำอยู่ไหน" shares "ห้อง…อยู่ไหน" with "ห้องผออยู่ไหน" — the subject must match too.
+      const otherSubject = topicOf(other);
+      if (subject && otherSubject && similarity(subject, otherSubject) < 0.4) continue;
+      const score = similarity(text, other);
       if (!best || score > best.score) best = { entry, score };
     }
   }
