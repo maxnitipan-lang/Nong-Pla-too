@@ -81,10 +81,14 @@ function collectDepartments() {
   const seen = new Map();
   for (const building of state.buildings) {
     for (const department of departmentsOf(building)) {
-      const key = department.code || department.name;
-      if (!seen.has(key)) seen.set(key, { department, building });
+      // Codes ("01", "02"…) are only unique inside one building, so match by name.
+      const key = (department.name || department.code || "").trim();
+      if (key && !seen.has(key)) seen.set(key, { department, building });
     }
   }
+  // Offices (ฝ่ายวิชาการ, งานทะเบียน…) are rooms too; show only real departments when there are any.
+  const real = [...seen.values()].filter(({ department }) => /^สาขา/.test(String(department.name).trim()));
+  if (real.length) return real;
   return seen.size ? [...seen.values()] : DEFAULT_DEPARTMENTS.map((department) => ({ department }));
 }
 
@@ -499,7 +503,7 @@ function departmentsHtml() {
   const cards = entries.map(({ department: d, building: b }, i) =>
     raw(html`<button class="department-card" data-action="department" data-index="${i}">
       ${raw(logoBox(d))}
-      <span class="dept-code">${d.code}</span>
+      <span class="dept-code">${String(i + 1).padStart(2, "0")}</span>
       <strong>${d.name}</strong>
       <small>${b ? `${b.shortName || b.name} · ชั้น ${d.floor}` : `ชั้น ${d.floor}`}</small>
       <span class="dept-link">ดูข้อมูลสาขา ${raw(icon("arrow"))}</span>
