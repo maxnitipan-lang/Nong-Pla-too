@@ -269,8 +269,8 @@
   .platoo-ui .kiosk-assistant, .platoo-ui .kiosk-menu { min-height: 0; }
   .platoo-ui .kiosk-assistant { padding: 20px 24px; }
   .platoo-ui .kiosk-menu { padding-top: 22px; padding-bottom: 18px; }
-  .platoo-ui .kiosk-mascot-wrap { --circle: 230px; width: 100%; height: 250px; }
-  .platoo-ui .platoo-main-image { height: 245px; }
+  .platoo-ui .kiosk-mascot-wrap { --circle: clamp(230px, calc(100vh - 520px), 400px); width: 100%; height: clamp(250px, calc(100vh - 450px), 470px); }
+  .platoo-ui .platoo-main-image { height: clamp(245px, calc(100vh - 460px), 460px); }
   .platoo-ui .kiosk-greeting { padding: 14px 20px; }
   .platoo-ui .kiosk-greeting strong { font-size: 19px; }
   .platoo-ui .kiosk-greeting span { font-size: 14px; }
