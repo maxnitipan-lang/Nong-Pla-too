@@ -4,6 +4,7 @@
 
 import { CAMPUS_BUILDINGS, CAMPUS_OVERVIEW } from "/shared/campus.js";
 import { buildingLatLng } from "../directions.js";
+import { esc } from "../util.js";
 
 const L = window.L;
 
@@ -33,7 +34,7 @@ export function createPointPicker(box, { value, onChange, disabled = false, buil
     const p = buildingLatLng(b);
     if (!p) continue;
     L.circleMarker([p.lat, p.lng], { radius: 4, color: "#fff", weight: 1, fillColor: b.accent, fillOpacity: 1, interactive: false })
-      .bindTooltip(b.shortName, { permanent: true, direction: "right", offset: [5, 0], className: "bname" })
+      .bindTooltip(esc(b.shortName), { permanent: true, direction: "right", offset: [5, 0], className: "bname" })
       .addTo(map);
   }
   let marker = null;

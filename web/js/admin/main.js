@@ -159,7 +159,9 @@ document.addEventListener("click", (event) => {
     const dark = document.documentElement.dataset.theme !== "dark";
     document.documentElement.dataset.theme = dark ? "dark" : "light";
     localStorage.setItem("theme", dark ? "dark" : "light");
-    void showPage();
+    // Only the button changes; the page stays as it is (unsaved walkway edits are kept).
+    const button = event.target.closest("[data-theme-toggle]");
+    button.innerHTML = `${icon(dark ? "sun" : "moon")} ${dark ? "โหมดสว่าง" : "โหมดมืด"}`;
     return;
   }
   const link = event.target.closest("a[data-link]");

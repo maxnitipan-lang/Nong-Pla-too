@@ -12,7 +12,7 @@ import { connectBuildingEntrance, networkComponents, networkLength, planCampusRo
 import { apiGet, apiPost } from "../api.js";
 import { buildingLatLng, formatDistance } from "../directions.js";
 import { icon as turnIcon } from "../icons.js";
-import { confirmDialog, html, icon, raw, toast, toastError, validate } from "./ui.js";
+import { confirmDialog, esc, html, icon, raw, toast, toastError, validate } from "./ui.js";
 
 const L = window.L;
 
@@ -217,7 +217,7 @@ export async function render(page, { canEdit }) {
       const p = buildingLatLng(b);
       if (!p) continue;
       L.circleMarker([p.lat, p.lng], { radius: 5, color: "#fff", weight: 1, fillColor: b.accent, fillOpacity: 0.9, interactive: false })
-        .bindTooltip(b.shortName, { permanent: true, direction: "right", className: "bname", offset: [6, 0] })
+        .bindTooltip(esc(b.shortName), { permanent: true, direction: "right", className: "bname", offset: [6, 0] })
         .addTo(layer);
     }
     net.edges.forEach((e, index) => {
@@ -233,7 +233,7 @@ export async function render(page, { canEdit }) {
         })
         .addTo(layer);
       line.addTo(layer);
-      if (e.name) line.bindTooltip(e.name, { sticky: true });
+      if (e.name) line.bindTooltip(esc(e.name), { sticky: true });
     });
     if (route) L.polyline(route.path, { color: "#e8563f", weight: 6, opacity: 0.9 }).addTo(layer);
     if (s.testStart) L.circleMarker([s.testStart.lat, s.testStart.lng], { radius: 8, color: "#fff", weight: 3, fillColor: "#16a34a", fillOpacity: 1 }).addTo(layer);
@@ -245,7 +245,7 @@ export async function render(page, { canEdit }) {
         edit.clickNode(node.id);
       });
       marker.on("dragend", () => edit.moveNode(node.id, marker.getLatLng()));
-      if (node.name) marker.bindTooltip(node.name, { direction: "top" });
+      if (node.name) marker.bindTooltip(esc(node.name), { direction: "top" });
       marker.addTo(layer);
     }
   }

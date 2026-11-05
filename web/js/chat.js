@@ -144,6 +144,8 @@ export class PlatooChat {
     const before = this.s;
     this.s = { ...this.s, ...patch };
     if ("settings" in patch) writeStore(SETTINGS_KEY, this.s.settings);
+    // Talking to the bot counts as using the kiosk (its 90 s reset watches for this).
+    if ("phase" in patch && patch.phase !== "idle") window.dispatchEvent(new Event("nongplatoo:activity"));
     this.update(before);
   }
 

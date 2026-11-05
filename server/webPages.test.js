@@ -37,6 +37,26 @@ describe("plain HTML pages", () => {
     expect((await fetch(`${base}/js/markdown.test.js`)).status).toBe(404);
   });
 
+  it("uses absolute paths, so /app/ (trailing slash) still loads its styles and scripts", async () => {
+    for (const page of ["/", "/app/"]) {
+      const text = await fetch(base + page).then(r => r.text());
+      expect(text, page).toContain('src="/js/app.js"');
+      expect(text, page).toContain('href="/css/app.css"');
+      expect(text, page).not.toMatch(/(href|src)="(css|js|vendor)\//);
+    }
+  });
+
+  it("answers 404 for a missing script or style (not another page)", async () => {
+    expect((await fetch(`${base}/js/does-not-exist.js`)).status).toBe(404);
+    expect((await fetch(`${base}/css/nope.css`)).status).toBe(404);
+  });
+
+  it("serves the admin page for /admin and its sub-pages", async () => {
+    for (const page of ["/admin", "/admin/walkways", "/admin/news/"]) {
+      expect(await fetch(base + page).then(r => r.text()), page).toContain('src="/js/admin/main.js"');
+    }
+  });
+
   it("sends old links to the new pages", async () => {
     const building = await fetch(`${base}/building/mech-auto`, { redirect: "manual" });
     expect(building.headers.get("location")).toBe("/app?place=mech-auto");

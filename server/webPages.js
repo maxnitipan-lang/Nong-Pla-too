@@ -21,7 +21,8 @@ export function registerWebPages(app) {
   // Page scripts, styles and the local copies of Leaflet / three.js / QR.
   // maxAge 0 = the browser re-checks each file (a quick 304 when unchanged), so a deploy never
   // mixes a new page with old scripts.
-  const files = express.static(WEB_DIR, { index: false, maxAge: 0 });
+  // fallthrough: false → a missing file is a 404, not the old React page.
+  const files = express.static(WEB_DIR, { index: false, maxAge: 0, fallthrough: false });
   app.use(["/js", "/css", "/vendor"], (req, res, next) => {
     if (req.path.endsWith(".test.js")) return res.status(404).end();
     // express strips the mount path; give static the full path back.

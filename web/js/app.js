@@ -382,11 +382,20 @@ async function mountMap() {
   };
   if (mapMode === "3d") {
     surface.innerHTML = '<p class="map3d-loading">กำลังโหลดแผนที่ 3D…</p>';
-    // three.js is big — only download it when the 3D map is actually shown.
-    const { createCampusMap3D } = await import("./map3d.js");
-    if (id !== mountId || !surface.isConnected) return;
-    surface.innerHTML = "";
-    const map3d = await createCampusMap3D(surface, { ...options, onUnsupported: () => toast("เครื่องนี้แสดงแผนที่ 3D ไม่ได้ — ใช้แผนที่ 2D แทน") });
+    let map3d = null;
+    try {
+      // three.js is big — only download it when the 3D map is actually shown.
+      const { createCampusMap3D } = await import("./map3d.js");
+      if (id !== mountId || !surface.isConnected) return;
+      surface.innerHTML = "";
+      map3d = await createCampusMap3D(surface, { ...options, onUnsupported: () => toast("เครื่องนี้แสดงแผนที่ 3D ไม่ได้ — ใช้แผนที่ 2D แทน") });
+    } catch (error) {
+      // e.g. offline before three.js was ever downloaded — show the 2D map instead of "loading" forever.
+      console.warn("[map] 3D map could not load", error);
+      if (id !== mountId || !surface.isConnected) return;
+      surface.innerHTML = "";
+      toast("โหลดแผนที่ 3D ไม่ได้ — ใช้แผนที่ 2D แทน");
+    }
     if (id !== mountId || !surface.isConnected) {
       map3d?.destroy();
       return;
@@ -759,6 +768,7 @@ document.addEventListener("focusin", (event) => {
 
 window.addEventListener("online", () => {
   state.online = true;
+  void reloadData();
   $(".online-status")?.replaceWith(htmlToNode(`<span class="online-status"><i></i> ออนไลน์</span>`));
 });
 window.addEventListener("offline", () => {
@@ -788,6 +798,7 @@ function goIdle() {
   Object.assign(state, { idle: true, selectedId: null, query: "", filter: "ทั้งหมด", listOpen: false, openDepartment: null, view: "home" });
   render();
   window.scrollTo({ top: 0 });
+  void reloadData(); // fresh news / admin edits for the next visitor
 }
 function wake() {
   state.idle = false;
@@ -795,6 +806,8 @@ function wake() {
   armIdle();
 }
 if (KIOSK) {
+  // The chat sends this while listening / thinking / speaking, so a voice conversation isn't cut off.
+  window.addEventListener("nongplatoo:activity", () => !state.idle && armIdle());
   for (const type of ["pointerdown", "keydown", "wheel", "touchstart"]) {
     window.addEventListener(type, () => (state.idle ? null : armIdle()), { passive: true });
   }
@@ -816,6 +829,35 @@ function registerServiceWorker() {
   });
 }
 
+/**
+ * Buildings, news, kiosk spot and walkways from the server (or the saved copy when offline).
+ * Runs at start, each time the kiosk resets for the next visitor, and when the internet
+ * comes back — so a kiosk left on for days still shows new news and admin edits.
+ */
+let defaultNetwork = null;
+async function loadData() {
+  defaultNetwork ??= await fetch(DEFAULT_WALK_NETWORK_URL).then((r) => r.json()).catch(() => null);
+  const fallbackNetwork = defaultNetwork ?? { nodes: [], edges: [] };
+  const [buildings, news, settings, network] = await Promise.all([
+    loadBuildings(CAMPUS_BUILDINGS),
+    loadNews(),
+    KIOSK ? loadSettings() : Promise.resolve(null),
+    loadWalkNetwork(fallbackNetwork),
+  ]);
+  state.buildings = buildings?.length ? buildings : CAMPUS_BUILDINGS;
+  state.news = news ?? [];
+  state.kiosk = KIOSK ? settings?.kiosk ?? null : null;
+  nav.setNetwork(network ?? fallbackNetwork);
+  nav.setFixedStart(state.kiosk);
+}
+
+/** Reload data in the background; redraw only if nobody is in the middle of something. */
+async function reloadData() {
+  await loadData().catch(() => undefined);
+  if (state.idle || (state.view !== "map" && state.openDepartment === null)) render();
+  else refresh();
+}
+
 async function start() {
   render();
   // The chat panel lives outside #app, so re-drawing the screens never resets the conversation.
@@ -828,18 +870,7 @@ async function start() {
   // Free hosting (Render) sleeps after 15 idle minutes; a page left open pings it every 10.
   setInterval(() => fetch("/api/health", { cache: "no-store" }).catch(() => undefined), 10 * 60 * 1000);
 
-  const defaultNetwork = await fetch(DEFAULT_WALK_NETWORK_URL).then((r) => r.json()).catch(() => ({ nodes: [], edges: [] }));
-  const [buildings, news, settings, network] = await Promise.all([
-    loadBuildings(CAMPUS_BUILDINGS),
-    loadNews(),
-    KIOSK ? loadSettings() : Promise.resolve(null),
-    loadWalkNetwork(defaultNetwork),
-  ]);
-  state.buildings = buildings?.length ? buildings : CAMPUS_BUILDINGS;
-  state.news = news ?? [];
-  state.kiosk = KIOSK ? settings?.kiosk ?? null : null;
-  nav.setNetwork(network ?? defaultNetwork);
-  nav.setFixedStart(state.kiosk);
+  await loadData();
   render();
 
   // Deep link from the kiosk QR: /app?place=<id>&go=1 → straight into navigation.

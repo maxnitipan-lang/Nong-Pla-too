@@ -11,10 +11,10 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600;700&family=Noto+Sans+Thai:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link rel="stylesheet" href="vendor/leaflet/leaflet.css" />
-    <link rel="stylesheet" href="css/platoo-ui.css" />
-    <link rel="stylesheet" href="css/platoo-extra.css" />
-    <link rel="stylesheet" href="css/app.css" />
+    <link rel="stylesheet" href="/vendor/leaflet/leaflet.css" />
+    <link rel="stylesheet" href="/css/platoo-ui.css" />
+    <link rel="stylesheet" href="/css/platoo-extra.css" />
+    <link rel="stylesheet" href="/css/app.css" />
   </head>
   <!-- Phone app ( /app ): GPS distance and live turn-by-turn navigation. -->
   <body data-mode="phone">
@@ -25,9 +25,9 @@
     <noscript>ต้องเปิดใช้ JavaScript เพื่อใช้งานน้องปลาทู</noscript>
     <!-- three.js for the 3D map (loaded only when 3D is shown). -->
     <script type="importmap">
-      { "imports": { "three": "./vendor/three/three.module.min.js", "three/addons/": "./vendor/three/addons/" } }
+      { "imports": { "three": "/vendor/three/three.module.min.js", "three/addons/": "/vendor/three/addons/" } }
     </script>
-    <script src="vendor/leaflet/leaflet.js"></script>
-    <script type="module" src="js/app.js"></script>
+    <script src="/vendor/leaflet/leaflet.js"></script>
+    <script type="module" src="/js/app.js"></script>
   </body>
 </html>
