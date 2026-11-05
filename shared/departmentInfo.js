@@ -126,6 +126,7 @@ const INFO = [
   },
   {
     match: /การตลาด|ค้าปลีก/,
+    logo: "/images/departments/retail.jpg",
     icon: "🛒",
     group: "business",
     tags: ["business"],
