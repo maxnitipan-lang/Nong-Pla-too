@@ -317,3 +317,60 @@
 .platoo-ui .news-detail h2 { margin: 10px 0 6px; }
 .platoo-ui .news-detail .card-qr { margin-top: 16px; }
 .platoo-ui .news-more-qr { max-width: 460px; margin: 22px auto 0; }
+
+/* ---------------------------------------------------------------- departments page (redesign) */
+.platoo-ui .dept-quiz-cta { width: 100%; display: flex; align-items: center; gap: 16px; margin: 4px 0 18px; padding: 14px 22px 14px 14px; color: white; text-align: left; font: inherit; background: linear-gradient(135deg, #0b4f72, #138b8f); border: 0; border-radius: 20px; box-shadow: 0 12px 30px rgba(8,70,96,.22); cursor: pointer; transition: transform .16s; }
+.platoo-ui .dept-quiz-cta:hover { transform: translateY(-2px); }
+.platoo-ui .dept-quiz-cta img { height: 74px; margin: -18px 0 -10px; filter: drop-shadow(0 8px 10px rgba(0,0,0,.2)); }
+.platoo-ui .dept-quiz-cta span { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.platoo-ui .dept-quiz-cta strong { font-size: 18px; }
+.platoo-ui .dept-quiz-cta small { color: #cdeef0; font-size: 13px; }
+.platoo-ui .dept-quiz-cta svg { width: 22px; }
+
+.platoo-ui .dept-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+.platoo-ui .dept-filters button { --dept: var(--blue); display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 16px; color: var(--text); font: inherit; font-size: 14px; font-weight: 600; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; cursor: pointer; }
+.platoo-ui .dept-filters button b { min-width: 24px; padding: 1px 7px; font-size: 12px; color: var(--muted); background: color-mix(in srgb, var(--dept) 12%, transparent); border-radius: 99px; }
+.platoo-ui .dept-filters button.active { color: white; background: var(--dept); border-color: var(--dept); }
+.platoo-ui .dept-filters button.active b { color: white; background: rgba(255,255,255,.22); }
+
+.platoo-ui .department-card { --dept: #3c8f8d; gap: 6px; padding: 20px; border-top: 4px solid var(--dept); }
+.platoo-ui .department-card .department-icon { margin-bottom: 6px; }
+.platoo-ui .dept-emoji { font-size: 26px; line-height: 1; }
+.platoo-ui .department-card > strong { line-height: 1.35; }
+.platoo-ui .dept-summary { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.platoo-ui .dept-careers { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.platoo-ui .dept-careers span { padding: 3px 10px; font-size: 12px; font-weight: 600; color: var(--dept); background: color-mix(in srgb, var(--dept) 11%, transparent); border-radius: 99px; }
+.platoo-ui .dept-foot { width: 100%; display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: auto; padding-top: 10px; }
+.platoo-ui .dept-foot small { color: var(--muted); font-size: 12px; }
+.platoo-ui .dept-foot .dept-link { color: var(--dept); white-space: nowrap; }
+.platoo-ui .dept-group-tag { display: inline-block; margin-top: 10px; padding: 3px 12px; font-size: 12px; font-weight: 700; color: var(--dept); background: color-mix(in srgb, var(--dept) 12%, transparent); border-radius: 99px; }
+
+/* "help me choose" quiz */
+.platoo-ui .dept-quiz { text-align: left; }
+.platoo-ui .dept-quiz .quiz-mascot { height: 86px; display: block; margin: -4px 0 4px; }
+.platoo-ui .quiz-step { color: var(--muted); font-size: 13px; font-weight: 700; }
+.platoo-ui .quiz-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 14px; }
+.platoo-ui .quiz-option { display: flex; align-items: center; gap: 10px; min-height: 58px; padding: 10px 14px; color: var(--text); font: inherit; font-size: 14px; font-weight: 600; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; }
+.platoo-ui .quiz-option:hover { border-color: var(--blue); }
+.platoo-ui .quiz-option span { font-size: 24px; }
+.platoo-ui .quiz-results { display: flex; flex-direction: column; gap: 10px; margin-top: 14px; }
+.platoo-ui .quiz-result { display: flex; align-items: center; gap: 12px; padding: 10px 14px; color: var(--text); font: inherit; text-align: left; background: var(--surface); border: 1px solid var(--border); border-radius: 14px; cursor: pointer; }
+.platoo-ui .quiz-result > span:not(.department-icon) { flex: 1; display: flex; flex-direction: column; }
+.platoo-ui .quiz-result small { color: var(--muted); font-size: 12px; }
+.platoo-ui .quiz-result svg { width: 18px; }
+.platoo-ui .quiz-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+@media (min-width: 1024px) {
+  .platoo-ui .dept-quiz-cta strong { font-size: 22px; }
+  .platoo-ui .dept-quiz-cta small { font-size: 16px; }
+  .platoo-ui .dept-summary { font-size: 15px; }
+  .platoo-ui .dept-careers span, .platoo-ui .dept-foot small { font-size: 14px; }
+  .platoo-ui .dept-filters button { min-height: 48px; font-size: 16px; }
+  .platoo-ui .quiz-option { min-height: 66px; font-size: 16px; }
+  .platoo-ui .dept-quiz { width: min(680px, calc(100% - 28px)); }
+}
+@media (max-width: 640px) {
+  .platoo-ui .department-grid { grid-template-columns: 1fr; }
+  .platoo-ui .quiz-options { grid-template-columns: 1fr; }
+  .platoo-ui .dept-filters { flex-wrap: nowrap; overflow-x: auto; padding-bottom: 4px; }
+  .platoo-ui .dept-filters button { flex: none; }
+}

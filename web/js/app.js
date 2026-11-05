@@ -5,7 +5,7 @@
 // Same screens for both: home, map, news, departments (the Figma design).
 
 import { CAMPUS_BUILDINGS, CAMPUS_CATEGORIES, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS } from "/shared/campus.js";
-import { withDepartmentInfo } from "/shared/departmentInfo.js";
+import { DEPARTMENT_GROUPS, DEPARTMENT_QUIZ, suggestDepartments, withDepartmentInfo } from "/shared/departmentInfo.js";
 import { distanceM, planCampusRoute } from "/shared/walkNetwork.js";
 import { loadBuildings, loadNews, loadSettings, loadWalkNetwork, savedBuildings, savedNews } from "./api.js";
 import { buildingLatLng, buildingSearchText, formatDistance, hasCoords, phoneRouteUrl, walkMinutes, walkingDeepLink } from "./directions.js";
@@ -62,6 +62,8 @@ const state = {
   theme: localStorage.getItem("theme") === "dark" ? "dark" : "light",
   online: navigator.onLine,
   openDepartment: null,
+  deptGroup: "", // departments page filter ("" = all)
+  deptQuiz: null, // { step, answers } while the "help me choose" quiz is open
   openNews: null, // kiosk: index of the story shown with its QR code
   installPrompt: null,
   installDismissed: readStore(INSTALL_DISMISSED_KEY) === 1 || window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true,
@@ -531,20 +533,71 @@ function newsHtml() {
 /** The built-in data lists every department on floor 1 — only say a floor once real per-floor data exists. */
 const floorKnown = (d, b) => Boolean(d?.floor) && ((b?.floorsDetail?.length ?? 0) > 1 || d.floor > 1);
 
+/** "Help me choose": two questions, then up to three suggested departments. */
+function quizHtml(entries, logoBox) {
+  const quiz = state.deptQuiz;
+  if (!quiz) return "";
+  const done = quiz.step >= DEPARTMENT_QUIZ.length;
+  const q = DEPARTMENT_QUIZ[quiz.step];
+  const picks = done ? suggestDepartments(entries.map((e, index) => ({ ...e, index })), quiz.answers) : [];
+  const body = done
+    ? html`<h2>สาขาที่น่าจะเหมาะกับคุณ</h2>
+      ${picks.length
+        ? raw(html`<div class="quiz-results">${picks.map((e) => raw(html`<button class="quiz-result" data-action="quiz-pick" data-index="${e.index}">
+            ${raw(logoBox(e.department))}<span><strong>${e.department.name}</strong><small>${(e.department.careers ?? []).slice(0, 3).join(" · ")}</small></span>${raw(icon("arrow"))}
+          </button>`))}</div>`)
+        : raw(html`<p>ยังไม่มีสาขาที่ตรงกับคำตอบ ลองดูสาขาทั้งหมด หรือถามน้องปลาทูได้เลยครับ</p>`)}
+      <div class="quiz-actions"><button class="route-retry alt" data-action="quiz-restart">ทำใหม่</button><button class="route-retry" data-action="quiz-close">ดูสาขาทั้งหมด</button></div>`
+    : html`<span class="quiz-step">ข้อ ${quiz.step + 1} / ${DEPARTMENT_QUIZ.length}</span>
+      <h2>${q.question}</h2>
+      <div class="quiz-options">${q.options.map((o) => raw(html`<button class="quiz-option" data-action="quiz-answer" data-key="${q.key}" data-value="${o.id}"><span aria-hidden="true">${o.icon}</span>${o.label}</button>`))}</div>`;
+  return html`<button class="ai-backdrop visible" data-action="quiz-close" aria-label="ปิด"></button>
+    <section class="dept-detail dept-quiz" role="dialog" aria-label="ช่วยเลือกสาขา">
+      <button class="card-close" data-action="quiz-close" aria-label="ปิด">${raw(icon("close"))}</button>
+      <img class="quiz-mascot" src="/mascots/${done ? "jump" : "search"}.webp" alt="" aria-hidden="true" />
+      ${raw(body)}
+    </section>`;
+}
+
 function departmentsHtml() {
   const entries = collectDepartments();
+  const groupOf = (d) => DEPARTMENT_GROUPS.find((g) => g.id === d.group);
+  const accentOf = (d) => groupOf(d)?.accent ?? d.accent ?? "#3c8f8d";
   const logoBox = (d) => {
     const logo = logoOf(d);
-    return html`<span class="department-icon" style="background:${d.accent}18;color:${d.accent}">${logo ? raw(html`<img src="${logo}" alt="" onerror="this.remove()" />`) : raw(icon("school"))}</span>`;
+    const inner = logo
+      ? raw(html`<img src="${logo}" alt="" onerror="this.remove()" />`)
+      : d.icon ? raw(html`<span class="dept-emoji" aria-hidden="true">${d.icon}</span>`) : raw(icon("school"));
+    return html`<span class="department-icon" style="background:${accentOf(d)}1f;color:${accentOf(d)}">${inner}</span>`;
   };
-  const cards = entries.map(({ department: d, building: b }, i) =>
-    raw(html`<button class="department-card" data-action="department" data-index="${i}">
+  // First sentence of the description, for the card.
+  const summary = (d) => String(d.description ?? "").split(/ ฝึก| เน้น/)[0];
+  const groupIds = new Set(entries.map((e) => e.department.group).filter(Boolean));
+  const groups = DEPARTMENT_GROUPS.filter((g) => groupIds.has(g.id));
+  const visible = entries
+    .map((entry, index) => ({ ...entry, index }))
+    .filter((e) => !state.deptGroup || e.department.group === state.deptGroup);
+
+  const card = ({ department: d, building: b, index }) =>
+    raw(html`<button class="department-card" data-action="department" data-index="${index}" style="--dept:${accentOf(d)}">
       ${raw(logoBox(d))}
-      <span class="dept-code">${String(i + 1).padStart(2, "0")}</span>
-      <strong>${d.name}</strong>
-      <small>${[b?.shortName || b?.name, floorKnown(d, b) ? `ชั้น ${d.floor}` : ""].filter(Boolean).join(" · ")}</small>
-      <span class="dept-link">ดูข้อมูลสาขา ${raw(icon("arrow"))}</span>
-    </button>`));
+      <strong>${d.name.replace(/^สาขาวิชา|^สาขา/, "")}</strong>
+      ${summary(d) ? raw(html`<p class="dept-summary">${summary(d)}</p>`) : ""}
+      ${d.careers?.length ? raw(html`<span class="dept-careers">${d.careers.slice(0, 2).map((c) => raw(html`<span>${c}</span>`))}</span>`) : ""}
+      <span class="dept-foot">
+        ${b ? raw(html`<small>📍 ${[b.shortName || b.name, floorKnown(d, b) ? `ชั้น ${d.floor}` : ""].filter(Boolean).join(" · ")}</small>`) : raw("<small></small>")}
+        <span class="dept-link">ดูข้อมูล ${raw(icon("arrow"))}</span>
+      </span>
+    </button>`);
+
+  const filterBar = groups.length > 1
+    ? raw(html`<div class="dept-filters" role="tablist" aria-label="กลุ่มสาขา">
+        <button class="${state.deptGroup ? "" : "active"}" data-action="dept-group" data-group="">ทั้งหมด <b>${entries.length}</b></button>
+        ${groups.map((g) => raw(html`<button class="${state.deptGroup === g.id ? "active" : ""}" data-action="dept-group" data-group="${g.id}" style="--dept:${g.accent}">${g.label} <b>${entries.filter((e) => e.department.group === g.id).length}</b></button>`))}
+      </div>`)
+    : "";
+
+  const quizBox = quizHtml(entries, logoBox);
 
   const open = state.openDepartment !== null ? entries[state.openDepartment] : null;
   const chips = (title, list) => (list?.length ? raw(html`<h3>${title}</h3><div class="room-chips">${list.map((s) => raw(html`<span>${s}</span>`))}</div>`) : "");
@@ -553,6 +606,7 @@ function departmentsHtml() {
       <section class="dept-detail" role="dialog" aria-label="${open.department.name}">
         <button class="card-close" data-action="department-close" aria-label="ปิด">${raw(icon("close"))}</button>
         ${raw(logoBox(open.department))}
+        ${groupOf(open.department) ? raw(html`<span class="dept-group-tag" style="--dept:${accentOf(open.department)}">${groupOf(open.department).label}</span>`) : ""}
         <h2>${open.department.name}</h2>
         <p>${open.department.description}</p>
         ${chips("ทักษะที่ได้", open.department.skills)}
@@ -571,7 +625,14 @@ function departmentsHtml() {
       <img class="section-mascot department-heading-mascot" src="/mascots/globe.webp" alt="" aria-hidden="true" />
     </div>
     <p class="page-intro">สำรวจหลักสูตรสายอาชีพที่ตอบโจทย์อนาคต พร้อมห้องปฏิบัติการและอุปกรณ์จริง</p>
-    <div class="department-grid">${cards}</div>
+    <button class="dept-quiz-cta" data-action="dept-quiz">
+      <img src="/mascots/search.webp" alt="" aria-hidden="true" />
+      <span><strong>ยังไม่รู้จะเรียนสาขาไหน?</strong><small>ตอบ 2 ข้อ ให้น้องปลาทูช่วยแนะนำสาขาที่เหมาะกับคุณ</small></span>
+      ${raw(icon("arrow"))}
+    </button>
+    ${filterBar}
+    <div class="department-grid">${visible.map(card)}</div>
+    ${raw(quizBox)}
     ${detail}
   </main>`;
 }
@@ -761,6 +822,34 @@ const actions = {
     state.openNews = null;
     render();
   },
+  "dept-group": (el) => {
+    state.deptGroup = el.dataset.group ?? "";
+    render();
+  },
+  "dept-quiz": () => {
+    state.deptQuiz = { step: 0, answers: {} };
+    render();
+  },
+  "quiz-answer": (el) => {
+    const quiz = state.deptQuiz;
+    if (!quiz) return;
+    quiz.answers[el.dataset.key] = el.dataset.value;
+    quiz.step += 1;
+    render();
+  },
+  "quiz-restart": () => {
+    state.deptQuiz = { step: 0, answers: {} };
+    render();
+  },
+  "quiz-close": () => {
+    state.deptQuiz = null;
+    render();
+  },
+  "quiz-pick": (el) => {
+    state.deptQuiz = null;
+    state.openDepartment = Number(el.dataset.index);
+    render();
+  },
   "department-close": () => {
     state.openDepartment = null;
     render();
@@ -845,7 +934,7 @@ function goIdle() {
   // Wipe the visitor's session for the next person.
   nav.clear();
   window.dispatchEvent(new Event("nongplatoo:reset"));
-  Object.assign(state, { idle: true, selectedId: null, query: "", filter: "ทั้งหมด", listOpen: false, openDepartment: null, openNews: null, view: "home" });
+  Object.assign(state, { idle: true, selectedId: null, query: "", filter: "ทั้งหมด", listOpen: false, openDepartment: null, openNews: null, deptGroup: "", deptQuiz: null, view: "home" });
   render();
   window.scrollTo({ top: 0 });
   void reloadData(); // fresh news / admin edits for the next visitor
