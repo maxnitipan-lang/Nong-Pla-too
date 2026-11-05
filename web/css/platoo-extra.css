@@ -41,7 +41,8 @@
 .platoo-ui .gps-error { color: #c46242; }
 
 /* News: real thumbnails and links. */
-.platoo-ui a.news-card, .platoo-ui a.featured-news { color: inherit; text-decoration: none; }
+.platoo-ui a.news-card { color: inherit; text-decoration: none; }
+.platoo-ui a.featured-news { color: white; text-decoration: none; } /* the design's white text on the blue card */
 .platoo-ui .featured-news { position: relative; }
 .platoo-ui .feature-art.photo { padding: 0; overflow: hidden; background: none; }
 .platoo-ui .feature-art.photo img { width: 100%; height: 100%; object-fit: cover; border-radius: 18px; }

@@ -287,9 +287,35 @@ function rowToNews(row) {
   };
 }
 
+// When the database can't be used, show live news from the college website instead of the
+// sample cards. Kept for 30 minutes so the site isn't asked on every page load; a failure is
+// remembered for 5 minutes. (On Render the site's Cloudflare blocks the request — sample cards then.)
+const LIVE_NEWS_TTL_MS = 30 * 60 * 1000;
+const LIVE_NEWS_RETRY_MS = 5 * 60 * 1000;
+let liveNews = { items: null, until: 0 };
+
+async function liveCollegeNews() {
+  if (Date.now() < liveNews.until) return liveNews.items;
+  try {
+    // Imported here: newsScraper.js imports this file too.
+    const { scrapeCollegeNews } = await import("./newsScraper.js");
+    const rows = await scrapeCollegeNews();
+    liveNews = { items: rows.map(rowToNews), until: Date.now() + LIVE_NEWS_TTL_MS };
+  } catch (error) {
+    console.warn("[News] live college news unavailable:", error instanceof Error ? error.message : error);
+    liveNews = { items: null, until: Date.now() + LIVE_NEWS_RETRY_MS };
+  }
+  return liveNews.items;
+}
+
+/** No usable news in the database → live news from sstc.ac.th → the sample cards. */
+async function fallbackNews() {
+  return (await liveCollegeNews()) ?? CAMPUS_NEWS;
+}
+
 export async function getCampusNews() {
   const db = await getDb();
-  if (!db) return CAMPUS_NEWS;
+  if (!db) return fallbackNews();
 
   try {
     const rows = await db
@@ -297,11 +323,11 @@ export async function getCampusNews() {
       .from(campusNews)
       .where(eq(campusNews.published, 1))
       .orderBy(asc(campusNews.sortOrder), asc(campusNews.createdAt));
-    if (!rows.length) return CAMPUS_NEWS;
+    if (!rows.length) return fallbackNews();
     return sortNewsRows(rows).map(rowToNews);
   } catch (error) {
-    console.warn("[Database] Could not load campus news, using demo data:", error);
-    return CAMPUS_NEWS;
+    console.warn("[Database] Could not load campus news, trying the college website:", error instanceof Error ? error.message : error);
+    return fallbackNews();
   }
 }
 
