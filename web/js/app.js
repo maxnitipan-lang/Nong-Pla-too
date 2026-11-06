@@ -531,19 +531,29 @@ function newsHtml() {
     return html`<span class="news-badges"><span class="news-kind" style="--kind:${k.color}">${k.emoji} ${k.label}</span>${isFreshNews(item) ? raw('<span class="news-new">ใหม่</span>') : ""}</span>`;
   };
 
-  // Admissions and announcements first; otherwise the site's order (newest first).
+  // Admissions and announcements are documents (their pictures are just file covers), so they
+  // get their own short list at the top; the photo stories fill the featured spot and the grid.
   const kindsPresent = NEWS_KINDS.filter((k) => state.news.some((n) => newsKind(n).id === k.id));
-  const order = (n) => (["apply", "notice"].includes(newsKind(n).id) ? 0 : 1);
-  const list = state.news
-    .filter((n) => !state.newsKind || newsKind(n).id === state.newsKind)
-    .map((n, i) => ({ n, i }))
-    .sort((a, b) => order(a.n) - order(b.n) || a.i - b.i)
-    .map((x) => x.n);
+  const isNotice = (n) => ["apply", "notice"].includes(newsKind(n).id);
+  const shown = state.news.filter((n) => !state.newsKind || newsKind(n).id === state.newsKind);
+  const notices = shown.filter(isNotice);
+  const list = shown.filter((n) => !isNotice(n));
 
   // Up to 3 stories rotate in the featured spot; keep at least 3 for the grid when there are few.
-  const featuredCount = list.length >= 6 ? 3 : 1;
+  const featuredCount = list.length >= 6 ? 3 : list.length ? 1 : 0;
   const featuredItems = list.slice(0, featuredCount);
   const rest = list.slice(featuredCount);
+  const noticeList = notices.length
+    ? html`<section class="notice-list" aria-label="ประกาศจากวิทยาลัย">
+        <h2>📢 ประกาศจากวิทยาลัย</h2>
+        ${notices.map((item) =>
+          raw(link(
+            item,
+            "notice-row",
+            html`<span class="notice-date">${item.date || ""}</span><strong>${item.title}</strong>${isFreshNews(item) ? raw('<span class="news-new">ใหม่</span>') : ""}${raw(icon("arrow"))}`,
+          )))}
+      </section>`
+    : "";
   const featuredHtml = featuredItems.length
     ? html`<div class="featured-carousel">
         ${featuredItems.map((item, i) =>
@@ -565,7 +575,9 @@ function newsHtml() {
           ? raw(html`<div class="featured-dots">${featuredItems.map((_, i) => raw(html`<button type="button" class="${i === 0 ? "active" : ""}" aria-label="ข่าวเด่น ${i + 1}"></button>`))}</div>`)
           : ""}
       </div>`
-    : html`<div class="empty-state">ยังไม่มีข่าวในตอนนี้ — ลองเปิดหน้านี้ใหม่อีกครั้งภายหลังครับ</div>`;
+    : notices.length
+      ? ""
+      : html`<div class="empty-state">ยังไม่มีข่าวในตอนนี้ — ลองเปิดหน้านี้ใหม่อีกครั้งภายหลังครับ</div>`;
 
   const cards = rest.map((item) =>
     raw(link(
@@ -607,6 +619,7 @@ function newsHtml() {
     </div>
     ${latest ? raw(html`<p class="page-intro">ข่าวล่าสุดเมื่อ ${latest.getDate()} ${THAI_MONTHS[latest.getMonth()]} ${String(latest.getFullYear() + 543).slice(-2)}</p>`) : ""}
     ${filterBar}
+    ${raw(noticeList)}
     ${raw(featuredHtml)}
     ${cards.length ? raw(html`<div class="news-grid news-grid-photo">${cards}</div>`) : ""}
     ${KIOSK

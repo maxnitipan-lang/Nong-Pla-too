@@ -11,8 +11,8 @@ export const CAMPUS_CATEGORIES = ["สายอุตสาหกรรม", "�
 
 export const CAMPUS_OVERVIEW = {
   name: "วิทยาลัยเทคนิคสมุทรสงคราม",
-  shortName: "SMTC",
-  address: "วิทยาลัยเทคนิคสมุทรสงคราม อำเภอเมืองสมุทรสงคราม จังหวัดสมุทรสงคราม",
+  shortName: "SSTC",
+  address: "89 หมู่ 12 ถนนเอกชัย ตำบลลาดใหญ่ อำเภอเมือง จังหวัดสมุทรสงคราม 75000",
   mapCenter: { lat: 13.41967, lng: 100.01036 },
   stats: [
     { value: "22", label: "อาคาร/หน่วยงาน" },
@@ -515,7 +515,7 @@ export const CAMPUS_NEWS = [
 export const CAMPUS_SETTINGS_DEFAULTS = {
   collegeName: CAMPUS_OVERVIEW.name,
   address: CAMPUS_OVERVIEW.address,
-  contactEmail: "info@smtc.ac.th",
+  contactEmail: "samutsongkhram.sstc@gmail.com",
   mapEmbedUrl: "",
   mapCenter: CAMPUS_OVERVIEW.mapCenter,
   kiosk: null,

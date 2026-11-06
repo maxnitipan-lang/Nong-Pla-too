@@ -12,7 +12,7 @@ export async function render(page, { canEdit }) {
   page.innerHTML = html`<form class="card stack" id="settings-form" novalidate>
     ${raw(field({ label: "ชื่อวิทยาลัย", name: "collegeName", value: data.collegeName, disabled: !canEdit }))}
     ${raw(field({ label: "ที่อยู่", name: "address", value: data.address, rows: 2, disabled: !canEdit }))}
-    ${raw(field({ label: "อีเมลติดต่อ", name: "contactEmail", value: data.contactEmail, placeholder: "info@smtc.ac.th", disabled: !canEdit }))}
+    ${raw(field({ label: "อีเมลติดต่อ", name: "contactEmail", value: data.contactEmail, placeholder: "samutsongkhram.sstc@gmail.com", disabled: !canEdit }))}
     ${raw(field({
       label: "ลิงก์ฝัง Google My Maps",
       name: "mapEmbedUrl",

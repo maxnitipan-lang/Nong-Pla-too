@@ -10,6 +10,7 @@
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
+import { COLLEGE_FACTS, collegeFactLines } from "../shared/collegeFacts.js";
 import { answerFromFaq } from "./chatFaq.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
@@ -61,6 +62,9 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     `ที่อยู่วิทยาลัย: ${settings.address}`,
     settings.contactEmail ? `อีเมลติดต่อ: ${settings.contactEmail}` : "",
     "",
+    "== ข้อมูลวิทยาลัย (จากเว็บไซต์วิทยาลัย) ==",
+    ...collegeFactLines(),
+    "",
     "== รายชื่ออาคาร/หน่วยงาน (แต่ละบรรทัดขึ้นต้นด้วย id ของอาคาร) ==",
     "หมายเหตุ: ชื่ออาคารสาขาวิชาส่วนใหญ่ = สาขาวิชาที่อยู่ในอาคารนั้น เวลาตอบให้พูดชื่อครั้งเดียว ห้ามพูดซ้ำแบบ 'อาคาร X มีสาขา X'",
     buildingLines || "(ยังไม่มีข้อมูล)",
@@ -71,7 +75,7 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "== กติกาการตอบ ==",
     "1. ตอบเป็นภาษาไทย สุภาพ กระชับ ตรงประเด็น",
     "2. ใช้เฉพาะข้อมูลข้างต้น ห้ามแต่งชื่ออาคาร แผนก หรือข่าวที่ไม่มีในรายการ",
-    `3. ถ้าไม่มีข้อมูลให้บอกตรง ๆ ว่าไม่ทราบ และแนะนำให้ติดต่อวิทยาลัย${settings.contactEmail ? ` ที่ ${settings.contactEmail}` : ""}`,
+    `3. ถ้าไม่มีข้อมูลให้บอกตรง ๆ ว่าไม่ทราบ และแนะนำให้ติดต่อวิทยาลัย โทร ${COLLEGE_FACTS.phone}${settings.contactEmail ? ` หรืออีเมล ${settings.contactEmail}` : ""}`,
     "4. ถ้าผู้ใช้ถามว่าอาคาร สาขา หรือห้องอยู่ตรงไหน ให้บอกตำแหน่งจากช่อง ตำแหน่ง: ของอาคารนั้น (อยู่ฝั่งไหนของวิทยาลัย ใกล้อาคารอะไร) และชั้นถ้ามีข้อมูล",
     `5. ถ้าผู้ใช้ขอเส้นทาง / วิธีไป / นำทาง ไปอาคารใดอาคารหนึ่ง ให้เรียกฟังก์ชัน ${ROUTE_TOOL} พร้อม buildingId (id จากรายการด้านบน) ของอาคารนั้น แทนการอธิบายเส้นทางด้วยข้อความ`,
     "6. ถ้าคำถามไม่เกี่ยวกับวิทยาลัย (เช่น การบ้าน ข่าวทั่วไป ความเห็นส่วนตัว) ให้ตอบปฏิเสธอย่างสุภาพเพียง 1 ประโยค แล้วชวนถามเรื่องในวิทยาลัยแทน ห้ามตอบเนื้อหานั้นยาว",

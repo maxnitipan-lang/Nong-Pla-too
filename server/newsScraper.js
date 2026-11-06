@@ -10,11 +10,12 @@ import { upsertCampusNews } from "./db.js";
 
 const SITE_BASE = "https://www.sstc.ac.th/";
 const NEWSLETTER_LIST_URL = "https://www.sstc.ac.th/news_325_1";
+const ANNOUNCEMENT_LIST_URL = "https://www.sstc.ac.th/news_90_1";
 const ACCENTS = ["#eb8b67", "#3c8f8d", "#bc7a3e", "#5b7da9", "#7e6aa8"];
 const DEFAULT_LIMIT = 6;
 
-/** Scrape (but do not save) the newest newsletter items. */
-export async function scrapeCollegeNews(limit = DEFAULT_LIMIT) {
+/** Scrape (but do not save) the newest items of one news list on the college site. */
+async function scrapeList({ listUrl, section, tag, limit, keep = () => true }) {
   // The college site sits behind Cloudflare, which turns away many data-centre
   // requests (Render gets 403). Ask like a normal browser first, then as our bot.
   const attempts = [
@@ -28,7 +29,7 @@ export async function scrapeCollegeNews(limit = DEFAULT_LIMIT) {
   ];
   let res = null;
   for (const headers of attempts) {
-    res = await fetch(NEWSLETTER_LIST_URL, { headers, signal: AbortSignal.timeout(20_000) });
+    res = await fetch(listUrl, { headers, signal: AbortSignal.timeout(20_000) });
     if (res.ok) break;
   }
   if (!res || !res.ok) {
@@ -57,7 +58,7 @@ export async function scrapeCollegeNews(limit = DEFAULT_LIMIT) {
       $titleLink.attr("title")?.trim() ||
       $el.find("a.txt-link[title]").first().attr("title")?.trim() ||
       "";
-    if (!idMatch || !title) return;
+    if (!idMatch || !title || !keep(title)) return;
 
     const numericId = idMatch[1];
     const rawDate = $el.find("time").first().text().replace(/ /g, " ").trim();
@@ -73,14 +74,14 @@ export async function scrapeCollegeNews(limit = DEFAULT_LIMIT) {
     }
 
     items.push({
-      id: `sstc-325-${numericId}`,
-      tag: "จดหมายข่าว",
+      id: `sstc-${section}-${numericId}`,
+      tag,
       title,
       excerpt: "",
       dateLabel,
       timeLabel: "ข่าวจากเว็บวิทยาลัย",
       accent: ACCENTS[items.length % ACCENTS.length],
-      link: `${SITE_BASE}news-detail_325_${numericId}`,
+      link: `${SITE_BASE}news-detail_${section}_${numericId}`,
       imageUrl,
       source: "sstc.ac.th",
       published: true,
@@ -111,10 +112,44 @@ async function fetchExcerpt(url, headers) {
   const res = await fetch(url, { headers, signal: AbortSignal.timeout(10_000) });
   if (!res.ok) return "";
   const $ = cheerio.load(await res.text());
-  const text = $("table.textData").first().text().replace(/\s+/g, " ").trim();
+  // Announcements are often just a file link: "ดาวน์โหลดไฟล์" is not a description.
+  const text = $("table.textData").first().text().replace(/ดาวน์โหลดไฟล์/g, "").replace(/\s+/g, " ").trim();
+  if (text.length < 25) return "";
   if (text.length <= 180) return text;
   const cut = text.slice(0, 180);
   return `${cut.slice(0, Math.max(cut.lastIndexOf(" "), 120))}…`;
+}
+
+/** Monthly finance reports and teaching-material posts in the announcements list — not for visitors. */
+const NOT_FOR_VISITORS = /รายงานตามเกณฑ์|รายงานผลการ|สื่อการสอน|สื่อการเรียน|แผนการจัดการเรียนรู้|ประกวดราคา|จัดซื้อ|จัดจ้าง/;
+
+/** "19 ต.ค. 69" → sortable number (yymmdd), 0 when unknown. */
+const THAI_MONTHS = ["ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค."];
+function dateKey(label) {
+  const m = String(label ?? "").match(/(\d{1,2})\s+([ก-๙.]+)\s+(\d{2,4})/);
+  const month = m ? THAI_MONTHS.indexOf(m[2]) : -1;
+  return m && month >= 0 ? (Number(m[3]) % 100) * 10000 + (month + 1) * 100 + Number(m[1]) : 0;
+}
+
+/**
+ * The newest newsletter stories plus the newest announcements (ประกาศ), newest first.
+ * The announcements are extra: if that list fails, the newsletter still comes back.
+ */
+export async function scrapeCollegeNews(limit = DEFAULT_LIMIT) {
+  const [newsletter, announcements] = await Promise.all([
+    scrapeList({ listUrl: NEWSLETTER_LIST_URL, section: "325", tag: "จดหมายข่าว", limit }),
+    scrapeList({ listUrl: ANNOUNCEMENT_LIST_URL, section: "90", tag: "ประกาศ", limit: 3, keep: (t) => !NOT_FOR_VISITORS.test(t) }).catch((error) => {
+      console.warn("[News] announcements unavailable:", error instanceof Error ? error.message : error);
+      return [];
+    }),
+  ]);
+  return [...newsletter, ...announcements]
+    .sort((a, b) => dateKey(b.dateLabel) - dateKey(a.dateLabel))
+    .map((item, i) => ({
+      ...item,
+      excerpt: item.excerpt || (item.tag === "ประกาศ" ? "ประกาศอย่างเป็นทางการของวิทยาลัย — เปิดอ่านไฟล์ประกาศฉบับเต็มได้บนเว็บวิทยาลัย" : ""),
+      sortOrder: 100 + i,
+    }));
 }
 
 /** Scrape and upsert. Returns how many items were written. */

@@ -11,6 +11,7 @@
 
 import faqData from "../shared/data/chatFaq.json" with { type: "json" };
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
+import { COLLEGE_FACTS } from "../shared/collegeFacts.js";
 
 const ENTRIES = faqData.entries;
 
@@ -59,7 +60,9 @@ function fill(template, settings) {
   return template
     .replace(/\{collegeName\}/g, settings.collegeName)
     .replace(/\{address\}/g, settings.address)
-    .replace(/\{email\}/g, settings.contactEmail || "ของวิทยาลัย");
+    .replace(/{email}/g, settings.contactEmail || COLLEGE_FACTS.email)
+    .replace(/{phone}/g, COLLEGE_FACTS.phone)
+    .replace(/{fax}/g, COLLEGE_FACTS.fax);
 }
 
 // ---------------------------------------------------------------- buildings
