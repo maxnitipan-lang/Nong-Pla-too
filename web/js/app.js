@@ -7,6 +7,7 @@
 import { CAMPUS_BUILDINGS, CAMPUS_CATEGORIES, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS } from "/shared/campus.js";
 import { PROGRAMMES, PROGRAMMES_AS_OF } from "/shared/collegeFacts.js";
 import { DEPARTMENT_GROUPS, DEPARTMENT_QUIZ, suggestDepartments, withDepartmentInfo } from "/shared/departmentInfo.js";
+import { englishKeysToThai } from "/shared/thaiKeyboard.js";
 import { distanceM, planCampusRoute } from "/shared/walkNetwork.js";
 import { loadBuildings, loadNews, loadSettings, loadWalkNetwork, savedBuildings, savedNews } from "./api.js";
 import { buildingLatLng, buildingSearchText, formatDistance, hasCoords, phoneRouteUrl, walkMinutes, walkingDeepLink } from "./directions.js";
@@ -123,9 +124,15 @@ function here() {
 /** Buildings matching the search and filter, nearest first when we know where you are. */
 function places() {
   const q = state.query.trim().toLowerCase();
+  // Keyboard left on English ("taphe" for "ช่างยนต์"…): also try the Thai on the same keys.
+  const qThai = q && !/[฀-๿]/.test(q) ? englishKeysToThai(state.query.trim()) : "";
   const me = here();
   return state.buildings
-    .filter((b) => (state.filter === "ทั้งหมด" || b.category === state.filter) && (!q || buildingSearchText(b).includes(q)))
+    .filter(
+      (b) =>
+        (state.filter === "ทั้งหมด" || b.category === state.filter) &&
+        (!q || buildingSearchText(b).includes(q) || (qThai && buildingSearchText(b).includes(qThai)))
+    )
     .map((b) => {
       const p = buildingLatLng(b);
       return { building: b, distance: me && p ? distanceM(me, p) : null };

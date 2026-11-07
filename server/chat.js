@@ -12,6 +12,7 @@
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
 import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, programmeLines } from "../shared/collegeFacts.js";
 import { answerFromFaq } from "./chatFaq.js";
+import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
 import { withDepartmentInfo } from "../shared/departmentInfo.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
@@ -132,6 +133,8 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
 }
 
 /** Send the conversation to the model and return the assistant answer. */
+const NO_AI_REPLY =
+  "น้องปลาทูตอบคำถามนี้ไม่ได้ตอนนี้ครับ ลองถามเรื่องพื้นฐาน เช่น \"ไปงานทะเบียนยังไง\" \"มีสาขาอะไรบ้าง\" หรือ \"เบอร์โทรวิทยาลัย\" ได้เลยครับ";
 const BUSY_REPLY = "ตอนนี้มีคนถามน้องปลาทูเยอะมากครับ รอสักครู่แล้วถามใหม่อีกครั้งนะครับ";
 const DOWN_REPLY = `ขออภัยครับ ตอนนี้น้องปลาทูตอบคำถามนี้ไม่ได้ชั่วคราว ลองถามใหม่อีกครั้ง หรือโทรสอบถามวิทยาลัย ${COLLEGE_FACTS.phone} ได้เลยครับ`;
 
@@ -152,13 +155,25 @@ export async function askCampusChat(history, options = {}) {
     return await answerChat(history, options);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (/GEMINI_API_KEY/.test(message)) throw error;
     console.warn("[Chat] AI answer failed:", message);
+    if (/GEMINI_API_KEY/.test(message)) {
+      return { reply: NO_AI_REPLY, routeToBuildingId: null, source: "fallback" };
+    }
     return { reply: /429|ถามบ่อย|หนาแน่น|โควตา/.test(message) ? BUSY_REPLY : DOWN_REPLY, routeToBuildingId: null, source: "fallback" };
   }
 }
 
 async function answerChat(history, options) {
+  // "g[njv" = "เบื่อ" typed with the keyboard on English: answer the Thai, and say so.
+  const lastIndex = history.findLastIndex(m => m.role === "user");
+  const fixed = lastIndex >= 0 ? fixWrongKeyboard(history[lastIndex].content) : null;
+  if (fixed) {
+    history = history.map((m, i) => (i === lastIndex ? { ...m, content: fixed } : m));
+    const answer = await answerChat(history, options);
+    return { ...answer, reply: `(น้องปลาทูเข้าใจว่าพิมพ์ว่า "${fixed}" — แป้นพิมพ์เป็นภาษาอังกฤษอยู่นะครับ)
+
+${answer.reply}` };
+  }
   const [buildings, news, settings] = await Promise.all([getCampusBuildings(), getCampusNews(), getCampusSettings()]);
 
   // Greetings, common and off-topic questions, "where is X": answer from the
