@@ -72,6 +72,21 @@ const departmentsOf = (b) => (b.departments ?? []).filter((d) => d.floor <= b.fl
 const logoOf = (d) => d.logo || withDepartmentInfo(d).logo;
 /** A building's logo: the logo of the first department inside it that has one. */
 const buildingLogo = (b) => departmentsOf(b).map(logoOf).find(Boolean) ?? null;
+/** Buildings without a department logo (offices, shared spaces) get an icon on their map pin. */
+const BUILDING_ICONS = {
+  "general-subjects": "📚",
+  "student-development": "🌱",
+  "building-85": "🏛️",
+  "ivec-central-5": "🏢",
+  auditorium: "🍽️",
+  "activity-building": "🎭",
+  "building-1": "🏫",
+  "parking-1": "🅿️",
+  "personnel-registration": "📋",
+  "supplies-dept": "📦",
+  "discipline-dept": "🛡️",
+  "director-office": "👔",
+};
 const pinColor = (b) => departmentsOf(b)[0]?.accent ?? b.accent;
 const numberOf = (id) => state.buildings.findIndex((b) => b.id === id) + 1;
 const selected = () => state.buildings.find((b) => b.id === state.selectedId) ?? null;
@@ -358,7 +373,9 @@ function markerHtml(b, active) {
   const logo = buildingLogo(b);
   const head = logo
     ? `<b class="has-logo"><i><img src="${esc(logo)}" alt="" /></i><em>${numberOf(b.id)}</em></b>`
-    : `<b><i>${numberOf(b.id)}</i></b>`;
+    : BUILDING_ICONS[b.id]
+      ? `<b class="has-icon"><i>${BUILDING_ICONS[b.id]}</i><em>${numberOf(b.id)}</em></b>`
+      : `<b><i>${numberOf(b.id)}</i></b>`;
   return `<div class="leaflet-pin ${active ? "active" : ""}" style="--pin:${esc(pinColor(b))}">${head}<small>${esc(b.shortName || b.name)}</small></div>`;
 }
 

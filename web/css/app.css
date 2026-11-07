@@ -470,3 +470,11 @@
   .platoo-ui .online-status { display: none; }
   .platoo-ui .app-header .install-button span { display: none; }
 }
+/* Logo pins use the same footprint as numbered pins, so the name label below stays visible. */
+.platoo-ui .leaflet-pin > b.has-logo { width: 40px; height: 40px; border-width: 3px; }
+@media (min-width: 1024px) { .platoo-ui .leaflet-pin > b.has-logo { width: 46px; height: 46px; } }
+/* Icon pins (offices, shared spaces): an emoji in a white pin, the list number as a badge. */
+.platoo-ui .leaflet-pin > b.has-icon { position: relative; background: white; border-color: var(--pin); }
+.platoo-ui .leaflet-pin > b.has-icon > i { font-size: 20px; line-height: 1; }
+.platoo-ui .leaflet-pin > b.has-icon > em { position: absolute; top: -8px; left: -8px; min-width: 20px; height: 20px; display: grid; place-items: center; transform: rotate(45deg); font-style: normal; font-size: 11px; font-weight: 800; color: white; background: var(--pin); border: 2px solid white; border-radius: 99px; }
+@media (min-width: 1024px) { .platoo-ui .leaflet-pin > b.has-icon > i { font-size: 23px; } }
