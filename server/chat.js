@@ -10,7 +10,7 @@
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
-import { COLLEGE_FACTS, collegeFactLines } from "../shared/collegeFacts.js";
+import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, programmeLines } from "../shared/collegeFacts.js";
 import { answerFromFaq } from "./chatFaq.js";
 import { withDepartmentInfo } from "../shared/departmentInfo.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
@@ -91,6 +91,9 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "",
     "== สาขาวิชาที่เปิดสอน (ทุกสาขาเรียนได้ทั้งชายและหญิง) ==",
     departmentLines(buildings) || "(ยังไม่มีข้อมูล)",
+    "",
+    `== หลักสูตรที่เปิดสอนอย่างเป็นทางการ (ข้อมูล ณ ${PROGRAMMES_AS_OF}) — ใช้ชื่อตามนี้เมื่อถามว่าเปิดสอนอะไร ==`,
+    ...programmeLines(),
     "",
     "== ข่าวสารล่าสุด ==",
     newsLines || "(ยังไม่มีข่าว)",

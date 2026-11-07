@@ -5,6 +5,7 @@
 // Same screens for both: home, map, news, departments (the Figma design).
 
 import { CAMPUS_BUILDINGS, CAMPUS_CATEGORIES, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS } from "/shared/campus.js";
+import { PROGRAMMES, PROGRAMMES_AS_OF } from "/shared/collegeFacts.js";
 import { DEPARTMENT_GROUPS, DEPARTMENT_QUIZ, suggestDepartments, withDepartmentInfo } from "/shared/departmentInfo.js";
 import { distanceM, planCampusRoute } from "/shared/walkNetwork.js";
 import { loadBuildings, loadNews, loadSettings, loadWalkNetwork, savedBuildings, savedNews } from "./api.js";
@@ -682,6 +683,34 @@ function quizHtml(entries, logoBox) {
     </section>`;
 }
 
+/** "ปวช." / "ปวส." badges: which levels the college offers for this department. */
+function levelBadges(d) {
+  const levels = Object.entries(d.programmes ?? {}).filter(([, names]) => names.length).map(([level]) => level);
+  return levels.length ? html`<span class="dept-levels">${levels.map((l) => raw(html`<span>${l}</span>`))}</span>` : "";
+}
+
+/** The official programme names for this department, per level, and its career group. */
+function programmeBlock(d) {
+  const rows = Object.entries(d.programmes ?? {}).filter(([, names]) => names.length);
+  if (!rows.length) return "";
+  return html`<h3>หลักสูตรที่เปิดสอน</h3>
+    <dl class="dept-programmes">${rows.map(([level, names]) => raw(html`<dt>${level}</dt><dd>${names.join(", ")}</dd>`))}</dl>
+    ${d.careerGroup ? raw(html`<p class="dept-career-group">กลุ่มอาชีพ: ${d.careerGroup}</p>`) : ""}`;
+}
+
+/** The college's full official programme list (some programmes have no building on the map). */
+function officialProgrammesHtml() {
+  const table = (level, rows) => html`<div class="programme-table">
+      <h3>${level === "ปวช." ? "ระดับ ปวช. (จบ ม.3)" : "ระดับ ปวส. (จบ ม.6 / ปวช.)"} · ${rows.length} สาขา</h3>
+      <ul>${rows.map(([type, name, career]) => raw(html`<li><strong>${name}</strong><small>${type} · ${career}</small></li>`))}</ul>
+    </div>`;
+  return html`<section class="official-programmes">
+      <h2>หลักสูตรที่เปิดสอนทั้งหมด</h2>
+      <p>จากรายงานหลักสูตรที่เปิดสอนของวิทยาลัย (ข้อมูล ณ ${PROGRAMMES_AS_OF})</p>
+      <div class="programme-tables">${Object.entries(PROGRAMMES).map(([level, rows]) => raw(table(level, rows)))}</div>
+    </section>`;
+}
+
 function departmentsHtml() {
   const entries = collectDepartments();
   const groupOf = (d) => DEPARTMENT_GROUPS.find((g) => g.id === d.group);
@@ -705,6 +734,7 @@ function departmentsHtml() {
     raw(html`<button class="department-card" data-action="department" data-index="${index}" style="--dept:${accentOf(d)}">
       ${raw(logoBox(d))}
       <strong>${d.name.replace(/^สาขาวิชา|^สาขา/, "")}</strong>
+      ${levelBadges(d) ? raw(levelBadges(d)) : ""}
       ${summary(d) ? raw(html`<p class="dept-summary">${summary(d)}</p>`) : ""}
       ${d.careers?.length ? raw(html`<span class="dept-careers">${d.careers.slice(0, 2).map((c) => raw(html`<span>${c}</span>`))}</span>`) : ""}
       <span class="dept-foot">
@@ -732,6 +762,7 @@ function departmentsHtml() {
         ${groupOf(open.department) ? raw(html`<span class="dept-group-tag" style="--dept:${accentOf(open.department)}">${groupOf(open.department).label}</span>`) : ""}
         <h2>${open.department.name}</h2>
         <p>${open.department.description}</p>
+        ${open.department.programmes ? raw(programmeBlock(open.department)) : ""}
         ${chips("ทักษะที่ได้", open.department.skills)}
         ${chips("อาชีพในอนาคต", open.department.careers)}
         ${chips("กิจกรรม", open.department.activities)}
@@ -755,6 +786,7 @@ function departmentsHtml() {
     </button>
     ${filterBar}
     <div class="department-grid">${visible.map(card)}</div>
+    ${raw(officialProgrammesHtml())}
     ${raw(quizBox)}
     ${detail}
   </main>`;

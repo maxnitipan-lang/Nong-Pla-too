@@ -53,6 +53,9 @@ export function suggestDepartments(departments, answers, limit = 3) {
 const INFO = [
   {
     match: /ช่างยนต์/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["ช่างยนต์"], "ปวส.": ["เทคนิคเครื่องกล"] },
+    careerGroup: "เครื่องกลและยานยนต์",
     logo: "/images/departments/automotive.jpg",
     icon: "🚗",
     group: "industry",
@@ -64,6 +67,9 @@ const INFO = [
   },
   {
     match: /อิเล็กทรอนิกส์|เทคโนโลยีสารสนเทศ/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["อิเล็กทรอนิกส์","เทคโนโลยีสารสนเทศ"], "ปวส.": ["เทคโนโลยีอิเล็กทรอนิกส์","เทคโนโลยีสารสนเทศ","เทคโนโลยีการสื่อสารโทรคมนาคม"] },
+    careerGroup: "พลังงานไฟฟ้าและอิเล็กทรอนิกส์ / ซอฟต์แวร์และการประยุกต์",
     logo: "/images/departments/electronics.jpg",
     icon: "🔌",
     group: "industry",
@@ -75,6 +81,9 @@ const INFO = [
   },
   {
     match: /คอมพิวเตอร์/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["ช่างเทคนิคคอมพิวเตอร์"], "ปวส.": ["เทคนิคคอมพิวเตอร์"] },
+    careerGroup: "ฮาร์ดแวร์",
     logo: "/images/departments/computer-technician.jpg",
     icon: "💻",
     group: "industry",
@@ -86,6 +95,9 @@ const INFO = [
   },
   {
     match: /ไฟฟ้ากำลัง/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["ช่างไฟฟ้า"], "ปวส.": ["ไฟฟ้า"] },
+    careerGroup: "พลังงานไฟฟ้าและอิเล็กทรอนิกส์",
     logo: "/images/departments/electrical-power.jpg",
     icon: "⚡",
     group: "industry",
@@ -97,6 +109,9 @@ const INFO = [
   },
   {
     match: /เชื่อมโลหะ/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["ช่างเชื่อมโลหะ"], "ปวส.": [] },
+    careerGroup: "อุตสาหกรรมการผลิต",
     logo: "/images/departments/welding.jpg",
     icon: "🔥",
     group: "industry",
@@ -108,6 +123,9 @@ const INFO = [
   },
   {
     match: /เมคคาทรอนิกส์|หุ่นยนต์/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["เมคคาทรอนิกส์และหุ่นยนต์"], "ปวส.": ["เมคคาทรอนิกส์และหุ่นยนต์"] },
+    careerGroup: "เมคคาทรอนิกส์ หุ่นยนต์ และระบบอัตโนมัติ",
     logo: "/images/departments/mechatronics.jpg",
     icon: "🤖",
     group: "industry",
@@ -119,6 +137,9 @@ const INFO = [
   },
   {
     match: /จัดการสำนักงาน/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["การจัดการสำนักงานธุรกิจดิจิทัล"], "ปวส.": ["การจัดการสำนักงานธุรกิจดิจิทัล"] },
+    careerGroup: "การจัดการ",
     logo: "/images/departments/office-management.jpg",
     icon: "🗂️",
     group: "business",
@@ -130,6 +151,9 @@ const INFO = [
   },
   {
     match: /การตลาด|ค้าปลีก/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["การตลาด","ธุรกิจค้าปลีก"], "ปวส.": ["การตลาด","การจัดการธุรกิจค้าปลีก"] },
+    careerGroup: "การตลาด",
     logo: "/images/departments/retail.jpg",
     icon: "🛒",
     group: "business",
@@ -141,6 +165,9 @@ const INFO = [
   },
   {
     match: /บัญชี/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["การบัญชี"], "ปวส.": ["การบัญชี"] },
+    careerGroup: "การเงินและบัญชี",
     logo: "/images/departments/accounting.jpg",
     icon: "🧮",
     group: "business",
@@ -152,6 +179,9 @@ const INFO = [
   },
   {
     match: /คหกรรม/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["คหกรรมศาสตร์"], "ปวส.": ["การบริหารงานคหกรรมศาสตร์"] },
+    careerGroup: "การประดิษฐ์",
     logo: "/images/departments/home-economics.jpg",
     icon: "🧵",
     group: "home",
@@ -163,6 +193,9 @@ const INFO = [
   },
   {
     match: /อาหารและโภชนาการ/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["อาหารและโภชนาการ"], "ปวส.": ["อาหารและโภชนาการ"] },
+    careerGroup: "การประกอบและบริการอาหาร",
     logo: "/images/departments/food-nutrition.jpg",
     icon: "🍳",
     group: "home",
@@ -174,6 +207,9 @@ const INFO = [
   },
   {
     match: /ธุรกิจดิจิทัล/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["เทคโนโลยีธุรกิจดิจิทัล"], "ปวส.": ["เทคโนโลยีธุรกิจดิจิทัล"] },
+    careerGroup: "ธุรกิจดิจิทัล และพาณิชย์อิเล็กทรอนิกส์",
     logo: "/images/departments/digital-business.jpg",
     icon: "📱",
     group: "business",
@@ -185,6 +221,9 @@ const INFO = [
   },
   {
     match: /เขียนแบบเครื่องกล/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["ช่างเขียนแบบเครื่องกล"], "ปวส.": ["เขียนแบบเครื่องกล"] },
+    careerGroup: "อุตสาหกรรมการผลิต",
     logo: "/images/departments/mechanical-drafting.jpg",
     icon: "📐",
     group: "industry",
@@ -196,6 +235,9 @@ const INFO = [
   },
   {
     match: /ช่างก่อสร้าง|ก่อสร้าง/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["ช่างก่อสร้าง"], "ปวส.": ["ช่างก่อสร้าง"] },
+    careerGroup: "อุตสาหกรรมก่อสร้าง",
     logo: "/images/departments/construction.jpg",
     icon: "🏗️",
     group: "industry",
@@ -207,6 +249,9 @@ const INFO = [
   },
   {
     match: /ช่างกลโรงงาน/,
+    // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
+    programmes: { "ปวช.": ["ช่างกลโรงงาน"], "ปวส.": ["เทคนิคการผลิต"] },
+    careerGroup: "อุตสาหกรรมการผลิต",
     logo: "/images/departments/machine-shop.jpg",
     icon: "⚙️",
     group: "industry",
@@ -229,6 +274,8 @@ export function withDepartmentInfo(department) {
     skills: department.skills?.length ? department.skills : info.skills,
     careers: department.careers?.length ? department.careers : info.careers,
     logo: department.logo || info.logo,
+    programmes: info.programmes,
+    careerGroup: info.careerGroup,
     icon: department.icon || info.icon,
     group: department.group || info.group,
     tags: info.tags,

@@ -478,3 +478,27 @@
 .platoo-ui .leaflet-pin > b.has-icon > i { font-size: 20px; line-height: 1; }
 .platoo-ui .leaflet-pin > b.has-icon > em { position: absolute; top: -8px; left: -8px; min-width: 20px; height: 20px; display: grid; place-items: center; transform: rotate(45deg); font-style: normal; font-size: 11px; font-weight: 800; color: white; background: var(--pin); border: 2px solid white; border-radius: 99px; }
 @media (min-width: 1024px) { .platoo-ui .leaflet-pin > b.has-icon > i { font-size: 23px; } }
+
+/* Official study levels and programme list */
+.platoo-ui .dept-levels { display: flex; gap: 6px; }
+.platoo-ui .dept-levels span { padding: 2px 9px; font-size: 11px; font-weight: 800; color: white; background: var(--dept); border-radius: 6px; }
+.platoo-ui .dept-programmes { display: grid; grid-template-columns: auto 1fr; gap: 6px 12px; margin: 0; font-size: 14px; }
+.platoo-ui .dept-programmes dt { font-weight: 800; color: var(--blue); }
+.platoo-ui .dept-programmes dd { margin: 0; }
+.platoo-ui .dept-career-group { margin-top: 8px; color: var(--muted); font-size: 13px; }
+.platoo-ui .official-programmes { margin-top: 28px; padding: 22px; background: var(--surface); border: 1px solid var(--border); border-radius: 20px; }
+.platoo-ui .official-programmes h2 { margin: 0; font-size: 20px; font-weight: 800; }
+.platoo-ui .official-programmes > p { margin: 4px 0 14px; color: var(--muted); font-size: 13px; }
+.platoo-ui .programme-tables { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+.platoo-ui .programme-table h3 { margin: 0 0 8px; font-size: 15px; font-weight: 800; color: var(--blue); }
+.platoo-ui .programme-table ul { margin: 0; padding: 0; list-style: none; }
+.platoo-ui .programme-table li { display: flex; flex-direction: column; padding: 7px 0; border-top: 1px solid var(--border); }
+.platoo-ui .programme-table li strong { font-size: 14px; }
+.platoo-ui .programme-table li small { color: var(--muted); font-size: 12px; }
+@media (min-width: 1024px) {
+  .platoo-ui .dept-levels span { font-size: 13px; }
+  .platoo-ui .official-programmes h2 { font-size: 24px; }
+  .platoo-ui .programme-table li strong { font-size: 16px; }
+  .platoo-ui .programme-table li small { font-size: 14px; }
+}
+@media (max-width: 640px) { .platoo-ui .programme-tables { grid-template-columns: 1fr; } }
