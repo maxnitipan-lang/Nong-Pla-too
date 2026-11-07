@@ -80,6 +80,7 @@ describe("questions that once got the wrong answer", () => {
     ["เบอร์โทรวิทยาลัย", "phone"],
     ["ไปช่างยนต์ยังไง", "building:mech-auto"],
     ["ช่างยนต์อยู่ไหน", "building:mech-auto"],
+    ["จะไปช่างยนต์ยังไง", "building:mech-auto"],
   ])("%s → %s", (question, id) => {
     expect(ask(question)?.faqId).toBe(id);
   });

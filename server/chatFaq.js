@@ -69,7 +69,7 @@ function fill(template, settings) {
 
 /** Words that mean "where is it / take me there". */
 // "ยังไง" alone is not about a place ("อยากเรียนช่างยนต์ต้องทำยังไง"), only "ไป…ยังไง" is.
-const LOCATION_INTENT = /ไหน|ทางไป|นำทาง|พาไป|^ไป|ไปS{0,30}ยังไง|เส้นทาง/;
+const LOCATION_INTENT = /ไหน|ทางไป|นำทาง|พาไป|^ไป|ไป\S{0,30}ยังไง|เส้นทาง/;
 /** Questions about studying, applying or comparing departments — not "where is it". */
 const NOT_LOCATION = /อยากเรียน|สมัคร|ต่างกัน|แตกต่าง|เรียนอะไร|ทำงานอะไร|ค่าเทอม|เหมาะกับ|ดีไหม|น่าเรียน/;
 /** Generic words stripped from names so "สาขาวิชาช่างยนต์" also matches "ช่างยนต์". */

@@ -371,7 +371,7 @@ export async function deleteCampusNews(id) {
 // Site settings
 // ---------------------------------------------------------------------------
 
-const isLegacyEmail = (email) => !email || /@smtc.ac.th$/i.test(email);
+const isLegacyEmail = (email) => !email || /@smtc\.ac\.th$/i.test(email);
 const isLegacyAddress = (address) => !address || address === "วิทยาลัยเทคนิคสมุทรสงคราม อำเภอเมืองสมุทรสงคราม จังหวัดสมุทรสงคราม";
 
 export async function getCampusSettings() {

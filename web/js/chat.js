@@ -191,6 +191,8 @@ export class PlatooChat {
   /** Stop listening, thinking and talking. */
   stopAll() {
     this.session++;
+    clearTimeout(this.waitTimer);
+    this.waitPhrase = null;
     this.listening?.cancel();
     this.listening = null;
     this.abort?.abort();
@@ -239,7 +241,9 @@ export class PlatooChat {
         if (session !== this.session) return;
         this.saidWaitPhrase = true;
         const phrase = WAIT_PHRASES[Math.floor(Math.random() * WAIT_PHRASES.length)];
-        this.waitPhrase = speak(phrase, { engine: this.engine, rate: this.s.settings.rate });
+        // Normally made in advance (instant); if the server just woke up and has not made it yet,
+        // use the device voice after 1.5 s rather than hold the real answer back.
+        this.waitPhrase = speak(phrase, { engine: this.engine, rate: this.s.settings.rate, firstWaitMs: 1500 });
       }, 600);
     }
     try {
