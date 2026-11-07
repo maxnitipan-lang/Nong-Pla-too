@@ -242,6 +242,42 @@ function speakOnDevice(text, rate, onStart) {
   };
 }
 
+/** How long to wait for the AI voice before using the device voice instead. */
+const FIRST_AUDIO_WAIT_MS = 6000;
+const NEXT_AUDIO_WAIT_MS = 12000;
+
+function withTimeout(promise, ms) {
+  let timer;
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`AI voice took over ${ms / 1000} s`)), ms);
+    }),
+  ]).finally(() => clearTimeout(timer));
+}
+
+/**
+ * Split a reply into short pieces for the AI voice: after each "ครับ", sentence mark or
+ * line break, merged so no piece is tiny, and long ones cut at a space (~110 characters).
+ * A short first piece means the first sound comes sooner.
+ */
+export function speechPieces(text, max = 110) {
+  const sentences = String(text)
+    .split(/(?<=ครับ|ค่ะ|[.!?。])\s+|\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const pieces = [];
+  for (const sentence of sentences) {
+    for (const part of chunk(sentence, max)) {
+      const last = pieces.at(-1);
+      // Join very short bits ("ได้เลยครับ") to the previous piece, except the first one.
+      if (last && pieces.length > 1 && last.length + part.length < 50) pieces[pieces.length - 1] = `${last} ${part}`;
+      else pieces.push(part);
+    }
+  }
+  return pieces.length ? pieces : [String(text)];
+}
+
 async function fetchAiAudio(text, signal) {
   const res = await fetch("/api/voice/tts", {
     method: "POST",
@@ -264,40 +300,59 @@ export function speak(rawText, options) {
   let audio = null;
   let fallback = null;
 
+  // AI voice: one request per sentence, so the first sentence plays after a couple of seconds
+  // while the next one is being made (one long request took 8–30 s before anything was heard).
+  const playBlob = (blob, first) => {
+    const url = URL.createObjectURL(blob);
+    audio = audioPlayer(); // unlocked during the user's tap — a new Audio() would be blocked on iOS
+    audio.src = url;
+    audio.playbackRate = rate;
+    audio.preservesPitch = true;
+    let onEnded = null;
+    return new Promise((resolve, reject) => {
+      onEnded = () => resolve();
+      audio.onplay = () => first && options.onStart?.();
+      audio.onended = onEnded;
+      audio.onerror = () => reject(new Error("audio playback failed"));
+      audio.onpause = () => {
+        if (controller.signal.aborted) resolve();
+      };
+      audio.play().catch(reject);
+    }).finally(() => {
+      URL.revokeObjectURL(url);
+      // The player is shared and reused by unlockAudio() on the next tap — don't let that
+      // silent unlock sound fire this reply's handlers (e.g. switch the UI to "speaking").
+      // Only if a newer reply has not already taken the player over.
+      if (audio.onended === onEnded) audio.onplay = audio.onended = audio.onerror = audio.onpause = null;
+    });
+  };
+
   const done = (async () => {
+    let spokenUpTo = 0; // sentences already played, so a fallback continues where the AI voice stopped
+    const pieces = speechPieces(text);
     if (options.engine === "ai") {
       try {
-        const blob = await fetchAiAudio(text, controller.signal);
-        if (controller.signal.aborted) return;
-        const url = URL.createObjectURL(blob);
-        audio = audioPlayer(); // unlocked during the user's tap — a new Audio() would be blocked on iOS
-        audio.src = url;
-        audio.playbackRate = rate;
-        audio.preservesPitch = true;
-        let onEnded = null;
-        await new Promise((resolve, reject) => {
-          onEnded = () => resolve();
-          audio.onplay = () => options.onStart?.();
-          audio.onended = onEnded;
-          audio.onerror = () => reject(new Error("audio playback failed"));
-          audio.onpause = () => {
-            if (controller.signal.aborted) resolve();
-          };
-          audio.play().catch(reject);
-        }).finally(() => {
-          URL.revokeObjectURL(url);
-          // The player is shared and reused by unlockAudio() on the next tap — don't let that
-          // silent unlock sound fire this reply's handlers (e.g. switch the UI to "speaking").
-          // Only if a newer reply has not already taken the player over.
-          if (audio.onended === onEnded) audio.onplay = audio.onended = audio.onerror = audio.onpause = null;
-        });
+        // The first sentence must arrive quickly, or the visitor hears nothing for too long.
+        const fetchPiece = (i, wait) => withTimeout(fetchAiAudio(pieces[i], controller.signal), wait);
+        let next = fetchPiece(0, FIRST_AUDIO_WAIT_MS);
+        for (let i = 0; i < pieces.length; i++) {
+          const blob = await next;
+          if (controller.signal.aborted) return;
+          next = i + 1 < pieces.length ? fetchPiece(i + 1, NEXT_AUDIO_WAIT_MS) : null;
+          next?.catch(() => undefined); // handled when awaited
+          await playBlob(blob, i === 0);
+          if (controller.signal.aborted) return;
+          spokenUpTo = i + 1;
+        }
         return;
       } catch (error) {
         if (controller.signal.aborted) return;
-        console.warn("[voice] AI voice unavailable, using device voice:", error);
+        console.warn("[voice] AI voice slow or unavailable, using device voice:", error);
       }
     }
-    fallback = speakOnDevice(text, rate, options.onStart);
+    const rest = pieces.slice(spokenUpTo).join(" ");
+    if (!rest) return;
+    fallback = speakOnDevice(rest, rate, spokenUpTo === 0 ? options.onStart : undefined);
     await fallback.done;
   })();
 

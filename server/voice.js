@@ -104,6 +104,9 @@ async function postJson(url, body, timeoutMs) {
   return res.json();
 }
 
+/** Which TTS API answered last (0 = Interactions, 1 = generateContent). */
+let preferredTts = 0;
+
 const ttsCache = new Map();
 const TTS_CACHE_MAX = 300;
 
@@ -129,7 +132,7 @@ export async function synthesizeSpeech(text) {
           response_format: { type: "audio" },
           generation_config: { speech_config: [{ voice: TTS_VOICE }] },
         },
-        25_000
+        15_000
       ),
     () =>
       postJson(
@@ -141,13 +144,19 @@ export async function synthesizeSpeech(text) {
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TTS_VOICE } } },
           },
         },
-        25_000
+        15_000
       ),
   ];
-  for (const attempt of attempts) {
+  // Try the API that worked last time first: when the first one is failing, waiting for it on
+  // every sentence made replies take 30 s.
+  const order = preferredTts === 1 ? [1, 0] : [0, 1];
+  for (const i of order) {
     try {
-      audio = findAudio(await attempt());
-      if (audio) break;
+      audio = findAudio(await attempts[i]());
+      if (audio) {
+        preferredTts = i;
+        break;
+      }
     } catch (error) {
       lastError = error;
     }
@@ -220,7 +229,8 @@ export function registerVoiceRoutes(app) {
     if (!isVoiceConfigured()) return res.status(503).json({ error: "ยังไม่ได้ตั้งค่า GEMINI_API_KEY" });
     const text = typeof req.body?.text === "string" ? req.body.text.trim().slice(0, MAX_TTS_CHARS) : "";
     if (!text) return res.status(400).json({ error: "ไม่มีข้อความ" });
-    if (!allow(req, "tts", 30)) return res.status(429).json({ error: "ขอเสียงบ่อยเกินไป" });
+    // Replies are spoken a sentence at a time (~3–5 requests per reply).
+    if (!allow(req, "tts", 90)) return res.status(429).json({ error: "ขอเสียงบ่อยเกินไป" });
     try {
       const wav = await synthesizeSpeech(text);
       res.setHeader("Content-Type", "audio/wav");
