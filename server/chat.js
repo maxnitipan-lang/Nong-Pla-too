@@ -167,10 +167,10 @@ async function answerChat(history, options) {
   const kiosk = options.atKiosk ? settings.kiosk : null;
   const ready = answerFromFaq(lastUser, buildings, settings, kiosk);
   if (ready) {
-    return { reply: ready.reply, routeToBuildingId: ready.routeToBuildingId, source: "faq" };
+    return { reply: ready.reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, source: "faq" };
   }
   const latestNews = newsAnswer(lastUser, news);
-  if (latestNews) return { reply: latestNews, routeToBuildingId: null, source: "news" };
+  if (latestNews) return { reply: latestNews, routeToBuildingId: null, action: "open-news", source: "news" };
 
   if (!CHAT_API_KEY) {
     throw new Error("ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในไฟล์ .env — ขอ key ฟรีที่ https://aistudio.google.com/apikey");

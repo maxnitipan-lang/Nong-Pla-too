@@ -215,7 +215,7 @@ export function answerFromFaq(
   if (match && match.score >= FAQ_MIN_SCORE) {
     const routeTo =
       match.entry.routeTo && buildings.some(b => b.id === match.entry.routeTo) ? match.entry.routeTo : null;
-    return { reply: fill(match.entry.answer, settings), routeToBuildingId: routeTo, faqId: match.entry.id };
+    return { reply: fill(match.entry.answer, settings), routeToBuildingId: routeTo, faqId: match.entry.id, action: match.entry.action ?? null };
   }
   return buildingAnswer(trimmed, buildings, kiosk);
 }

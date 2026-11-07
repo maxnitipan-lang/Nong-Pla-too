@@ -45,6 +45,13 @@ const PHASE_TEXT = {
   thinking: "น้องปลาทูกำลังคิด…",
   speaking: "กำลังพูด — แตะปุ่มเพื่อหยุด",
 };
+/** Buttons a reply can show (the server names them; unknown names are ignored). */
+const CHAT_ACTIONS = {
+  "dept-quiz": "🎯 เริ่มเกมเลือกสาขา",
+  "open-departments": "🏫 ดูสาขาวิชาทั้งหมด",
+  "open-news": "📰 ดูข่าวสาร",
+  "open-map": "🗺️ เปิดแผนที่",
+};
 const SETTINGS_KEY = "nong-platoo-voice-settings-v1";
 const DEFAULT_SETTINGS = { speakReplies: true, handsFree: true, engine: "ai", rate: 1 };
 
@@ -83,9 +90,10 @@ export class PlatooChat {
    * @param {(id:string)=>void} [options.onShowRoute]  the bot decided to show a walking route
    * @param {()=>void} [options.onOpenMap]  "เปิดแผนที่วิทยาลัย" button
    */
-  constructor(root, { atKiosk = false, onShowRoute, onOpenMap } = {}) {
+  constructor(root, { atKiosk = false, onShowRoute, onOpenMap, onAction } = {}) {
     this.atKiosk = atKiosk;
     this.onShowRoute = onShowRoute;
+    this.onAction = onAction; // a button under a reply, e.g. open the department quiz
     this.onOpenMap = onOpenMap;
     this.s = {
       open: false,
@@ -235,14 +243,14 @@ export class PlatooChat {
       }, 600);
     }
     try {
-      const { reply, routeToBuildingId } = await apiPost(
+      const { reply, routeToBuildingId, action } = await apiPost(
         "chat/ask",
         { messages: history, spoken: fromVoice || undefined, atKiosk: this.atKiosk || undefined },
         controller.signal,
       );
       clearTimeout(this.waitTimer);
       if (session !== this.session) return;
-      this.set({ messages: [...this.s.messages, { role: "assistant", content: reply }] });
+      this.set({ messages: [...this.s.messages, { role: "assistant", content: reply, action: CHAT_ACTIONS[action] ? action : undefined }] });
       if (routeToBuildingId && this.onShowRoute) {
         // Say it, then hand over to the map (the panel closes so the route is visible).
         void this.speakReply(reply, session);
@@ -404,6 +412,11 @@ export class PlatooChat {
       case "stop":
         this.stopAll();
         break;
+      case "action":
+        this.stopAll();
+        this.set({ open: false });
+        this.onAction?.(el.dataset.name);
+        break;
       case "mic-help":
         this.set({ showMicHelp: !s.showMicHelp });
         break;
@@ -498,7 +511,7 @@ export class PlatooChat {
       }
       const again = index > 0 && this.canSpeakOut ? raw(html`<button type="button" class="listen-again" data-chat="listen-again" data-index="${index}">${raw(icon("volume-on"))} ฟังอีกครั้ง</button>`) : "";
       return html`<div class="message-row bot"><img class="message-mascot" src="/mascots/greeting.webp" alt="" aria-hidden="true" />
-        <div class="message bot">${raw(renderMarkdown(m.content))}${again}</div></div>`;
+        <div class="message bot">${raw(renderMarkdown(m.content))}${m.action ? raw(html`<button type="button" class="chat-action" data-chat="action" data-name="${m.action}">${CHAT_ACTIONS[m.action]} ${raw(icon("arrow"))}</button>`) : ""}${again}</div></div>`;
     });
     const interim = s.phase === "listening" && s.interim ? html`<div class="message-row user"><div class="message user interim">${s.interim}…</div></div>` : "";
     return `<p class="chat-date">วันนี้</p>${rows.join("")}${interim}`;

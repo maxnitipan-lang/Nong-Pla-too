@@ -187,6 +187,16 @@ function headerHtml() {
   </header>`;
 }
 
+/** A button under a chat reply: go to the page it names (the quiz opens straight away). */
+function runChatAction(name) {
+  if (name === "dept-quiz") {
+    state.deptQuiz = { step: 0, answers: {} };
+    go("departments");
+  } else if (name === "open-departments") go("departments");
+  else if (name === "open-news") go("news");
+  else if (name === "open-map") go("map");
+}
+
 function chromeHtml() {
   // The home screen already has the mic and the "ถามด้วยเสียง" card, so no floating button there.
   const floating = state.view === "home"
@@ -1191,7 +1201,7 @@ async function reloadData() {
 async function start() {
   render();
   // The chat panel lives outside #app, so re-drawing the screens never resets the conversation.
-  createChat({ atKiosk: KIOSK, onShowRoute: (id) => startNavigation(id), onOpenMap: () => go("map") });
+  createChat({ atKiosk: KIOSK, onShowRoute: (id) => startNavigation(id), onOpenMap: () => go("map"), onAction: runChatAction });
   armIdle();
   startGpsWatch();
   if (params.get("voice") === "1") setTimeout(() => openChat(true), 600);
