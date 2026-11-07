@@ -163,6 +163,7 @@ const INFO = [
   },
   {
     match: /อาหารและโภชนาการ/,
+    logo: "/images/departments/food-nutrition.jpg",
     icon: "🍳",
     group: "home",
     tags: ["cook"],
