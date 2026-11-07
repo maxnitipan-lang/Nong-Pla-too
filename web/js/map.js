@@ -174,7 +174,15 @@ export class CampusMap {
     layer.addTo(this.map);
     this.routeLayer = layer;
     // Frame the on-campus part only — the off-campus approach is outside the locked area.
-    if (!this.follow) this.map.fitBounds(L.latLngBounds(route.path).pad(0.15), { animate: true, maxZoom: 19 });
+    // The route card covers the left/bottom of the map: frame the route in the space beside it.
+    const cover = this.options.routeCover?.() ?? { left: 0, bottom: 0 };
+    if (!this.follow)
+      this.map.fitBounds(L.latLngBounds(route.path).pad(0.15), {
+        animate: true,
+        maxZoom: 19,
+        paddingTopLeft: [cover.left + 20, 20],
+        paddingBottomRight: [20, cover.bottom + 20],
+      });
   }
 
   /** Mark the next turn ahead of the walker. */

@@ -58,6 +58,7 @@ const state = {
   deptGroup: "", // departments page filter ("" = all)
   deptQuiz: null, // { step, answers } while the "help me choose" quiz is open
   newsKind: "", // news page filter ("" = all)
+  routeCollapsed: false, // route card shrunk to one line so the map shows
   openNews: null, // kiosk: index of the story shown with its QR code
   installPrompt: null,
   installDismissed: readStore(INSTALL_DISMISSED_KEY) === 1 || window.matchMedia?.("(display-mode: standalone)").matches || navigator.standalone === true,
@@ -332,7 +333,10 @@ function placeListHtml() {
 function buildingCardHtml() {
   const b = selected();
   if (!b) return "";
-  if (nav.state.status !== "idle") return html`<article class="building-card"><div class="route-panel-wrap">${raw(routePanelHtml(nav))}</div></article>`;
+  if (nav.state.status !== "idle")
+    return html`<article class="building-card route-card ${state.routeCollapsed ? "collapsed" : ""}">
+      <button type="button" class="route-collapse" data-action="route-collapse" aria-label="${state.routeCollapsed ? "ขยายรายละเอียดเส้นทาง" : "ย่อเพื่อดูแผนที่"}">${state.routeCollapsed ? "ขยาย ▲" : "ย่อ ▼"}</button>
+      <div class="route-panel-wrap">${raw(routePanelHtml(nav))}</div></article>`;
   const depts = departmentsOf(b);
   // Built-in data repeats the same names in the description, departments and rooms — show each once.
   // "· 2 ห้อง" on a hall or office says nothing useful, so a count that small is dropped.
@@ -411,6 +415,15 @@ async function mountMap() {
     center: CAMPUS_OVERVIEW.mapCenter,
     onSelect: (buildingId) => selectBuilding(buildingId),
     markerHtml,
+    // How much of the map the open card covers, so a route is framed beside it (wide screens) or above it (phones).
+    routeCover: () => {
+      const card = document.querySelector("#building-card-slot .building-card");
+      const host = document.querySelector("#map-canvas");
+      if (!card || !host) return { left: 0, bottom: 0 };
+      const c = card.getBoundingClientRect();
+      const h = host.getBoundingClientRect();
+      return c.width > h.width * 0.6 ? { left: 0, bottom: h.bottom - c.top } : { left: c.right - h.left, bottom: 0 };
+    },
     markerSize: [120, 72],
     userLabel: KIOSK && state.kiosk ? (state.kiosk.fallback ? state.kiosk.name : "คุณอยู่ที่นี่") : undefined,
     controlsTop: KIOSK ? 70 : 120,
@@ -457,7 +470,8 @@ function updateMap() {
   $("#place-panel").classList.toggle("panel-open", state.listOpen);
   $("#sheet-backdrop").hidden = !state.listOpen;
   $("#map-canvas").classList.toggle("navigating", navigating);
-  $("#nav-banner").innerHTML = navigating ? navBannerHtml(nav) : "";
+  // Kiosk: no banner — it only repeats the first step already listed in the route card.
+  $("#nav-banner").innerHTML = navigating && !KIOSK ? navBannerHtml(nav) : "";
   $("#mobile-controls").hidden = navigating;
   $("#map-guide").hidden = navigating;
   $("#show-places").hidden = Boolean(selected()) || navigating;
@@ -965,7 +979,14 @@ const actions = {
   "gps-on": () => enableGps(),
   route: () => state.selectedId && startNavigation(state.selectedId),
   share: () => void share(),
-  "nav-clear": () => nav.clear(),
+  "nav-clear": () => {
+    state.routeCollapsed = false;
+    nav.clear();
+  },
+  "route-collapse": () => {
+    state.routeCollapsed = !state.routeCollapsed;
+    updateMap();
+  },
   "nav-retry": () => nav.state.targetId && void nav.routeTo(nav.state.targetId),
   "nav-from-gate": () => nav.state.targetId && void nav.routeFromGate(nav.state.targetId),
   "nav-start": () => nav.startLive(),
