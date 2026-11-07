@@ -221,6 +221,8 @@ export function cleanTranscript(raw) {
 // ---------------------------------------------------------------------------
 
 export function registerVoiceRoutes(app) {
+  // Make the common phrases' voice in the background shortly after start-up (not in tests).
+  if (process.env.NODE_ENV !== "test" && !process.env.VITEST) setTimeout(() => void warmVoiceCache().catch(() => undefined), 15_000).unref?.();
   app.get("/api/voice/status", (_req, res) => {
     res.json({ ai: isVoiceConfigured() });
   });
@@ -260,4 +262,38 @@ export function registerVoiceRoutes(app) {
       }
     }
   );
+}
+
+// ---------------------------------------------------------------------------
+// Voice made in advance
+// ---------------------------------------------------------------------------
+
+/**
+ * Google takes ~6 s to make any sentence, however short. Make the voice for the
+ * wait phrases, the greeting and every ready-made answer once at start-up, so those
+ * play instantly. Pieces are cut exactly like the browser cuts them (shared/speechText.js),
+ * otherwise the cache would never match. One request every 2 s; stops on quota errors.
+ */
+export async function warmVoiceCache({ gapMs = 2000, limit = 45 } = {}) {
+  if (!API_KEY) return { made: 0 };
+  const [{ cleanForSpeech, speechPieces, WAIT_PHRASES, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
+    await Promise.all([import("../shared/speechText.js"), import("./chatFaq.js"), import("./db.js")]);
+  const settings = await getCampusSettings().catch(() => null);
+  const texts = [...WAIT_PHRASES, GREETING_PHRASE, ...(settings ? readyAnswerTexts(settings) : [])];
+  const pieces = [...new Set(texts.flatMap(t => speechPieces(cleanForSpeech(t))))].slice(0, limit);
+  let made = 0;
+  for (const piece of pieces) {
+    if (ttsCache.has(piece)) continue;
+    try {
+      await synthesizeSpeech(piece);
+      made++;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      console.warn(`[Voice] pre-made voice stopped after ${made}: ${message.slice(0, 120)}`);
+      if (/429|quota|exhausted/i.test(message)) break;
+    }
+    await new Promise(r => setTimeout(r, gapMs));
+  }
+  console.log(`[Voice] pre-made voice for ${made} of ${pieces.length} phrases`);
+  return { made, total: pieces.length };
 }

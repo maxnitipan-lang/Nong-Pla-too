@@ -216,3 +216,8 @@ export function answerFromFaq(
   }
   return buildingAnswer(trimmed, buildings, kiosk);
 }
+
+/** The most-asked ready-made answers as they would be sent (settings filled in) — for making their voice in advance. */
+export function readyAnswerTexts(settings, categories = ["ทักทาย", "ข้อมูลวิทยาลัย"]) {
+  return ENTRIES.filter(entry => categories.includes(entry.category)).map(entry => fill(entry.answer, settings));
+}

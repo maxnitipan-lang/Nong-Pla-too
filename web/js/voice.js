@@ -1,3 +1,4 @@
+import { chunk, cleanForSpeech, speechPieces } from "../../shared/speechText.js";
 // (Converted from client/src/lib/voice.ts — same behaviour.)
 // Voice in / voice out for the น้องปลาทู assistant.
 //
@@ -137,21 +138,6 @@ export function aiVoiceAvailable() {
 // ---------------------------------------------------------------------------
 
 /** Turn a chat reply (markdown, links, emoji) into something pleasant to hear. */
-export function cleanForSpeech(text) {
-  return text
-    .replace(/```[\s\S]*?```/g, " ")
-    .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [label](url) → label
-    .replace(/https?:\/\/\S+/g, " ") // bare URLs
-    .replace(/[*_#>`~|]/g, " ")
-    .replace(/^\s*[-•]\s+/gm, "") // bullets
-    .replace(/(\d)\s*ม\.(?!\S)/g, "$1 เมตร")
-    .replace(/(\d)\s*กม\./g, "$1 กิโลเมตร")
-    .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, " ")
-    .replace(/\s*\n+\s*/g, " ")
-    .replace(/\s{2,}/g, " ")
-    .trim();
-}
-
 // Only one thing speaks at a time.
 let current = null;
 export function stopSpeaking() {
@@ -185,20 +171,6 @@ function voicesReady() {
     window.speechSynthesis.addEventListener("voiceschanged", done, { once: true });
     setTimeout(done, 1500);
   });
-}
-
-/** Chrome cuts utterances off after ~15 s, so speak long text in pieces split at spaces. */
-function chunk(text, max = 160) {
-  const parts = [];
-  let rest = text;
-  while (rest.length > max) {
-    let cut = rest.lastIndexOf(" ", max);
-    if (cut < max * 0.5) cut = max;
-    parts.push(rest.slice(0, cut).trim());
-    rest = rest.slice(cut).trim();
-  }
-  if (rest) parts.push(rest);
-  return parts;
 }
 
 function speakOnDevice(text, rate, onStart) {
@@ -256,27 +228,7 @@ function withTimeout(promise, ms) {
   ]).finally(() => clearTimeout(timer));
 }
 
-/**
- * Split a reply into short pieces for the AI voice: after each "ครับ", sentence mark or
- * line break, merged so no piece is tiny, and long ones cut at a space (~110 characters).
- * A short first piece means the first sound comes sooner.
- */
-export function speechPieces(text, max = 110) {
-  const sentences = String(text)
-    .split(/(?<=ครับ|ค่ะ|[.!?。])\s+|\n+/)
-    .map((s) => s.trim())
-    .filter(Boolean);
-  const pieces = [];
-  for (const sentence of sentences) {
-    for (const part of chunk(sentence, max)) {
-      const last = pieces.at(-1);
-      // Join very short bits ("ได้เลยครับ") to the previous piece, except the first one.
-      if (last && pieces.length > 1 && last.length + part.length < 50) pieces[pieces.length - 1] = `${last} ${part}`;
-      else pieces.push(part);
-    }
-  }
-  return pieces.length ? pieces : [String(text)];
-}
+export { cleanForSpeech, speechPieces };
 
 async function fetchAiAudio(text, signal) {
   const res = await fetch("/api/voice/tts", {
@@ -334,7 +286,7 @@ export function speak(rawText, options) {
       try {
         // The first sentence must arrive quickly, or the visitor hears nothing for too long.
         const fetchPiece = (i, wait) => withTimeout(fetchAiAudio(pieces[i], controller.signal), wait);
-        let next = fetchPiece(0, FIRST_AUDIO_WAIT_MS);
+        let next = fetchPiece(0, options.firstWaitMs ?? FIRST_AUDIO_WAIT_MS);
         for (let i = 0; i < pieces.length; i++) {
           const blob = await next;
           if (controller.signal.aborted) return;

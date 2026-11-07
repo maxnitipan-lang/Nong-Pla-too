@@ -11,6 +11,7 @@
 //   "nongplatoo:reset" kiosk idle: forget the conversation and close
 
 import { apiPost } from "./api.js";
+import { WAIT_PHRASES } from "../../shared/speechText.js";
 import { icon } from "./icons.js";
 import { renderMarkdown } from "./markdown.js";
 import { $, html, raw, readStore, writeStore } from "./util.js";
@@ -196,9 +197,15 @@ export class PlatooChat {
     if (!s.speakReplies) return;
     // The AI voice takes a few seconds to arrive — stay on "กำลังคิด…" until sound actually plays.
     this.set({ phase: "thinking" });
+    // Let a wait phrase finish first, so the answer does not cut it off mid-word.
+    await this.waitPhrase?.done;
+    this.waitPhrase = null;
+    if (session !== this.session) return;
     const speech = speak(text, {
       engine: this.engine,
       rate: s.rate,
+      // A wait phrase was already heard, so the visitor can wait a little longer for the AI voice.
+      firstWaitMs: this.saidWaitPhrase ? 8000 : undefined,
       onStart: () => session === this.session && this.set({ phase: "speaking" }),
     });
     await speech.done;
@@ -215,12 +222,25 @@ export class PlatooChat {
     this.set({ notice: null, messages: [...this.s.messages, { role: "user", content: q, spoken: fromVoice }], phase: "thinking" });
     const controller = new AbortController();
     this.abort = controller;
+    // Voice question: if the answer is not back within 0.6 s, say a short wait phrase (its voice
+    // is made in advance on the server, so it plays at once) instead of leaving silence.
+    this.saidWaitPhrase = false;
+    clearTimeout(this.waitTimer);
+    if (fromVoice && this.s.settings.speakReplies) {
+      this.waitTimer = setTimeout(() => {
+        if (session !== this.session) return;
+        this.saidWaitPhrase = true;
+        const phrase = WAIT_PHRASES[Math.floor(Math.random() * WAIT_PHRASES.length)];
+        this.waitPhrase = speak(phrase, { engine: this.engine, rate: this.s.settings.rate });
+      }, 600);
+    }
     try {
       const { reply, routeToBuildingId } = await apiPost(
         "chat/ask",
         { messages: history, spoken: fromVoice || undefined, atKiosk: this.atKiosk || undefined },
         controller.signal,
       );
+      clearTimeout(this.waitTimer);
       if (session !== this.session) return;
       this.set({ messages: [...this.s.messages, { role: "assistant", content: reply }] });
       if (routeToBuildingId && this.onShowRoute) {
@@ -234,6 +254,7 @@ export class PlatooChat {
       if (session !== this.session) return;
       if (fromVoice && this.s.settings.handsFree) this.startListening();
     } catch (error) {
+      clearTimeout(this.waitTimer);
       if (session !== this.session) return;
       const content = controller.signal.aborted
         ? "หยุดแล้วครับ — ถามใหม่ได้เลย"
