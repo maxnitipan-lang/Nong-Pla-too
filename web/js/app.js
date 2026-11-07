@@ -71,7 +71,12 @@ const departmentsOf = (b) => (b.departments ?? []).filter((d) => d.floor <= b.fl
 /** A department's logo: uploaded in admin, else the one stored with the app (matched by name). */
 const logoOf = (d) => d.logo || withDepartmentInfo(d).logo;
 /** A building's logo: the logo of the first department inside it that has one. */
-const buildingLogo = (b) => departmentsOf(b).map(logoOf).find(Boolean) ?? null;
+/** Emblems made for buildings that are not a department (offices, shared spaces), by building id. */
+const BUILDING_IMAGES = {
+  auditorium: "/images/buildings/auditorium.webp",
+  "activity-building": "/images/buildings/activity-building.webp",
+};
+const buildingLogo = (b) => BUILDING_IMAGES[b.id] ?? departmentsOf(b).map(logoOf).find(Boolean) ?? null;
 /** Buildings without a department logo (offices, shared spaces) get an icon on their map pin. */
 const BUILDING_ICONS = {
   "general-subjects": "📚",
