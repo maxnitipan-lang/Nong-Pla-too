@@ -75,6 +75,7 @@ const INFO = [
   },
   {
     match: /คอมพิวเตอร์/,
+    logo: "/images/departments/computer-technician.jpg",
     icon: "💻",
     group: "industry",
     tags: ["computer"],
@@ -96,6 +97,7 @@ const INFO = [
   },
   {
     match: /เชื่อมโลหะ/,
+    logo: "/images/departments/welding.jpg",
     icon: "🔥",
     group: "industry",
     tags: ["machine","build"],
@@ -106,6 +108,7 @@ const INFO = [
   },
   {
     match: /เมคคาทรอนิกส์|หุ่นยนต์/,
+    logo: "/images/departments/mechatronics.jpg",
     icon: "🤖",
     group: "industry",
     tags: ["machine","electric","computer"],
@@ -116,6 +119,7 @@ const INFO = [
   },
   {
     match: /จัดการสำนักงาน/,
+    logo: "/images/departments/office-management.jpg",
     icon: "🗂️",
     group: "business",
     tags: ["office"],
@@ -202,6 +206,7 @@ const INFO = [
   },
   {
     match: /ช่างกลโรงงาน/,
+    logo: "/images/departments/machine-shop.jpg",
     icon: "⚙️",
     group: "industry",
     tags: ["machine"],
