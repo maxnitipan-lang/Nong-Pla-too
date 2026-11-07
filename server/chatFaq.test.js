@@ -96,3 +96,16 @@ describe("questions that once got the wrong answer", () => {
     expect(CAMPUS_SETTINGS_DEFAULTS.contactEmail).not.toMatch(/smtc\.ac\.th/);
   });
 });
+
+describe("small talk", () => {
+  it.each([
+    ["สบายดีไหม", "chat-how-are-you"],
+    ["ทำไมชื่อปลาทู", "chat-where-from"],
+    ["เบื่อจัง", "chat-bored"],
+    ["เครียดมาก", "chat-stress"],
+    ["หลงทาง", "chat-lost"],
+    ["หิวข้าว", "canteen"], // the canteen answer opens the route, so it wins
+  ])("%s → %s", (question, id) => {
+    expect(ask(question)?.faqId).toBe(id);
+  });
+});
