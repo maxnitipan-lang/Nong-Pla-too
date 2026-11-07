@@ -547,3 +547,12 @@
   .platoo-ui .route-card .route-qr strong { font-size: 16px; }
   .platoo-ui .route-card .route-qr span { font-size: 14px; }
 }
+
+/* Speaking: the bars bounce like a sound meter (the keyframes were missing, so they sat still). */
+@keyframes platoo-eq { 0%, 100% { transform: scaleY(.3); } 50% { transform: scaleY(1); } }
+.platoo-chat .speaking-bars i { transform-origin: bottom; }
+.platoo-chat .voice-orb > button.is-speaking { cursor: pointer; }
+.platoo-chat .voice-orb > button.is-speaking::after { content: "หยุด"; position: absolute; bottom: -20px; left: 50%; transform: translateX(-50%); font-size: 11px; font-weight: 800; color: #21a7a0; white-space: nowrap; }
+/* The mascot next to the reply bobs while it is being read aloud. */
+.platoo-chat.is-speaking .message-row.bot:last-child .message-mascot { animation: platoo-talk .5s ease-in-out infinite alternate; }
+@keyframes platoo-talk { from { transform: translateY(0) rotate(-3deg); } to { transform: translateY(-4px) rotate(3deg); } }

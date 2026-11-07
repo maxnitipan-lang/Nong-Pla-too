@@ -43,7 +43,7 @@ const PHASE_TEXT = {
   listening: "กำลังฟัง… พูดได้เลยครับ",
   transcribing: "กำลังฟังคำถาม…",
   thinking: "น้องปลาทูกำลังคิด…",
-  speaking: "กำลังตอบ — แตะเพื่อพูดแทรก",
+  speaking: "กำลังพูด — แตะปุ่มเพื่อหยุด",
 };
 const SETTINGS_KEY = "nong-platoo-voice-settings-v1";
 const DEFAULT_SETTINGS = { speakReplies: true, handsFree: true, engine: "ai", rate: 1 };
@@ -318,7 +318,8 @@ export class PlatooChat {
     unlockAudio(); // phones: allow the reply to be played and the mic to be recorded later
     const { phase } = this.s;
     if (phase === "listening") this.listening?.stop(); // done talking → use what was heard
-    else if (phase === "speaking" || phase === "idle") {
+    else if (phase === "speaking") this.stopAll(); // tap while speaking = stop talking
+    else if (phase === "idle") {
       this.misses = 0;
       this.startListening();
     } else this.stopAll();
@@ -464,6 +465,7 @@ export class PlatooChat {
     }
     if (changed("phase", "notice", "micState", "showMicHelp", "aiVoice", "settings")) part("voice").innerHTML = this.voiceHtml();
     if (changed("phase")) {
+      this.el.classList.toggle("is-speaking", s.phase === "speaking");
       for (const b of this.el.querySelectorAll("[data-chat=quick]")) b.disabled = this.busy;
       this.updateSend();
     }
@@ -529,7 +531,7 @@ export class PlatooChat {
     const ring = phase === "listening" || phase === "speaking" ? raw(`<span class="orb-ring ${phase}"></span><span class="orb-ring inner ${phase}"></span>`) : "";
     const orbClass = phase === "listening" ? "is-listening" : phase === "speaking" ? "is-speaking" : this.busy ? "is-busy" : "";
     const orbIcon = this.busy ? icon("spinner", "spin") : phase === "speaking" ? SPEAKING_BARS : icon("mic");
-    const label = phase === "listening" ? "พูดจบแล้ว" : phase === "speaking" ? "พูดแทรก" : this.busy ? "หยุด" : "แตะเพื่อพูด";
+    const label = phase === "listening" ? "พูดจบแล้ว" : phase === "speaking" ? "หยุดพูด" : this.busy ? "หยุด" : "แตะเพื่อพูด";
     const stop =
       (phase !== "idle" || s.settings.handsFree) && phase !== "listening"
         ? raw(html`<button type="button" class="voice-stop" data-chat="stop">${raw(icon("stop"))} ${phase === "idle" ? "โหมดสนทนาต่อเนื่องเปิดอยู่" : "หยุดทั้งหมด"}</button>`)
