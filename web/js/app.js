@@ -693,8 +693,9 @@ function levelBadges(d) {
 function programmeBlock(d) {
   const rows = Object.entries(d.programmes ?? {}).filter(([, names]) => names.length);
   if (!rows.length) return "";
-  return html`<h3>หลักสูตรที่เปิดสอน</h3>
-    <dl class="dept-programmes">${rows.map(([level, names]) => raw(html`<dt>${level}</dt><dd>${names.join(", ")}</dd>`))}</dl>
+  const who = { "ปวช.": "จบ ม.3", "ปวส.": "จบ ม.6 / ปวช." };
+  return html`<h3 class="dept-section"><span aria-hidden="true">📜</span>เปิดสอนระดับไหน</h3>
+    <dl class="dept-programmes">${rows.map(([level, names]) => raw(html`<dt>${level}<small>${who[level] ?? ""}</small></dt><dd>${names.join(", ")}</dd>`))}</dl>
     ${d.careerGroup ? raw(html`<p class="dept-career-group">กลุ่มอาชีพ: ${d.careerGroup}</p>`) : ""}`;
 }
 
@@ -753,19 +754,23 @@ function departmentsHtml() {
   const quizBox = quizHtml(entries, logoBox);
 
   const open = state.openDepartment !== null ? entries[state.openDepartment] : null;
-  const chips = (title, list) => (list?.length ? raw(html`<h3>${title}</h3><div class="room-chips">${list.map((s) => raw(html`<span>${s}</span>`))}</div>`) : "");
+  // Each section: an icon + a heading bigger than its content, so the eye knows what to read first.
+  const chips = (emoji, title, list, cls = "") =>
+    list?.length
+      ? raw(html`<h3 class="dept-section"><span aria-hidden="true">${emoji}</span>${title}</h3><div class="room-chips ${cls}">${list.map((s) => raw(html`<span>${s}</span>`))}</div>`)
+      : "";
   const detail = open
     ? raw(html`<button class="ai-backdrop visible" data-action="department-close" aria-label="ปิดข้อมูลสาขา"></button>
-      <section class="dept-detail" role="dialog" aria-label="${open.department.name}">
+      <section class="dept-detail" role="dialog" aria-label="${open.department.name}" style="--dept:${accentOf(open.department)}">
         <button class="card-close" data-action="department-close" aria-label="ปิด">${raw(icon("close"))}</button>
         ${raw(logoBox(open.department))}
         ${groupOf(open.department) ? raw(html`<span class="dept-group-tag" style="--dept:${accentOf(open.department)}">${groupOf(open.department).label}</span>`) : ""}
         <h2>${open.department.name}</h2>
-        <p>${open.department.description}</p>
+        ${open.department.description ? raw(html`<p class="dept-description">${open.department.description}</p>`) : ""}
+        ${chips("💼", "จบแล้วทำงานอะไรได้", open.department.careers, "career-chips")}
+        ${chips("🛠️", "ทักษะที่ได้", open.department.skills)}
         ${open.department.programmes ? raw(programmeBlock(open.department)) : ""}
-        ${chips("ทักษะที่ได้", open.department.skills)}
-        ${chips("อาชีพในอนาคต", open.department.careers)}
-        ${chips("กิจกรรม", open.department.activities)}
+        ${chips("🎉", "กิจกรรม", open.department.activities)}
         ${open.building
           ? raw(html`<button class="route-button" data-action="department-show" data-id="${open.building.id}">${raw(icon("pin"))} ดูที่ตั้ง ${open.building.shortName || open.building.name}${floorKnown(open.department, open.building) ? ` ชั้น ${open.department.floor}` : ""}</button>`)
           : ""}

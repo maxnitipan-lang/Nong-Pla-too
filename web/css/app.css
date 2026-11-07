@@ -502,3 +502,26 @@
   .platoo-ui .programme-table li small { font-size: 14px; }
 }
 @media (max-width: 640px) { .platoo-ui .programme-tables { grid-template-columns: 1fr; } }
+
+/* Department details: easier to read (dark description, clear section headings, coloured careers). */
+.platoo-ui .dept-detail .dept-description { margin: 6px 0 4px; color: var(--text); font-size: 16px; line-height: 1.75; }
+.platoo-ui .dept-detail h3.dept-section { display: flex; align-items: center; gap: 8px; margin: 20px 0 10px; font-size: 16px; font-weight: 800; color: var(--text); }
+.platoo-ui .dept-detail h3.dept-section span { font-size: 19px; }
+.platoo-ui .dept-detail .room-chips span { padding: 7px 13px; font-size: 14px; color: var(--text); background: color-mix(in srgb, var(--text) 6%, transparent); border: 1px solid var(--border); }
+.platoo-ui .dept-detail .career-chips span { color: white; font-weight: 700; background: var(--dept); border-color: var(--dept); }
+.platoo-ui .dept-detail .dept-programmes { gap: 8px 14px; font-size: 15px; }
+.platoo-ui .dept-detail .dept-programmes dt { display: flex; flex-direction: column; line-height: 1.3; }
+.platoo-ui .dept-detail .dept-programmes dt small { color: var(--muted); font-size: 11px; font-weight: 600; }
+.platoo-ui .dept-detail .dept-programmes dd { align-self: center; font-weight: 600; }
+.platoo-ui .dept-detail .dept-career-group { margin-top: 6px; color: var(--muted); font-size: 13px; }
+@media (min-width: 1024px) {
+  .platoo-ui .dept-detail .dept-description { font-size: 19px; }
+  .platoo-ui .dept-detail h3.dept-section { font-size: 19px; }
+  .platoo-ui .dept-detail h3.dept-section span { font-size: 22px; }
+  .platoo-ui .dept-detail .room-chips span { font-size: 16px; }
+  .platoo-ui .dept-detail .dept-programmes { font-size: 17px; }
+  .platoo-ui .dept-detail .dept-programmes dt small { font-size: 13px; }
+  .platoo-ui .dept-detail .dept-career-group { font-size: 15px; }
+}
+.platoo-ui .dept-detail .dept-programmes { grid-template-columns: max-content 1fr; }
+.platoo-ui .dept-detail .dept-programmes dt small { white-space: nowrap; }
