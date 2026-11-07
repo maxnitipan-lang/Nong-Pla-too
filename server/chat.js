@@ -12,6 +12,7 @@
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
 import { COLLEGE_FACTS, collegeFactLines } from "../shared/collegeFacts.js";
 import { answerFromFaq } from "./chatFaq.js";
+import { withDepartmentInfo } from "../shared/departmentInfo.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
 const CHAT_BASE_URL = process.env.CHAT_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
@@ -25,6 +26,25 @@ const ROUTE_TOOL = "show_walking_route";
 
 /** Whether an API key is configured. */
 export const isChatConfigured = () => CHAT_API_KEY.length > 0;
+
+/** One line per department: where it is, what students learn, careers (for "which department…" questions). */
+function departmentLines(buildings) {
+  const seen = new Set();
+  const lines = [];
+  for (const b of buildings) {
+    for (const raw of b.departments ?? []) {
+      if (!/^สาขา/.test(raw.name ?? "") || seen.has(raw.name)) continue;
+      seen.add(raw.name);
+      const d = withDepartmentInfo(raw);
+      lines.push(
+        [`- ${d.name}`, `อยู่ที่: ${b.name}`, d.description && `เรียน: ${d.description}`, d.careers?.length && `อาชีพ: ${d.careers.join(", ")}`]
+          .filter(Boolean)
+          .join(" | ")
+      );
+    }
+  }
+  return lines.join("\n");
+}
 
 function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = null) {
   const buildingLines = buildings
@@ -69,17 +89,23 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "หมายเหตุ: ชื่ออาคารสาขาวิชาส่วนใหญ่ = สาขาวิชาที่อยู่ในอาคารนั้น เวลาตอบให้พูดชื่อครั้งเดียว ห้ามพูดซ้ำแบบ 'อาคาร X มีสาขา X'",
     buildingLines || "(ยังไม่มีข้อมูล)",
     "",
+    "== สาขาวิชาที่เปิดสอน (ทุกสาขาเรียนได้ทั้งชายและหญิง) ==",
+    departmentLines(buildings) || "(ยังไม่มีข้อมูล)",
+    "",
     "== ข่าวสารล่าสุด ==",
     newsLines || "(ยังไม่มีข่าว)",
     "",
     "== กติกาการตอบ ==",
     "1. ตอบเป็นภาษาไทย สุภาพ กระชับ ตรงประเด็น",
-    "2. ใช้เฉพาะข้อมูลข้างต้น ห้ามแต่งชื่ออาคาร แผนก หรือข่าวที่ไม่มีในรายการ",
-    `3. ถ้าไม่มีข้อมูลให้บอกตรง ๆ ว่าไม่ทราบ และแนะนำให้ติดต่อวิทยาลัย โทร ${COLLEGE_FACTS.phone}${settings.contactEmail ? ` หรืออีเมล ${settings.contactEmail}` : ""}`,
+    "2. ใช้เฉพาะข้อมูลข้างต้น ห้ามแต่งชื่ออาคาร แผนก ข่าว ตัวเลข หรือบอกว่าหน่วยงานใดอยู่อาคารไหน ถ้ารายการอาคารไม่ได้ระบุไว้ (เช่น ห้ามเดาว่าฝ่ายกิจการนักเรียนอยู่อาคาร 85 ปี)",
+    `3. ถ้าไม่มีข้อมูล ให้บอกสั้น ๆ 1 ประโยคว่าน้องปลาทูยังไม่มีข้อมูลเรื่องนี้ แล้วแนะนำทางเดียวที่ตรงที่สุด (เช่น สอบถามงานทะเบียน หรือโทร ${COLLEGE_FACTS.phone}) ห้ามขอโทษซ้ำหลายรอบ`,
+    "3.1 ใส่เบอร์โทร/อีเมลเฉพาะเมื่อไม่มีข้อมูลตอบ หรือผู้ใช้ถามช่องทางติดต่อเท่านั้น ห้ามต่อท้ายทุกคำตอบ และห้ามปิดท้ายด้วย 'มีอะไรให้ช่วยอีกไหมครับ' ทุกครั้ง",
+    "3.2 ถ้าถามว่าสาขาไหนเหมาะกับเพศใด ให้ตอบว่าทุกสาขาเรียนได้ทุกเพศ แล้วแนะนำตามความสนใจ (ชอบงานช่าง งานคอมพิวเตอร์ งานธุรกิจ งานอาหาร) ห้ามแบ่งสาขาตามเพศ",
+    "3.3 ถ้าถามว่ามีสาขาเกี่ยวกับเรื่องใด ให้ไล่ดูรายการสาขาวิชาด้านบนให้ครบ แล้วบอกทุกสาขาที่เกี่ยวข้อง",
     "4. ถ้าผู้ใช้ถามว่าอาคาร สาขา หรือห้องอยู่ตรงไหน ให้บอกตำแหน่งจากช่อง ตำแหน่ง: ของอาคารนั้น (อยู่ฝั่งไหนของวิทยาลัย ใกล้อาคารอะไร) และชั้นถ้ามีข้อมูล",
     `5. ถ้าผู้ใช้ขอเส้นทาง / วิธีไป / นำทาง ไปอาคารใดอาคารหนึ่ง ให้เรียกฟังก์ชัน ${ROUTE_TOOL} พร้อม buildingId (id จากรายการด้านบน) ของอาคารนั้น แทนการอธิบายเส้นทางด้วยข้อความ`,
     "6. ถ้าคำถามไม่เกี่ยวกับวิทยาลัย (เช่น การบ้าน ข่าวทั่วไป ความเห็นส่วนตัว) ให้ตอบปฏิเสธอย่างสุภาพเพียง 1 ประโยค แล้วชวนถามเรื่องในวิทยาลัยแทน ห้ามตอบเนื้อหานั้นยาว",
-    "7. ตอบสั้น กระชับ อ่านง่าย:",
+    "7. ตอบสั้น กระชับ อ่านง่าย ทั้งคำตอบไม่เกิน 5 บรรทัด:",
     "   - ถ้ามีหลายรายการ (ตั้งแต่ 2 ข้อขึ้นไป) ให้ทำเป็น bullet list ขึ้นต้นบรรทัดด้วย '- ' ห้ามเขียนต่อกันยาว ๆ ในย่อหน้าเดียว",
     "   - เกริ่นนำ 1 บรรทัดสั้น ๆ ก่อนลิสต์ แล้วขึ้นบรรทัดใหม่",
     "   - แต่ละย่อหน้าไม่เกิน 2 ประโยค เว้นบรรทัดว่างระหว่างย่อหน้า",
@@ -100,7 +126,33 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
 }
 
 /** Send the conversation to the model and return the assistant answer. */
+const BUSY_REPLY = "ตอนนี้มีคนถามน้องปลาทูเยอะมากครับ รอสักครู่แล้วถามใหม่อีกครั้งนะครับ";
+const DOWN_REPLY = `ขออภัยครับ ตอนนี้น้องปลาทูตอบคำถามนี้ไม่ได้ชั่วคราว ลองถามใหม่อีกครั้ง หรือโทรสอบถามวิทยาลัย ${COLLEGE_FACTS.phone} ได้เลยครับ`;
+
+/** "ข่าวล่าสุดมีอะไรบ้าง" — answered straight from the news list (instant, no AI needed). */
+function newsAnswer(question, news) {
+  const q = question.replace(/\s+/g, "");
+  if (!/ข่าว|ประกาศ|กิจกรรมล่าสุด/.test(q) || !/ล่าสุด|อะไรบ้าง|มีอะไร|ใหม่|วันนี้/.test(q) || !news.length) return null;
+  const items = news.slice(0, 3).map(n => `- ${n.title}${n.date ? ` (${n.date})` : ""}`);
+  return ["ข่าวล่าสุดของวิทยาลัยครับ", ...items, "", "ดูข่าวทั้งหมดพร้อมรูปได้ที่เมนูข่าวสารครับ"].join("\n");
+}
+
+/**
+ * Answer a chat message. If the AI service fails (busy, quota, network), the visitor gets a
+ * polite reply instead of a "server error" — only a missing API key is reported as an error.
+ */
 export async function askCampusChat(history, options = {}) {
+  try {
+    return await answerChat(history, options);
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    if (/GEMINI_API_KEY/.test(message)) throw error;
+    console.warn("[Chat] AI answer failed:", message);
+    return { reply: /429|ถามบ่อย|หนาแน่น|โควตา/.test(message) ? BUSY_REPLY : DOWN_REPLY, routeToBuildingId: null, source: "fallback" };
+  }
+}
+
+async function answerChat(history, options) {
   const [buildings, news, settings] = await Promise.all([getCampusBuildings(), getCampusNews(), getCampusSettings()]);
 
   // Greetings, common and off-topic questions, "where is X": answer from the
@@ -111,6 +163,8 @@ export async function askCampusChat(history, options = {}) {
   if (ready) {
     return { reply: ready.reply, routeToBuildingId: ready.routeToBuildingId, source: "faq" };
   }
+  const latestNews = newsAnswer(lastUser, news);
+  if (latestNews) return { reply: latestNews, routeToBuildingId: null, source: "news" };
 
   if (!CHAT_API_KEY) {
     throw new Error("ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในไฟล์ .env — ขอ key ฟรีที่ https://aistudio.google.com/apikey");

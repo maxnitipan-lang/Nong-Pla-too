@@ -70,3 +70,29 @@ describe("ready-made answers (no AI call)", () => {
     expect(similarity("", "abc")).toBe(0);
   });
 });
+
+// Questions that used to get the wrong ready-made answer (found by asking the live assistant).
+describe("questions that once got the wrong answer", () => {
+  it.each([
+    ["ผอ.ชื่ออะไร", "director-name"],
+    ["ใครเป็นผอ", "director-name"],
+    ["ไปห้องผอ.", "director"],
+    ["เบอร์โทรวิทยาลัย", "phone"],
+    ["ไปช่างยนต์ยังไง", "building:mech-auto"],
+    ["ช่างยนต์อยู่ไหน", "building:mech-auto"],
+  ])("%s → %s", (question, id) => {
+    expect(ask(question)?.faqId).toBe(id);
+  });
+
+  it.each([
+    "อยากเรียนช่างยนต์ต้องทำยังไง", // studying, not "where is it"
+    "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง", // comparing departments
+    "ห้องน้ำอยู่ไหน", // must not answer with the director's office
+  ])("%s → left to the AI", (question) => {
+    expect(ask(question)?.faqId).toBeUndefined();
+  });
+
+  it("never sends the old wrong email", () => {
+    expect(CAMPUS_SETTINGS_DEFAULTS.contactEmail).not.toMatch(/smtc\.ac\.th/);
+  });
+});

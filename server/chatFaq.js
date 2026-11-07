@@ -68,7 +68,10 @@ function fill(template, settings) {
 // ---------------------------------------------------------------- buildings
 
 /** Words that mean "where is it / take me there". */
-const LOCATION_INTENT = /ไหน|ยังไง|ทางไป|นำทาง|พาไป|ไป|เส้นทาง/;
+// "ยังไง" alone is not about a place ("อยากเรียนช่างยนต์ต้องทำยังไง"), only "ไป…ยังไง" is.
+const LOCATION_INTENT = /ไหน|ทางไป|นำทาง|พาไป|^ไป|ไปS{0,30}ยังไง|เส้นทาง/;
+/** Questions about studying, applying or comparing departments — not "where is it". */
+const NOT_LOCATION = /อยากเรียน|สมัคร|ต่างกัน|แตกต่าง|เรียนอะไร|ทำงานอะไร|ค่าเทอม|เหมาะกับ|ดีไหม|น่าเรียน/;
 /** Generic words stripped from names so "สาขาวิชาช่างยนต์" also matches "ช่างยนต์". */
 const GENERIC = /^(สาขาวิชา|สาขา|หมวดวิชา|อาคาร|ตึก|งาน|ฝ่าย|ห้อง)/;
 
@@ -148,7 +151,7 @@ const politely = text => `${text}${/[0-9A-Za-z.)]$/.test(text) ? " " : ""}คร
 
 function buildingAnswer(question, buildings, kiosk) {
   const text = normalizeQuestion(question);
-  if (!LOCATION_INTENT.test(text)) return null;
+  if (!LOCATION_INTENT.test(text) || NOT_LOCATION.test(text)) return null;
   const match = findBuildingMatch(question, buildings);
   if (!match) return null;
   const { building, key } = match;

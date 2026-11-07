@@ -371,6 +371,9 @@ export async function deleteCampusNews(id) {
 // Site settings
 // ---------------------------------------------------------------------------
 
+const isLegacyEmail = (email) => !email || /@smtc.ac.th$/i.test(email);
+const isLegacyAddress = (address) => !address || address === "วิทยาลัยเทคนิคสมุทรสงคราม อำเภอเมืองสมุทรสงคราม จังหวัดสมุทรสงคราม";
+
 export async function getCampusSettings() {
   const db = await getDb();
   if (!db) return CAMPUS_SETTINGS_DEFAULTS;
@@ -385,8 +388,10 @@ export async function getCampusSettings() {
     };
     return {
       collegeName: map.get("collegeName") || CAMPUS_SETTINGS_DEFAULTS.collegeName,
-      address: map.get("address") || CAMPUS_SETTINGS_DEFAULTS.address,
-      contactEmail: map.get("contactEmail") ?? CAMPUS_SETTINGS_DEFAULTS.contactEmail,
+      // Values saved before the real details were known (wrong "smtc" email, address without
+      // house number) fall back to the correct defaults instead of being repeated to visitors.
+      address: isLegacyAddress(map.get("address")) ? CAMPUS_SETTINGS_DEFAULTS.address : map.get("address"),
+      contactEmail: isLegacyEmail(map.get("contactEmail")) ? CAMPUS_SETTINGS_DEFAULTS.contactEmail : map.get("contactEmail"),
       mapEmbedUrl: map.get("mapEmbedUrl") ?? CAMPUS_SETTINGS_DEFAULTS.mapEmbedUrl,
       mapCenter: {
         lat: num("mapCenterLat", CAMPUS_SETTINGS_DEFAULTS.mapCenter.lat),

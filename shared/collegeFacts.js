@@ -25,6 +25,7 @@ export const COLLEGE_FACTS = {
   area: "53 ไร่ 4 งาน 149 ตารางวา (2 แปลง: วิทยาลัย 43 ไร่ และบ้านพักครู 10 ไร่)",
   buildingCount: "อาคารเรียนและอาคารปฏิบัติการรวม 15 หลัง 353 ห้อง",
   officeHours: "08:00–16:30 น.",
+  director: "นายอรุณ เกลื่อนพันธ์",
 };
 
 /** The facts as lines for the chat assistant's instructions. */
@@ -33,7 +34,7 @@ export function collegeFactLines(f = COLLEGE_FACTS) {
     `ชื่อภาษาอังกฤษ: ${f.nameEn} (${f.shortName})`,
     `ที่อยู่: ${f.address}`,
     `โทรศัพท์: ${f.phone} | โทรสาร: ${f.fax} | อีเมล: ${f.email} | เว็บไซต์: ${f.website}`,
-    `เวลาทำการ: ${f.officeHours}`,
+    `เวลาทำการ: ${f.officeHours} | ผู้อำนวยการ: ${f.director}`,
     `ประวัติ: ${f.history}`,
     `วิสัยทัศน์: ${f.vision}`,
     `อัตลักษณ์: ${f.identity}`,
