@@ -112,11 +112,28 @@ const TTS_CACHE_MAX = 300;
 /** Voices being made right now, so two requests for the same text share one. */
 const ttsInFlight = new Map();
 
+/**
+ * After Google says the voice quota is used up (HTTP 429), stop asking for 30 minutes: every
+ * request would fail anyway, and the browser can use the device voice straight away instead.
+ */
+const QUOTA_PAUSE_MS = 30 * 60 * 1000;
+let quotaPausedUntil = 0;
+export const aiVoicePaused = () => Date.now() < quotaPausedUntil;
+
 export function synthesizeSpeech(text) {
   const cached = ttsCache.get(text);
   if (cached) return Promise.resolve(cached);
+  if (aiVoicePaused()) return Promise.reject(new Error("AI voice paused: quota used up (HTTP 429)"));
   if (ttsInFlight.has(text)) return ttsInFlight.get(text);
-  const job = makeSpeech(text).finally(() => ttsInFlight.delete(text));
+  const job = makeSpeech(text)
+    .catch(error => {
+      if (/HTTP 429/.test(error instanceof Error ? error.message : "")) {
+        quotaPausedUntil = Date.now() + QUOTA_PAUSE_MS;
+        console.warn("[Voice] quota used up (429): using the device voice for the next 30 minutes");
+      }
+      throw error;
+    })
+    .finally(() => ttsInFlight.delete(text));
   ttsInFlight.set(text, job);
   return job;
 }
@@ -243,7 +260,8 @@ export function registerVoiceRoutes(app) {
   // Make the common phrases' voice in the background shortly after start-up (not in tests).
   if (process.env.NODE_ENV !== "test" && !process.env.VITEST) setTimeout(() => void warmVoiceCache().catch(() => undefined), 15_000).unref?.();
   app.get("/api/voice/status", (_req, res) => {
-    res.json({ ai: isVoiceConfigured() });
+    // While the quota is used up, tell browsers to use their own voice (no failed requests, no wait).
+    res.json({ ai: isVoiceConfigured() && !aiVoicePaused() });
   });
 
   app.post("/api/voice/tts", async (req, res) => {
@@ -258,8 +276,11 @@ export function registerVoiceRoutes(app) {
       res.setHeader("Cache-Control", "private, max-age=3600");
       res.send(wav);
     } catch (error) {
-      console.warn("[Voice] TTS failed:", error instanceof Error ? error.message : error);
-      res.status(502).json({ error: "สร้างเสียงไม่สำเร็จ" });
+      const message = error instanceof Error ? error.message : String(error);
+      if (!aiVoicePaused() || !/paused/.test(message)) console.warn("[Voice] TTS failed:", message);
+      // 503 + Retry-After while paused, so the browser falls back to its own voice at once.
+      if (aiVoicePaused()) res.setHeader("Retry-After", String(Math.ceil((quotaPausedUntil - Date.now()) / 1000)));
+      res.status(aiVoicePaused() ? 503 : 502).json({ error: "สร้างเสียงไม่สำเร็จ" });
     }
   });
 
