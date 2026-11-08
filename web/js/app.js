@@ -226,10 +226,8 @@ function runChatAction(name) {
 }
 
 function chromeHtml() {
-  // The home screen already has the mic and the "ถามด้วยเสียง" card, so no floating button there.
-  const floating = state.view === "home"
-    ? ""
-    : html`<button class="floating-ai" data-action="chat" aria-label="เปิดผู้ช่วยน้องปลาทู">
+  // The "ถามน้องปลาทู" button is on every screen, home included (people look for it bottom-right).
+  const floating = html`<button class="floating-ai" data-action="chat" aria-label="เปิดผู้ช่วยน้องปลาทู">
       <img class="floating-platoo" src="/mascots/jump.webp" alt="" aria-hidden="true" />
       <span class="floating-ai-copy"><strong>ถามน้องปลาทู</strong><small>แตะเพื่อเริ่มถาม</small></span>
     </button>`;

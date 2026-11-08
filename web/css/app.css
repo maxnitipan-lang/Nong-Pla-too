@@ -624,3 +624,21 @@
 .platoo-ui .dept-levels > span { background: #c4621d; }
 /* Place numbers in the list: white on orange/grey — a soft shadow keeps the digits readable. */
 .platoo-ui .place-number { text-shadow: 0 1px 2px rgba(0, 0, 0, .45); font-weight: 800; }
+/* Phones: room at the end of each page so the last card can scroll above the "ถามน้องปลาทู" button. */
+@media (max-width: 640px) {
+  .platoo-ui .kiosk-home { padding-bottom: 76px; }
+  .platoo-ui .content-page { padding-bottom: 84px; }
+}
+/* Home on iPad (page scrolls): room at the end for the floating button. */
+@media (min-width: 641px) and (max-width: 1023px) {
+  .platoo-ui .kiosk-home { padding-bottom: 96px; }
+}
+/* Home on computers / kiosk (fits one screen): the map bar ends before the floating button. */
+@media (min-width: 1024px) {
+  .platoo-ui .kiosk-map-button { margin-right: 190px; padding-right: 18px !important; }
+  /* its own mascot would sit right beside the floating button's mascot — one is enough */
+  .platoo-ui .kiosk-map-button .map-button-mascot { display: none; }
+}
+@media (min-width: 1280px) {
+  .platoo-ui .kiosk-map-button { margin-right: 240px; white-space: nowrap; } /* the floating button is wider here */
+}
