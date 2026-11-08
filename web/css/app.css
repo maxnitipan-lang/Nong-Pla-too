@@ -578,3 +578,7 @@
 @supports (height: 100dvh) {
   .platoo-ui .app { min-height: 100dvh; }
 }
+
+/* Pinch on the map zooms the map only: the page itself may scroll here but never pinch-zoom. */
+.platoo-ui #map-canvas { touch-action: pan-x pan-y; }
+.platoo-ui #map-canvas .leaflet-container, .platoo-ui #map-canvas .map3d-canvas, .platoo-ui #map-canvas .map3d-labels { touch-action: none; }

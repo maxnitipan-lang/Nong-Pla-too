@@ -892,6 +892,16 @@ function selectBuilding(id) {
   refresh();
 }
 
+/* ------------------------------------------------------------------ pinch on the map */
+
+// Two fingers on the map zoom the map, never the whole page. CSS (touch-action) handles most
+// browsers; iPhone/iPad Safari can still zoom the page, so stop its gesture here. Leaflet and the
+// 3D view get the touches before this runs (they listen on inner elements), so they still zoom.
+const onMap = (e) => e.target instanceof Element && Boolean(e.target.closest("#map-canvas"));
+document.addEventListener("gesturestart", (e) => { if (onMap(e)) e.preventDefault(); }, { passive: false });
+document.addEventListener("gesturechange", (e) => { if (onMap(e)) e.preventDefault(); }, { passive: false });
+document.addEventListener("touchmove", (e) => { if (e.touches.length > 1 && onMap(e)) e.preventDefault(); }, { passive: false });
+
 /* ------------------------------------------------------------------ phone GPS */
 
 let watchId = null;
