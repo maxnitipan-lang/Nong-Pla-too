@@ -176,7 +176,9 @@ export class CampusMap {
     // Frame the on-campus part only — the off-campus approach is outside the locked area.
     // The route card covers the left/bottom of the map: frame the route in the space beside it.
     const cover = this.options.routeCover?.() ?? { left: 0, bottom: 0 };
-    if (!this.follow)
+    // Live mode follows the walker — but only once they are on campus; from outside, show the route.
+    const userInside = this.lastFix && this.bounds.contains([this.lastFix.lat, this.lastFix.lng]);
+    if (!this.follow || !userInside)
       this.map.fitBounds(L.latLngBounds(route.path).pad(0.15), {
         animate: true,
         maxZoom: 19,
@@ -198,6 +200,7 @@ export class CampusMap {
   /** The walker's blue dot + accuracy circle; in live mode keep them centred. */
   setUser(fix) {
     if (!fix) return;
+    this.lastFix = fix;
     this.meLayer?.remove();
     const me = L.marker([fix.lat, fix.lng], { icon: meIcon(), zIndexOffset: 2000, interactive: false });
     if (this.options.userLabel) me.bindTooltip(this.options.userLabel, { permanent: true, direction: "top", offset: [0, -10], className: "me-label" });

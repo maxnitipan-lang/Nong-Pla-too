@@ -207,12 +207,20 @@ export class CampusMap3D {
     this.paintLabels();
   }
 
+  /** Live mode only follows the walker on (or right next to) the route — far away, the camera stays on campus. */
+  followsUser(fix = this.lastFix) {
+    if (!this.follow || !fix || !this.route) return false;
+    const mPerLat = 111_320;
+    const mPerLng = 111_320 * Math.cos((fix.lat * Math.PI) / 180);
+    return this.route.path.some(([lat, lng]) => Math.hypot((lat - fix.lat) * mPerLat, (lng - fix.lng) * mPerLng) < 250);
+  }
+
   setRoute(route, approachPath, follow) {
     this.follow = Boolean(follow);
     this.route = route;
     this.scene.setRoute(route, approachPath, this.activeStep);
     const key = route ? `${route.path[0]?.join()}|${route.path[route.path.length - 1]?.join()}` : "";
-    if (route && key !== this.routeKey && !this.follow) this.scene.frameRoute(route);
+    if (route && key !== this.routeKey && !this.followsUser()) this.scene.frameRoute(route);
     this.routeKey = key;
     this.approachPath = approachPath;
   }
@@ -224,7 +232,8 @@ export class CampusMap3D {
   }
 
   setUser(fix) {
-    this.scene.setUser(fix, this.follow);
+    this.lastFix = fix ?? null;
+    this.scene.setUser(fix, this.followsUser(fix));
   }
 
   setDark(dark) {
