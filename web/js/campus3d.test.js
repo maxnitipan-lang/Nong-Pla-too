@@ -19,6 +19,11 @@ describe("3D campus map — building placement", () => {
   it("uses the floor count (or the photo override) for the height", () => {
     for (const p of placed) {
       const style = building3dStyle(p.ids[0]);
+      if (style.open) {
+        expect(p.open).toBe(true); // the football field: flat, no building
+        expect(p.height).toBeLessThan(1);
+        continue;
+      }
       if (style.height) {
         expect(p.height).toBe(style.height);
         continue;

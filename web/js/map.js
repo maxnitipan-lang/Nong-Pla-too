@@ -4,6 +4,7 @@
 // (Same behaviour as client/src/components/CampusLeafletMap.tsx.)
 
 import { CAMPUS_BUILDINGS } from "/shared/campus.js";
+import { FOOTBALL_FIELD, pitchMarkings } from "/shared/campusAreas.js";
 import { buildingLatLng, formatDistance, getBestPosition } from "./directions.js";
 import { icon } from "./icons.js";
 import { esc } from "./util.js";
@@ -91,6 +92,12 @@ export class CampusMap {
     }, 200);
 
     container.querySelector(".map-locate-button").addEventListener("click", () => this.locateMe());
+    // The football field as grass with pitch lines (the street map shows it as a blank patch).
+    const field = L.layerGroup([
+      L.polygon(FOOTBALL_FIELD, { color: "#4a9a3f", weight: 1, fillColor: "#6fbf5f", fillOpacity: 0.9, interactive: false }),
+      ...pitchMarkings().map(line => L.polyline(line, { color: "#ffffff", weight: 2, opacity: 0.95, interactive: false })),
+    ]).addTo(map);
+    field.eachLayer(l => l.bringToBack?.());
     this.drawMarkers();
     this.showWholeCampus(false);
   }

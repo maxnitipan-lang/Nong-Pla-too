@@ -15,6 +15,7 @@
 //   size      [length, width] m of the box drawn when OpenStreetMap has no
 //             footprint for this building (it's turned to the campus grid)
 //   turn      extra turn of that box in degrees (90 = long side the other way)
+//   open      true = an open area (no building): only the pin and label, e.g. the football field
 //
 // Roof colours were checked against a satellite view of the campus (พ.ย. 2569):
 // from above most "white" buildings have grey, blue or dark metal roofs.
@@ -22,6 +23,9 @@
 export const DEFAULT_3D_STYLE = { wall: "#eeeeea", roof: "#c9ced3", trim: "#b9c0c6", roofType: "flat" };
 
 export const BUILDING_3D_STYLES = {
+  // สนามฟุตบอล — grass and pitch lines are drawn with the ground (shared/campusAreas.js), no box.
+  "football-field": { open: true },
+
   // ตึก ๑๒ ICT / เทคนิคการผลิต — white, curved balconies, big teal-blue metal roof.
   // OSM has no footprint for it, so it's drawn as a box this size.
   // From above: the big blue roof east of the hall, long side running east–west.

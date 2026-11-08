@@ -609,3 +609,11 @@
 }
 /* The location message beside the map title: never below 11px on any screen. */
 .platoo-ui .map-heading-actions > small { font-size: 11px; }
+/* Phones: the "ถามน้องปลาทู" button shows its words like on the computer (not just a round icon). */
+@media (max-width: 640px) {
+  .platoo-ui .floating-ai { width: auto; height: 54px; right: 12px; bottom: 80px; padding: 0 16px 0 58px; justify-content: flex-start; }
+  .platoo-ui .floating-ai-copy { display: flex; }
+  .platoo-ui .floating-ai-copy strong { font-size: 14px; white-space: nowrap; }
+  .platoo-ui .floating-ai-copy small { font-size: 11px; white-space: nowrap; }
+  .platoo-ui .floating-platoo { height: 64px; left: -8px; bottom: 1px; }
+}

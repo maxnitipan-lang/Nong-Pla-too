@@ -15,6 +15,7 @@ import * as THREE from "three";
 import { MapControls } from "three/addons/controls/MapControls.js";
 import { mergeGeometries } from "three/addons/utils/BufferGeometryUtils.js";
 import { building3dStyle } from "../../shared/building3dStyles.js";
+import { FOOTBALL_FIELD, pitchMarkings } from "../../shared/campusAreas.js";
 
 // OpenStreetMap outlines of the campus buildings and roads (shared/data/campusFootprints.json).
 // The page fetches the file and hands it over with setFootprints() before drawing the scene.
@@ -36,6 +37,8 @@ export const LIGHT_PALETTE = {
   campus: "#cfe8de",
   road: "#ffffff",
   roadMajor: "#f6efe2",
+  grass: "#6fbf5f",
+  grassLine: "#ffffff",
   context: "#eef1f3",
   contextRoof: "#f7f8f9",
   edge: "#0b3550",
@@ -47,6 +50,8 @@ export const DARK_PALETTE = {
   campus: "#143247",
   road: "#2b4a61",
   roadMajor: "#36566d",
+  grass: "#2f6b3e",
+  grassLine: "#cfe8d6",
   context: "#24405a",
   contextRoof: "#2d4c66",
   edge: "#9fd3e6",
@@ -352,6 +357,11 @@ export function placeBuildings(buildings, project, styleOf = building3dStyle) {
   const grid = angles.length ? angles[Math.floor(angles.length / 2)] : 0;
   for (const { b, p } of loose) {
     const style = styleOf(b.id);
+    // Open areas (the football field): a pin and label on the ground, no building box.
+    if (style.open) {
+      placed.push({ ids: [b.id], poly: boxPoly({ c: p, u: [1, 0], v: [0, 1], a: 4, b: 4 }), height: 0.4, roofRise: 0, roofOnly: false, open: true, accent: b.accent, style, anchor: new THREE.Vector3(p[0], 1, p[1]) });
+      continue;
+    }
     const [len, wid] = style.size ?? FALLBACK_SIZE;
     const angle = grid + ((style.turn ?? 0) * Math.PI) / 180;
     const u = [Math.cos(angle), Math.sin(angle)];
@@ -610,7 +620,29 @@ export class CampusScene {
       mesh.receiveShadow = true;
       this.ground.add(mesh);
     }
+    this.buildField();
     this.dirty = true;
+  }
+
+  /** The football field: grass over the ground, with white pitch markings. */
+  buildField() {
+    const pts = FOOTBALL_FIELD.map(([lat, lng]) => this.project(lat, lng));
+    const shape = new THREE.Shape(pts.map(([x, z]) => new THREE.Vector2(x, -z)));
+    const grass = new THREE.Mesh(
+      new THREE.ShapeGeometry(shape),
+      new THREE.MeshStandardMaterial({ color: this.palette.grass, roughness: 1 })
+    );
+    grass.rotation.x = -Math.PI / 2;
+    grass.position.y = 0.3; // above the roads (0.22–0.26)
+    grass.receiveShadow = true;
+    this.ground.add(grass);
+    const lines = pitchMarkings()
+      .map(line => ribbon(line.map(([lat, lng]) => this.project(lat, lng)), 0.6, 0.34))
+      .filter(Boolean);
+    if (!lines.length) return;
+    const merged = mergeGeometries(lines);
+    lines.forEach(g => g.dispose());
+    if (merged) this.ground.add(new THREE.Mesh(merged, new THREE.MeshBasicMaterial({ color: this.palette.grassLine })));
   }
 
   /** Rebuild every building from the current list (pins/floors may have been edited in admin). */
@@ -656,7 +688,9 @@ export class CampusScene {
       const group = new THREE.Group();
       group.userData.ids = p.ids;
       const parts = [];
-      if (p.roofOnly) {
+      if (p.open) {
+        // nothing to build — the grass is drawn with the ground
+      } else if (p.roofOnly) {
         parts.push(new THREE.Mesh(prism(p.poly, 0.5, p.height - 0.5), [roof, trim]));
       } else {
         // Walls (group 0 = top cap, hidden under the roof; group 1 = sides).
