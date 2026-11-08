@@ -333,6 +333,12 @@ export function placeBuildings(buildings, project, styleOf = building3dStyle) {
         accent: owners[0].accent,
         style,
         anchor: new THREE.Vector3(c[0], height + roofRise, c[1]),
+        // Each unit's own pin — units placed apart on one building (อาคาร 8: ไฟฟ้า left,
+        // ก่อสร้าง right) get their own label there.
+        pins: owners.map(o => {
+          const [x, z] = project(Number(o.latitude), Number(o.longitude));
+          return { id: o.id, x, z };
+        }),
       });
     } else {
       const levels = s.f.levels ?? (roofOnly ? 1 : s.f.kind === "apartments" ? 3 : 1);

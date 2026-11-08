@@ -162,12 +162,20 @@ export class CampusMap3D {
     this.labelHost.replaceChildren();
     const byId = new Map(buildings.map((b) => [b.id, b]));
     this.labels = [];
+    // One label per shape: several units in one building share it — unless their pins were put
+    // clearly apart (> 12 m, e.g. the left and right halves of อาคาร 8): then each gets its own.
+    const groups = [];
     for (const p of placed) {
-      // One label per shape: several units in one building share it.
-      if (!p.ids.some((id) => byId.has(id))) continue;
+      const pins = p.pins ?? [];
+      const apart = pins.length > 1 && pins.some((a, i) => pins.some((b, j) => j > i && Math.hypot(a.x - b.x, a.z - b.z) > 12));
+      if (apart) for (const pin of pins) groups.push({ ids: [pin.id], anchor: { x: pin.x, y: p.anchor.y, z: pin.z } });
+      else groups.push({ ids: p.ids, anchor: { x: p.anchor.x, y: p.anchor.y, z: p.anchor.z } });
+    }
+    for (const g of groups) {
+      if (!g.ids.some((id) => byId.has(id))) continue;
       const el = document.createElement("div");
       el.className = "map3d-label";
-      const label = { el, ids: p.ids, anchor: { x: p.anchor.x, y: p.anchor.y, z: p.anchor.z } };
+      const label = { el, ids: g.ids, anchor: g.anchor };
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         this.options.onSelect?.(this.shownId(label));
