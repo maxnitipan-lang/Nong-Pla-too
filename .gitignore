@@ -122,3 +122,6 @@ client/public/__manus__/version.json
 .db-backups/
 # output of pnpm ai:test
 scripts/ai-test-report.md
+
+# Building data backups made by scripts/updateCampusMap2569.js
+scripts/backups/

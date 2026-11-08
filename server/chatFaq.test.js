@@ -27,7 +27,7 @@ describe("ready-made answers (no AI call)", () => {
 
   it("fills in the college name and opens routes", () => {
     expect(ask("สวัสดีครับ")?.reply).toContain(CAMPUS_SETTINGS_DEFAULTS.collegeName);
-    expect(ask("โรงอาหารอยู่ตรงไหน")).toMatchObject({ faqId: "canteen", routeToBuildingId: "auditorium" });
+    expect(ask("โรงอาหารอยู่ตรงไหน")).toMatchObject({ faqId: "canteen", routeToBuildingId: "canteen" });
   });
 
   it.each([
@@ -88,9 +88,16 @@ describe("questions that once got the wrong answer", () => {
   it.each([
     "อยากเรียนช่างยนต์ต้องทำยังไง", // studying, not "where is it"
     "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง", // comparing departments
-    "ห้องน้ำอยู่ไหน", // must not answer with the director's office
   ])("%s → left to the AI", (question) => {
     expect(ask(question)?.faqId).toBeUndefined();
+  });
+
+  it("ห้องน้ำอยู่ไหน → the toilet answer, not the director's office", () => {
+    expect(ask("ห้องน้ำอยู่ไหน")).toMatchObject({ faqId: "toilet", routeToBuildingId: "personnel-registration" });
+  });
+
+  it("ห้องสมุด / ห้องพยาบาล → อาคาร 3 ชั้น 1 (from the map handout)", () => {
+    expect(ask("ห้องสมุดอยู่ไหน")?.routeToBuildingId).toBe("general-subjects");
   });
 
   it("never sends the old wrong email", () => {

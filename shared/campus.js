@@ -7,6 +7,8 @@
 // seed content for `campus_buildings` / `campus_news`.
 
 // The four Google My Maps layers of the campus PR map.
+import { MAP_2569_UPDATES } from "./data/campusMap2569.js";
+
 export const CAMPUS_CATEGORIES = ["สายอุตสาหกรรม", "พาณิชยกรรม/คหกรรม/สามัญ", "บริหาร-สนับสนุน", "ส่วนกลาง-กิจกรรม"];
 
 export const CAMPUS_OVERVIEW = {
@@ -282,19 +284,100 @@ const RAW_CAMPUS_BUILDINGS = [
   },
   {
     id: "auditorium",
-    name: "หอประชุม (โรงอาหาร)",
-    shortName: "หอประชุม / โรงอาหาร",
+    name: "หอประชุม 1",
+    shortName: "หอประชุม 1",
     category: "ส่วนกลาง-กิจกรรม",
-    description: "พื้นที่ส่วนกลาง จัดกิจกรรมและรับประทานอาหาร · 2 ห้อง",
+    description: "อาคารหอประชุม 1 · ใช้จัดงานและประชุมใหญ่ (โรงอาหารอยู่ติดกัน)",
     floors: 1,
-    x: 72,
-    y: 68,
+    x: 70,
+    y: 70,
     width: 18,
     height: 16,
     accent: "#3f9d6d",
-    latitude: 13.419306679309,
-    longitude: 100.01088199252,
-    floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["พื้นที่ส่วนกลาง จัดกิจกรรมและรับประทานอาหาร"] }],
+    latitude: 13.419193394,
+    longitude: 100.0107543179,
+    floorsDetail: [{ level: 1, label: "หอประชุม 1", rooms: ["หอประชุม 1"] }],
+  },
+  // Added from the college map handout (8 พ.ย. 69) — same as scripts/updateCampusMap2569.js.
+  {
+    id: "canteen",
+    name: "โรงอาหาร",
+    shortName: "โรงอาหาร",
+    category: "ส่วนกลาง-กิจกรรม",
+    description: "หมายเลข 17 · โรงอาหารของวิทยาลัย (ติดกับหอประชุม 1)",
+    floors: 1,
+    x: 73,
+    y: 67,
+    width: 6,
+    height: 6,
+    accent: "#3f9d6d",
+    latitude: 13.4193121973,
+    longitude: 100.0109069647,
+    floorsDetail: [{ level: 1, label: "โรงอาหาร", rooms: ["โรงอาหาร"] }],
+  },
+  {
+    id: "football-field",
+    name: "สนามฟุตบอล",
+    shortName: "สนามฟุตบอล",
+    category: "ส่วนกลาง-กิจกรรม",
+    description: "หมายเลข 14 · สนามฟุตบอลกลางวิทยาลัย",
+    floors: 1,
+    x: 29,
+    y: 37,
+    width: 6,
+    height: 6,
+    accent: "#3f9d6d",
+    latitude: 13.4201950729,
+    longitude: 100.0098369647,
+    floorsDetail: [{ level: 1, label: "สนามฟุตบอล", rooms: ["สนามฟุตบอล"] }],
+  },
+  {
+    id: "fix-it-center",
+    name: "Fix it Center (ศูนย์ซ่อมสร้างเพื่อชุมชน)",
+    shortName: "Fix it Center",
+    category: "บริหาร-สนับสนุน",
+    description: "หมายเลข 22 · ศูนย์ซ่อมสร้างเพื่อชุมชนแบบถาวร (ใกล้ทางเข้า)",
+    floors: 1,
+    x: 32,
+    y: 12,
+    width: 6,
+    height: 6,
+    accent: "#6b7a86",
+    latitude: 13.4209455477,
+    longitude: 100.0098928729,
+    floorsDetail: [{ level: 1, label: "Fix it Center", rooms: ["Fix it Center","ศูนย์ซ่อมสร้างเพื่อชุมชน"] }],
+  },
+  {
+    id: "school-bank",
+    name: "ธนาคารโรงเรียน",
+    shortName: "ธนาคารโรงเรียน",
+    category: "ส่วนกลาง-กิจกรรม",
+    description: "จุด A · ธนาคารโรงเรียน (ระหว่างอาคาร 7 และอาคาร 8)",
+    floors: 1,
+    x: 51,
+    y: 35,
+    width: 6,
+    height: 6,
+    accent: "#3f9d6d",
+    latitude: 13.4202509301,
+    longitude: 100.0103814864,
+    floorsDetail: [{ level: 1, label: "ธนาคารโรงเรียน", rooms: ["ธนาคารโรงเรียน"] }],
+  },
+  {
+    id: "plernfae-cafe",
+    name: "ร้านเพลินแฟ",
+    shortName: "ร้านเพลินแฟ",
+    category: "ส่วนกลาง-กิจกรรม",
+    description: "จุด B · ร้านกาแฟและเครื่องดื่ม (ใกล้งานทะเบียน)",
+    floors: 1,
+    x: 42,
+    y: 58,
+    width: 6,
+    height: 6,
+    accent: "#3f9d6d",
+    latitude: 13.4195890285,
+    longitude: 100.0101767106,
+    floorsDetail: [{ level: 1, label: "ร้านเพลินแฟ", rooms: ["ร้านเพลินแฟ","ร้านกาแฟ"] }],
   },
   {
     id: "activity-building",
@@ -464,13 +547,31 @@ const RAW_CAMPUS_BUILDINGS = [
   },
 ];
 
-export const CAMPUS_BUILDINGS = RAW_CAMPUS_BUILDINGS.map(building => ({
-  ...building,
-  latitude: String(building.latitude),
-  longitude: String(building.longitude),
-  departments: buildDepartments(building),
-  gallery: [],
-}));
+/** Apply the college map handout (8 พ.ย. 69): names, floors, rooms and departments per floor. */
+function withMap2569(building) {
+  const update = MAP_2569_UPDATES[building.id];
+  if (!update) return building;
+  const next = { ...building };
+  for (const key of ["name", "shortName", "category", "description", "floors", "floorsDetail"]) if (update[key]) next[key] = update[key];
+  if (update.departments)
+    next.departments = update.departments.map(([name, floor], i) => {
+      const found = building.departments.find(d => d.name === name);
+      return found
+        ? { ...found, floor }
+        : { id: `${building.id}-dept-m${i + 1}`, floor, name, code: String(i + 1).padStart(2, "0"), description: "", skills: [], careers: [], accent: building.accent };
+    });
+  return next;
+}
+
+export const CAMPUS_BUILDINGS = RAW_CAMPUS_BUILDINGS.map(building =>
+  withMap2569({
+    ...building,
+    latitude: String(building.latitude),
+    longitude: String(building.longitude),
+    departments: buildDepartments(building),
+    gallery: [],
+  })
+);
 
 export const CAMPUS_NEWS = [
   {
