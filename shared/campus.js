@@ -7,7 +7,7 @@
 // seed content for `campus_buildings` / `campus_news`.
 
 // The four Google My Maps layers of the campus PR map.
-import { MAP_2569_UPDATES } from "./data/campusMap2569.js";
+import { MAP_2569_NEW_PLACES, MAP_2569_UPDATES } from "./data/campusMap2569.js";
 
 export const CAMPUS_CATEGORIES = ["สายอุตสาหกรรม", "พาณิชยกรรม/คหกรรม/สามัญ", "บริหาร-สนับสนุน", "ส่วนกลาง-กิจกรรม"];
 
@@ -192,8 +192,8 @@ const RAW_CAMPUS_BUILDINGS = [
     width: 18,
     height: 16,
     accent: "#2f7fb5",
-    latitude: 13.4187456064652,
-    longitude: 100.010345639489,
+    latitude: 13.418713054537294, // moved in admin (matches the database)
+    longitude: 100.01054102084674,
     floorsDetail: [{ level: 1, label: "แผนกวิชา / หน่วยงาน", rooms: ["สาขาการตลาดและธุรกิจค้าปลีก", "สาขาการบัญชี"] }],
   },
   {
@@ -569,7 +569,8 @@ export const CAMPUS_BUILDINGS = RAW_CAMPUS_BUILDINGS.map(building =>
     ...building,
     latitude: String(building.latitude),
     longitude: String(building.longitude),
-    departments: buildDepartments(building),
+    // Places added from the map handout (canteen, field, bank …) are not departments.
+    departments: MAP_2569_NEW_PLACES.some(p => p.id === building.id) ? [] : buildDepartments(building),
     gallery: [],
   })
 );
