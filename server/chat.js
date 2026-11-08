@@ -16,6 +16,7 @@ import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
 import { cleanForSpeech } from "../shared/speechText.js";
 import { prepareSpeech } from "./voice.js";
 import { withDepartmentInfo } from "../shared/departmentInfo.js";
+import { staffLines } from "../shared/staffDirectory.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
 const CHAT_BASE_URL = process.env.CHAT_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
@@ -58,7 +59,10 @@ function departmentLines(buildings) {
   return lines.join("\n");
 }
 
-function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = null) {
+/** Questions about people (teachers, who to contact): only then is the long staff list sent. */
+const ABOUT_PEOPLE = /ครู|อาจารย์|ใคร|หัวหน้า|ติดต่อ|ชื่อ|ทุน|ผู้อำนวยการ|ผอ|รอง|ดูแล|รับผิดชอบ|พบ|คุยกับ/;
+
+function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = null, aboutPeople = false) {
   const buildingLines = buildings
     .map(b => {
       // Rooms per floor + kiosk departments, so "สาขา X อยู่ไหน" can be answered.
@@ -97,6 +101,7 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "== ข้อมูลวิทยาลัย (จากเว็บไซต์วิทยาลัย) ==",
     ...collegeFactLines(),
     ...peopleLines(),
+    ...(aboutPeople ? staffLines() : ["(รายชื่อครูและหัวหน้างานมีในระบบ แต่ไม่ได้แนบมากับคำถามนี้)"]),
     "",
     "== รายชื่ออาคาร/หน่วยงาน (แต่ละบรรทัดขึ้นต้นด้วย id ของอาคาร) ==",
     "หมายเหตุ: ชื่ออาคารสาขาวิชาส่วนใหญ่ = สาขาวิชาที่อยู่ในอาคารนั้น เวลาตอบให้พูดชื่อครั้งเดียว ห้ามพูดซ้ำแบบ 'อาคาร X มีสาขา X'",
@@ -123,6 +128,7 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "3.1 ใส่เบอร์โทร/อีเมลเฉพาะเมื่อไม่มีข้อมูลตอบ หรือผู้ใช้ถามช่องทางติดต่อเท่านั้น ห้ามต่อท้ายทุกคำตอบ และห้ามปิดท้ายด้วย 'มีอะไรให้ช่วยอีกไหมครับ' ทุกครั้ง",
     "3.2 เฉพาะเมื่อคำถามพูดถึงเพศ (ผู้หญิง ผู้ชาย) ให้ตอบว่าทุกสาขาเรียนได้ทุกเพศ แล้วแนะนำตามความสนใจ ห้ามแบ่งสาขาตามเพศ — ถ้าคำถามไม่ได้พูดถึงเพศ ไม่ต้องพูดเรื่องนี้",
     "3.3 ถ้าถามว่ามีสาขาเกี่ยวกับเรื่องใด ให้ไล่ดูรายการสาขาวิชาด้านบนให้ครบ แล้วบอกทุกสาขาที่เกี่ยวข้อง",
+    "3.4 ถ้าชื่อสาขาที่ถามมีอยู่ในรายการหลักสูตรอย่างเป็นทางการ (เช่น การเลขานุการ เทคโนโลยีสารสนเทศ) ให้ยืนยันด้วยชื่อนั้นตรง ๆ พร้อมระดับที่เปิดสอน ห้ามบอกเป็นสาขาอื่นแทน",
     "4. ถ้าผู้ใช้ถามว่าอาคาร สาขา หรือห้องอยู่ตรงไหน ให้บอกตำแหน่งจากช่อง ตำแหน่ง: ของอาคารนั้น (อยู่ฝั่งไหนของวิทยาลัย ใกล้อาคารอะไร) และชั้นถ้ามีข้อมูล",
     `5. ถ้าผู้ใช้ขอเส้นทาง / วิธีไป / นำทาง ไปอาคารใดอาคารหนึ่ง ให้เรียกฟังก์ชัน ${ROUTE_TOOL} พร้อม buildingId (id จากรายการด้านบน) ของอาคารนั้น แทนการอธิบายเส้นทางด้วยข้อความ`,
     "6. คำถามนอกเรื่องวิทยาลัย แบ่งเป็น 2 แบบ:",
@@ -227,7 +233,7 @@ ${answer.reply}` };
   const requestBody = JSON.stringify({
     model: CHAT_MODEL,
     messages: [
-      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk) },
+      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk, turns.some(m => m.role === "user" && ABOUT_PEOPLE.test(m.content))) },
       ...turns,
     ],
     temperature: 0.3,
