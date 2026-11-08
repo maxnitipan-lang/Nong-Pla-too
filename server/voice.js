@@ -271,16 +271,17 @@ export function registerVoiceRoutes(app) {
 /**
  * Google takes ~6 s to make any sentence, however short. Make the voice for the
  * greeting and the most-asked ready-made answers once at start-up, so those
- * play instantly. Pieces are cut exactly like the browser cuts them (shared/speechText.js),
+ * play instantly. The text must match what the browser sends (shared/speechText.js cleanForSpeech),
  * otherwise the cache would never match. One request every 2 s; stops on quota errors.
  */
 export async function warmVoiceCache({ gapMs = 2000, limit = 45 } = {}) {
   if (!API_KEY) return { made: 0 };
-  const [{ cleanForSpeech, speechPieces, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
+  const [{ cleanForSpeech, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
     await Promise.all([import("../shared/speechText.js"), import("./chatFaq.js"), import("./db.js")]);
   const settings = await getCampusSettings().catch(() => null);
   const texts = [GREETING_PHRASE, ...(settings ? readyAnswerTexts(settings) : [])];
-  const pieces = [...new Set(texts.flatMap(t => speechPieces(cleanForSpeech(t))))].slice(0, limit);
+  // Whole answers, cleaned exactly as the browser cleans them before asking for the voice.
+  const pieces = [...new Set(texts.map(t => cleanForSpeech(t)))].filter(Boolean).slice(0, limit);
   let made = 0;
   for (const piece of pieces) {
     if (ttsCache.has(piece)) continue;

@@ -224,8 +224,8 @@ function speakOnDevice(text, rate, onStart) {
 }
 
 /** How long to wait for the AI voice before using the device voice instead. */
-const FIRST_AUDIO_WAIT_MS = 6000;
-const NEXT_AUDIO_WAIT_MS = 12000;
+// The whole answer is made in one request (~6–10 s); after this the device voice is used instead.
+const FIRST_AUDIO_WAIT_MS = 12000;
 
 function withTimeout(promise, ms) {
   let timer;
@@ -289,31 +289,24 @@ export function speak(rawText, options) {
   };
 
   const done = (async () => {
-    let spokenUpTo = 0; // sentences already played, so a fallback continues where the AI voice stopped
-    const pieces = speechPieces(text);
     if (options.engine === "ai") {
+      // The whole answer in one request: every request comes out in a slightly different
+      // voice, so speaking sentence by sentence made the voice change mid-answer.
+      let started = false;
       try {
-        // The first sentence must arrive quickly, or the visitor hears nothing for too long.
-        const fetchPiece = (i, wait) => withTimeout(fetchAiAudio(pieces[i], controller.signal), wait);
-        let next = fetchPiece(0, options.firstWaitMs ?? FIRST_AUDIO_WAIT_MS);
-        for (let i = 0; i < pieces.length; i++) {
-          const blob = await next;
-          if (controller.signal.aborted) return;
-          next = i + 1 < pieces.length ? fetchPiece(i + 1, NEXT_AUDIO_WAIT_MS) : null;
-          next?.catch(() => undefined); // handled when awaited
-          await playBlob(blob, i === 0);
-          if (controller.signal.aborted) return;
-          spokenUpTo = i + 1;
-        }
+        const blob = await withTimeout(fetchAiAudio(text, controller.signal), options.firstWaitMs ?? FIRST_AUDIO_WAIT_MS);
+        if (controller.signal.aborted) return;
+        started = true;
+        await playBlob(blob, true);
         return;
       } catch (error) {
         if (controller.signal.aborted) return;
-        console.warn("[voice] AI voice slow or unavailable, using device voice:", error);
+        // Once the AI voice has started, never switch to another voice part-way through.
+        if (started) return;
+        console.warn("[voice] AI voice slow or unavailable, using the device voice:", error);
       }
     }
-    const rest = pieces.slice(spokenUpTo).join(" ");
-    if (!rest) return;
-    fallback = speakOnDevice(rest, rate, spokenUpTo === 0 ? options.onStart : undefined);
+    fallback = speakOnDevice(text, rate, options.onStart);
     await fallback.done;
   })();
 
