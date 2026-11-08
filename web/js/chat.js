@@ -17,6 +17,7 @@ import { renderMarkdown } from "./markdown.js";
 import { $, html, raw, readStore, writeStore } from "./util.js";
 import {
   aiVoiceAvailable,
+  naturalDeviceVoice,
   checkMicrophone,
   devicePlatform,
   hasBrowserRecognition,
@@ -52,8 +53,9 @@ const CHAT_ACTIONS = {
   "open-news": "📰 ดูข่าวสาร",
   "open-map": "🗺️ เปิดแผนที่",
 };
-const SETTINGS_KEY = "nong-platoo-voice-settings-v1";
-const DEFAULT_SETTINGS = { speakReplies: true, handsFree: true, engine: "ai", rate: 1 };
+// v2: the voice defaults to "auto" (a natural device voice if there is one, else the AI voice).
+const SETTINGS_KEY = "nong-platoo-voice-settings-v2";
+const DEFAULT_SETTINGS = { speakReplies: true, handsFree: true, engine: "auto", rate: 1 };
 
 /** Steps to turn the microphone on, per device. */
 function micHelpSteps(state) {
@@ -159,7 +161,10 @@ export class PlatooChat {
   }
 
   get engine() {
-    return this.s.settings.engine === "ai" && this.s.aiVoice ? "ai" : "device";
+    const chosen = this.s.settings.engine;
+    if (chosen === "device") return "device";
+    if (chosen === "auto" && naturalDeviceVoice()) return "device"; // natural and instant
+    return this.s.aiVoice ? "ai" : "device";
   }
   get canSpeakOut() {
     return this.engine === "ai" || Boolean(this.s.deviceVoiceName) || "speechSynthesis" in window;
@@ -496,9 +501,11 @@ export class PlatooChat {
       <label><span>สนทนาต่อเนื่อง (ไม่ต้องกดไมค์ซ้ำ)<small>ตอบจบแล้วฟังต่อทันที — เงียบ 2 รอบจะหยุดเอง</small></span>
         <input type="checkbox" data-setting="handsFree" ${st.handsFree ? "checked" : ""} /></label>
       <div><p>เสียงพูด</p><div class="voice-engines">
-        <button type="button" data-chat="engine" data-engine="ai" class="${this.engine === "ai" ? "is-on" : ""}" ${this.s.aiVoice ? "" : "disabled"}>
+        <button type="button" data-chat="engine" data-engine="auto" class="${st.engine === "auto" ? "is-on" : ""}">
+          <strong>อัตโนมัติ (แนะนำ)</strong><small>${naturalDeviceVoice() ? `ใช้ ${naturalDeviceVoice().name} — พูดได้ทันที` : "เสียง AI ธรรมชาติ"}</small></button>
+        <button type="button" data-chat="engine" data-engine="ai" class="${st.engine === "ai" ? "is-on" : ""}" ${this.s.aiVoice ? "" : "disabled"}>
           <strong>เสียง AI (ธรรมชาติ)</strong><small>${this.s.aiVoice ? "Gemini · ต้องต่ออินเทอร์เน็ต" : "ยังไม่พร้อมใช้"}</small></button>
-        <button type="button" data-chat="engine" data-engine="device" class="${this.engine === "device" ? "is-on" : ""}">
+        <button type="button" data-chat="engine" data-engine="device" class="${st.engine === "device" ? "is-on" : ""}">
           <strong>เสียงของเครื่อง</strong><small>${this.s.deviceVoiceName ?? "ไม่พบเสียงภาษาไทยในเครื่อง"}</small></button>
       </div></div>
       <label class="rate">ความเร็วเสียง ${st.rate.toFixed(1)}×

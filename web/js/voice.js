@@ -163,6 +163,15 @@ export function thaiDeviceVoices() {
     .sort((a, b) => score(b) - score(a));
 }
 
+/**
+ * A natural-sounding Thai voice built into this device (e.g. Edge's "Niwat Online (Natural)").
+ * It starts instantly, while the AI voice needs ~6 s for every new sentence.
+ */
+export function naturalDeviceVoice() {
+  const best = thaiDeviceVoices()[0];
+  return best && /natural|online|neural|premium|enhanced/i.test(best.name) ? best : null;
+}
+
 /** getVoices() is empty until the browser has loaded them — wait up to 1.5 s. */
 function voicesReady() {
   if (!window.speechSynthesis || window.speechSynthesis.getVoices().length) return Promise.resolve();

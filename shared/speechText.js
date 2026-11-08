@@ -36,17 +36,19 @@ export function chunk(text, max = 160) {
  * line break, merged so no piece is tiny, and long ones cut at a space (~110 characters).
  * A short first piece means the first sound comes sooner.
  */
-export function speechPieces(text, max = 110) {
+export function speechPieces(text, max = 110, restMax = 220) {
   const sentences = String(text)
     .split(/(?<=ครับ|ค่ะ|[.!?。])\s+|\n+/)
     .map((s) => s.trim())
     .filter(Boolean);
   const pieces = [];
   for (const sentence of sentences) {
-    for (const part of chunk(sentence, max)) {
+    // The first piece stays short (the voice starts sooner); after that, sentences are joined
+    // into longer pieces (fewer gaps between requests, so it sounds like one smooth answer).
+    const limit = pieces.length === 0 ? max : restMax;
+    for (const part of chunk(sentence, limit)) {
       const last = pieces.at(-1);
-      // Join very short bits ("ได้เลยครับ") to the previous piece, except the first one.
-      if (last && pieces.length > 1 && last.length + part.length < 50) pieces[pieces.length - 1] = `${last} ${part}`;
+      if (last && pieces.length > 1 && last.length + part.length + 1 <= restMax) pieces[pieces.length - 1] = `${last} ${part}`;
       else pieces.push(part);
     }
   }
