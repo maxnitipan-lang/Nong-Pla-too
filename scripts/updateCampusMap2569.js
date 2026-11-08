@@ -91,6 +91,7 @@ for (const [id, patch] of Object.entries(UPDATES)) {
   if (patch.floors) next.floors = patch.floors;
   if (patch.floorsDetail) next.floorDetails = patch.floorsDetail;
   if (patch.departments) next.departments = departmentsFor(row, patch.departments);
+  if (patch.latLng) [next.latitude, next.longitude] = patch.latLng;
   if (patch.pdfPixel) {
     next.latitude = toLat(patch.pdfPixel).toFixed(10);
     next.longitude = toLng(patch.pdfPixel).toFixed(10);

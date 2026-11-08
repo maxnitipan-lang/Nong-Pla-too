@@ -553,6 +553,7 @@ function withMap2569(building) {
   if (!update) return building;
   const next = { ...building };
   for (const key of ["name", "shortName", "category", "description", "floors", "floorsDetail"]) if (update[key]) next[key] = update[key];
+  if (update.latLng) [next.latitude, next.longitude] = update.latLng;
   if (update.departments)
     next.departments = update.departments.map(([name, floor], i) => {
       const found = building.departments.find(d => d.name === name);

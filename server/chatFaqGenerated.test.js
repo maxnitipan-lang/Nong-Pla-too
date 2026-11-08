@@ -64,6 +64,17 @@ describe("answers built from the data files", () => {
     for (const q of ["หัวหน้าสาขาช่างยนต์คือใคร", "หัวหน้าสาขาบัญชีคือใคร"]) expect(ask(q)?.faqId, q).toBe("dept-head-unknown");
   });
 
+  it("อาคาร 8: ไฟฟ้ากำลัง (left) and ช่างก่อสร้าง (right) share one building", () => {
+    expect(ask("อาคาร 8 มีอะไรบ้าง")?.reply).toMatch(/ไฟฟ้ากำลัง.*ก่อสร้าง/);
+    expect(ask("ช่างไฟฟ้าอยู่ตึกไหน")?.routeToBuildingId).toBe("electrical-construction");
+    expect(ask("ช่างก่อสร้างอยู่ไหน")?.routeToBuildingId).toBe("construction-workshop");
+  });
+
+  it("a different number is a different place (อาคาร 85 ปี ≠ อาคาร 8)", () => {
+    expect(ask("อาคาร 85 ปีอยู่ไหน")?.routeToBuildingId).toBe("building-85");
+    expect(ask("ไปอาคาร 8 ยังไง")?.routeToBuildingId).toBe("electrical-construction");
+  });
+
   it("never states a tuition price", () => {
     expect(ask("ค่าเทอมเท่าไหร่")?.reply).not.toMatch(/\d+\s*บาท/);
   });

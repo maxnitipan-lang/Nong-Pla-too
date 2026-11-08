@@ -22,14 +22,23 @@ export const MAP_2569_UPDATES = {
     description: "อาคาร 7 · แผนกวิชาอิเล็กทรอนิกส์ เทคโนโลยีสารสนเทศ และเทคโนโลยีคอมพิวเตอร์",
     floorsDetail: floors([1, "อาคาร 7", ["สาขาวิชาอิเล็กทรอนิกส์", "สาขาวิชาเทคโนโลยีสารสนเทศ", "สาขาวิชาเทคโนโลยีคอมพิวเตอร์"]]),
   },
+  // อาคาร 8 is one building: ไฟฟ้ากำลัง on the left (west) half, ช่างก่อสร้าง on the right (east) half.
+  // Two pins on the same building, placed at 1/4 and 3/4 along its length (OSM footprint 830679883).
   "electrical-construction": {
-    description: "อาคาร 8 · แผนกวิชาช่างไฟฟ้า (ฝั่งซ้าย) และแผนกวิชาช่างก่อสร้าง (ฝั่งขวา)",
-    // Construction is its own map point (ตึกช่างก่อสร้าง = the right side of อาคาร 8), so it is not a room here.
-    floorsDetail: floors([1, "อาคาร 8", ["สาขาวิชาช่างไฟฟ้ากำลัง"]]),
+    name: "อาคาร 8 · ช่างไฟฟ้ากำลัง (ฝั่งซ้าย)",
+    shortName: "ช่างไฟฟ้า",
+    description: "อาคาร 8 ฝั่งซ้าย · แผนกวิชาช่างไฟฟ้ากำลัง (ฝั่งขวาของอาคารเดียวกันเป็นช่างก่อสร้าง)",
+    floorsDetail: floors([1, "อาคาร 8 ฝั่งซ้าย", ["สาขาวิชาช่างไฟฟ้ากำลัง"]]),
+    departments: [["สาขาวิชาไฟฟ้ากำลัง", 1]],
+    latLng: ["13.4201045000", "100.0105185000"],
   },
   "construction-workshop": {
-    description: "อาคาร 8 ฝั่งขวา · แผนกวิชาช่างก่อสร้าง",
-    floorsDetail: floors([1, "อาคาร 8 (ฝั่งขวา)", ["สาขาวิชาช่างก่อสร้าง"]]),
+    name: "อาคาร 8 · ช่างก่อสร้าง (ฝั่งขวา)",
+    shortName: "ช่างก่อสร้าง",
+    description: "อาคาร 8 ฝั่งขวา · แผนกวิชาช่างก่อสร้าง (ฝั่งซ้ายของอาคารเดียวกันเป็นไฟฟ้ากำลัง)",
+    floorsDetail: floors([1, "อาคาร 8 ฝั่งขวา", ["สาขาวิชาช่างก่อสร้าง"]]),
+    departments: [["สาขาวิชาช่างก่อสร้าง", 1]],
+    latLng: ["13.4201728000", "100.0107598000"],
   },
   "machine-shop": {
     name: "อาคาร 9 (ช่างกลโรงงาน)",

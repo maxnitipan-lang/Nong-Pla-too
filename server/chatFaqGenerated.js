@@ -192,13 +192,29 @@ function applyEntries() {
 /** "อาคาร 4 มีอะไรบ้าง" / "ตึก 10 มีอะไร" → the rooms per floor. */
 function buildingEntries() {
   const entries = [];
+  // Only "อาคาร N" that names this building ("อาคาร 4 · …"), not "ระหว่างอาคาร 7 และอาคาร 8".
+  const numberOf = b => /^อาคาร\s*(\d+)(\s*·|\s*\(|$)/.exec(b.name)?.[1] ?? /^อาคาร\s*(\d+)[^·]*·/.exec(b.description)?.[1];
+  const sharing = new Map(); // building number → the map points on that building (อาคาร 8 = ไฟฟ้ากำลัง + ก่อสร้าง)
+  for (const b of CAMPUS_BUILDINGS) {
+    const n = numberOf(b);
+    if (n) sharing.set(n, [...(sharing.get(n) ?? []), b]);
+  }
+  for (const [n, list] of sharing) {
+    if (list.length < 2) continue;
+    entries.push({
+      id: `building-number-${n}-inside`,
+      category: "อาคาร",
+      questions: [`อาคาร ${n}มีอะไรบ้าง`, `ในอาคาร ${n}มีอะไร`, `ตึก ${n}มีอะไรบ้าง`, `ในตึก ${n}มีอะไร`, `อาคาร ${n}มีห้องอะไรบ้าง`, `อาคาร ${n}อยู่ไหน`, `ไปอาคาร ${n}ยังไง`, `ตึก ${n}อยู่ไหน`],
+      answer: `อาคาร ${n} มี ${list.map(b => b.description.replace(/^อาคาร\s*\d+\s*/, "").replace(/\s*\(.*\)$/, "")).join(" และ ")} ครับ ผมเปิดเส้นทางไปฝั่ง${list[0].shortName}ให้แล้วครับ`,
+      routeTo: list[0].id,
+    });
+  }
   for (const b of CAMPUS_BUILDINGS) {
     const floors = (b.floorsDetail ?? []).filter(f => f.rooms.length);
     if (!floors.length) continue;
     const names = new Set([b.name, ...b.shortName.split("/").map(s => s.trim())]);
-    // Only "อาคาร N" that names this building ("อาคาร 4 · …"), not "ระหว่างอาคาร 7 และอาคาร 8".
-    const number = /^อาคาร\s*(\d+)(\s*·|\s*\(|$)/.exec(b.name)?.[1] ?? /^อาคาร\s*(\d+)\s*·/.exec(b.description)?.[1];
-    if (number) names.add(`อาคาร ${number}`).add(`ตึก ${number}`);
+    const number = numberOf(b);
+    if (number && sharing.get(number).length === 1) names.add(`อาคาร ${number}`).add(`ตึก ${number}`);
     const questions = [];
     for (const n of names) if (n.length >= 4) questions.push(`${n}มีอะไรบ้าง`, `ใน${n}มีอะไร`, `${n}มีห้องอะไรบ้าง`);
     // Several floors: list them. One floor: the description says more (e.g. อาคาร 8 = ไฟฟ้า + ก่อสร้าง).

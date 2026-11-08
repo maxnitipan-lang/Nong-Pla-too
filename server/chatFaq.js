@@ -192,6 +192,7 @@ export function bestFaqMatch(question) {
   if (!text) return null;
   let best = null;
   const subject = topicOf(text);
+  const digits = text.match(/\d+/g)?.join(",");
   for (const entry of ENTRIES) {
     for (const q of entry.questions) {
       const other = normalizeQuestion(q);
@@ -199,6 +200,9 @@ export function bestFaqMatch(question) {
       const otherSubject = topicOf(other);
       if (subject && otherSubject && similarity(subject, otherSubject) < 0.4) continue;
       const score = similarity(text, other);
+      // Different numbers = a different thing: "อาคาร 85 ปี" is not "อาคาร 8", "ม.3" is not "ม.6".
+      const otherDigits = other.match(/\d+/g)?.join(",");
+      if (digits && otherDigits && digits !== otherDigits) continue;
       if (!best || score > best.score) best = { entry, score };
     }
   }
