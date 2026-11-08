@@ -132,9 +132,13 @@ function here() {
 }
 
 /** Buildings matching the search and filter, nearest first when we know where you are. */
+/** Everyday words people type for places that the data names differently. */
+const SEARCH_SYNONYMS = [[/ห้องน้ำ|ส้วม|สุขา/, "ห้องสุขา"], [/กาแฟ|คาเฟ่/, "ร้านกาแฟ"]];
+
 function places() {
-  const q = state.query.trim().toLowerCase();
-  // Keyboard left on English ("taphe" for "ช่างยนต์"…): also try the Thai on the same keys.
+  let q = state.query.trim().toLowerCase();
+  for (const [words, name] of SEARCH_SYNONYMS) if (words.test(q)) q = name;
+  // Keyboard left on English ("=jk'po9N" for "ช่างยนต์"…): also try the Thai on the same keys.
   const qThai = q && !/[฀-๿]/.test(q) ? englishKeysToThai(state.query.trim()) : "";
   const me = here();
   return state.buildings
@@ -147,7 +151,13 @@ function places() {
       const p = buildingLatLng(b);
       return { building: b, distance: me && p ? distanceM(me, p) : null };
     })
-    .sort((a, b) => (a.distance ?? Infinity) - (b.distance ?? Infinity) || numberOf(a.building.id) - numberOf(b.building.id));
+    .sort(
+      (a, b) =>
+        // A place whose own name matches comes before one that only mentions it ("โรงอาหาร" → โรงอาหาร, then หอประชุม).
+        (q ? Number(!a.building.name.toLowerCase().includes(q)) - Number(!b.building.name.toLowerCase().includes(q)) : 0) ||
+        (a.distance ?? Infinity) - (b.distance ?? Infinity) ||
+        numberOf(a.building.id) - numberOf(b.building.id)
+    );
 }
 
 /** Real walking distance/time to the selected building (phone). */
