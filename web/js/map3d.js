@@ -123,20 +123,39 @@ export class CampusMap3D {
       }
       placed.push({ label, x: pos.x, y: pos.y, depth: pos.depth, selected: label.ids.includes(this.selectedId ?? "") });
     }
-    placed.sort((a, b) => Number(b.selected) - Number(a.selected) || a.depth - b.depth);
+    // Departments (สาขา) are what visitors look for most — they get a spot before offices and open areas.
+    const isDept = (label) => {
+      const b = this.buildings?.find((x) => x.id === label.ids[0]);
+      return Boolean(b && /สายอุตสาหกรรม|พาณิชยกรรม/.test(b.category));
+    };
+    placed.sort((a, b) => Number(b.selected) - Number(a.selected) || Number(isDept(b.label)) - Number(isDept(a.label)) || a.depth - b.depth);
     for (const { label, x, y, depth, selected } of placed) {
       const scale = Math.max(0.5, Math.min(1.05, 300 / depth));
       const w = (label.size?.[0] ?? 60) * scale;
       const h = (label.size?.[1] ?? 40) * scale;
-      const rect = { l: x - w / 2, t: y - h, r: x + w / 2, b: y };
-      const overlap = shown.some((o) => Math.min(o.r, rect.r) - Math.max(o.l, rect.l) > w * 0.35 && Math.min(o.b, rect.b) - Math.max(o.t, rect.t) > h * 0.35);
-      if (overlap && !selected) {
+      const overlaps = (rect) =>
+        shown.some((o) => Math.min(o.r, rect.r) - Math.max(o.l, rect.l) > w * 0.35 && Math.min(o.b, rect.b) - Math.max(o.t, rect.t) > h * 0.35);
+      // Crowded spot (two departments on one building, a neighbour next door): nudge the label
+      // up or sideways before giving up on it, so every department stays findable.
+      const nudges = [[0, 0], [0, -0.8], [0.6, 0], [-0.6, 0], [0.55, -0.75], [-0.55, -0.75], [0, -1.5]];
+      let at = null;
+      for (const [dx, dy] of nudges) {
+        const nx = x + dx * w;
+        const ny = y + dy * h;
+        const rect = { l: nx - w / 2, t: ny - h, r: nx + w / 2, b: ny };
+        if (!overlaps(rect)) {
+          at = { x: nx, y: ny, rect };
+          break;
+        }
+      }
+      if (!at && selected) at = { x, y, rect: { l: x - w / 2, t: y - h, r: x + w / 2, b: y } };
+      if (!at) {
         label.el.style.display = "none";
         continue;
       }
-      shown.push(rect);
+      shown.push(at.rect);
       label.el.style.display = "";
-      label.el.style.transform = `translate(${x}px, ${y}px) translate(-50%, -100%) scale(${scale.toFixed(3)})`;
+      label.el.style.transform = `translate(${at.x}px, ${at.y}px) translate(-50%, -100%) scale(${scale.toFixed(3)})`;
       label.el.style.zIndex = String(selected ? 100000 : Math.round(100000 - depth * 10));
     }
     const ua = scene.userAnchor();
