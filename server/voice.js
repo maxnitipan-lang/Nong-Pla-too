@@ -109,9 +109,28 @@ let preferredTts = 0;
 const ttsCache = new Map();
 const TTS_CACHE_MAX = 300;
 
-export async function synthesizeSpeech(text) {
+/** Voices being made right now, so two requests for the same text share one. */
+const ttsInFlight = new Map();
+
+export function synthesizeSpeech(text) {
   const cached = ttsCache.get(text);
-  if (cached) return cached;
+  if (cached) return Promise.resolve(cached);
+  if (ttsInFlight.has(text)) return ttsInFlight.get(text);
+  const job = makeSpeech(text).finally(() => ttsInFlight.delete(text));
+  ttsInFlight.set(text, job);
+  return job;
+}
+
+/**
+ * Start making the voice for a chat answer as soon as the answer exists, before the browser
+ * asks for it — the browser's request then joins this one instead of starting from zero.
+ */
+export function prepareSpeech(text) {
+  if (!API_KEY || !text) return;
+  synthesizeSpeech(text.slice(0, MAX_TTS_CHARS)).catch(() => undefined);
+}
+
+async function makeSpeech(text) {
 
   let audio = null;
   let lastError;

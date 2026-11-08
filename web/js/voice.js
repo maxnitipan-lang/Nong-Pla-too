@@ -152,8 +152,12 @@ export function thaiDeviceVoices() {
   const score = v => {
     const n = v.name.toLowerCase();
     let s = 0;
-    if (/niwat|pattara|male|ชาย/.test(n)) s += 4; // Edge "Niwat Online (Natural)", Windows "Pattara"
-    if (/natural|online|neural|premium|enhanced/.test(n)) s += 3;
+    // Natural-sounding first: Edge "Niwat/Premwadee Online (Natural)", Chrome "Google ไทย".
+    // The old Windows "Pattara" voice sounds robotic, so it only wins when nothing else exists.
+    if (/natural|neural|premium|enhanced/.test(n)) s += 8;
+    else if (/google/.test(n)) s += 6;
+    else if (/online/.test(n)) s += 5;
+    if (/niwat|male|ชาย/.test(n)) s += 2; // the persona says "ผม"
     if (!v.localService) s += 1;
     return s;
   };
@@ -169,7 +173,7 @@ export function thaiDeviceVoices() {
  */
 export function naturalDeviceVoice() {
   const best = thaiDeviceVoices()[0];
-  return best && /natural|online|neural|premium|enhanced/i.test(best.name) ? best : null;
+  return best && /natural|online|neural|premium|enhanced|google/i.test(best.name) ? best : null;
 }
 
 /** getVoices() is empty until the browser has loaded them — wait up to 1.5 s. */

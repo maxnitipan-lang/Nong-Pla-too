@@ -13,6 +13,8 @@ import { describeLocation, locateBuilding } from "./buildingLocation.js";
 import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, programmeLines } from "../shared/collegeFacts.js";
 import { answerFromFaq } from "./chatFaq.js";
 import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
+import { cleanForSpeech } from "../shared/speechText.js";
+import { prepareSpeech } from "./voice.js";
 import { withDepartmentInfo } from "../shared/departmentInfo.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
@@ -159,7 +161,10 @@ function newsAnswer(question, news) {
  */
 export async function askCampusChat(history, options = {}) {
   try {
-    return await answerChat(history, options);
+    const answer = await answerChat(history, options);
+    // The browser will read this aloud with the AI voice: start making that voice now.
+    if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
+    return answer;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     console.warn("[Chat] AI answer failed:", message);

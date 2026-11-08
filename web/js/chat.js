@@ -231,7 +231,13 @@ export class PlatooChat {
     try {
       const { reply, routeToBuildingId, action } = await apiPost(
         "chat/ask",
-        { messages: history, spoken: fromVoice || undefined, atKiosk: this.atKiosk || undefined },
+        {
+          messages: history,
+          spoken: fromVoice || undefined,
+          atKiosk: this.atKiosk || undefined,
+          // Tell the server to start making the AI voice for the answer straight away.
+          aiVoice: (this.s.settings.speakReplies && this.engine === "ai") || undefined,
+        },
         controller.signal,
       );
       if (session !== this.session) return;

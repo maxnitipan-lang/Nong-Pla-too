@@ -183,11 +183,13 @@ export const appRouter = router({
           spoken: z.boolean().optional(),
           /** New (optional): asked on the kiosk → "how far from here" uses the kiosk location. */
           atKiosk: z.boolean().optional(),
+          /** New (optional): the reply will be read with the AI voice → start making it right away. */
+          aiVoice: z.boolean().optional(),
         })
       )
       .mutation(async ({ input }) => {
         try {
-          return await askCampusChat(input.messages, { spoken: input.spoken, atKiosk: input.atKiosk });
+          return await askCampusChat(input.messages, { spoken: input.spoken, atKiosk: input.atKiosk, aiVoice: input.aiVoice });
         } catch (error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",
