@@ -123,14 +123,18 @@ export function devicePlatform() {
   return "other";
 }
 
-let aiVoiceStatus = null;
-/** Whether the server can do AI voice (has a Gemini key). Cached for the page. */
+let voiceStatus = null;
+const serverVoiceStatus = () =>
+  (voiceStatus ??= fetch("/api/voice/status")
+    .then(r => (r.ok ? r.json() : {}))
+    .catch(() => ({})));
+/** Whether the server can speak (Azure / Gemini voice). Cached for the page. */
 export function aiVoiceAvailable() {
-  aiVoiceStatus ??= fetch("/api/voice/status")
-    .then(r => (r.ok ? r.json() : { ai: false }))
-    .then(j => Boolean(j.ai))
-    .catch(() => false);
-  return aiVoiceStatus;
+  return serverVoiceStatus().then(j => Boolean(j.ai));
+}
+/** Whether the server can turn speech into text (for browsers without their own recognition). */
+export function serverSttAvailable() {
+  return serverVoiceStatus().then(j => Boolean(j.stt ?? j.ai));
 }
 
 // ---------------------------------------------------------------------------

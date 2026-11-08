@@ -2,7 +2,8 @@
 //
 // Text to speech tries, in order:
 //   1. Azure Speech (th-TH Neural voices — clear, same voice every time, large free tier)
-//   2. Gemini TTS (same key as the chat)
+//   2. Gemini TTS (same key as the chat) — only with GEMINI_TTS=1 (off by default: its Thai is
+//      sometimes garbled and the free quota runs out fast)
 //   3. nothing → the browser uses the device's own voice
 //
 //   AZURE_SPEECH_KEY / AZURE_SPEECH_REGION   from the Azure "Speech" resource (Keys and Endpoint)
@@ -35,12 +36,13 @@ const AZURE_REGION = process.env.AZURE_SPEECH_REGION || "";
 const AZURE_VOICE = process.env.AZURE_TTS_VOICE || "th-TH-NiwatNeural";
 const AZURE_RATE = process.env.AZURE_TTS_RATE || "+0%";
 export const isAzureConfigured = () => AZURE_KEY.length > 0 && AZURE_REGION.length > 0;
+const GEMINI_TTS = process.env.GEMINI_TTS === "1" && API_KEY.length > 0;
 
 const MAX_TTS_CHARS = 1200;
 const MAX_STT_BYTES = 6 * 1024 * 1024; // ~3 min of 16 kHz mono WAV
 
 /** Some AI voice exists (Azure or Gemini). Speech-to-text still needs the Gemini key. */
-export const isVoiceConfigured = () => isAzureConfigured() || API_KEY.length > 0;
+export const isVoiceConfigured = () => isAzureConfigured() || GEMINI_TTS;
 
 // ---------------------------------------------------------------------------
 // Rate limiting (per IP, sliding minute)
@@ -174,7 +176,7 @@ async function makeSpeech(text) {
       console.warn("[Voice] Azure TTS failed:", error instanceof Error ? error.message : error);
     }
   }
-  if (!API_KEY) throw azureError ?? new Error("ยังไม่ได้ตั้งค่าเสียง AI");
+  if (!GEMINI_TTS) throw azureError ?? new Error("ยังไม่ได้ตั้งค่าเสียง AI");
   if (geminiPaused()) throw new Error("AI voice paused: quota used up (HTTP 429)");
   try {
     return await geminiSpeech(text);
@@ -321,7 +323,8 @@ export function registerVoiceRoutes(app) {
   if (process.env.NODE_ENV !== "test" && !process.env.VITEST) setTimeout(() => void warmVoiceCache().catch(() => undefined), 15_000).unref?.();
   app.get("/api/voice/status", (_req, res) => {
     // While the quota is used up, tell browsers to use their own voice (no failed requests, no wait).
-    res.json({ ai: isVoiceConfigured() && !aiVoicePaused() });
+    // ai = the server can speak; stt = the server can listen (Gemini key), for browsers without recognition.
+    res.json({ ai: isVoiceConfigured() && !aiVoicePaused(), stt: API_KEY.length > 0 });
   });
 
   app.post("/api/voice/tts", async (req, res) => {

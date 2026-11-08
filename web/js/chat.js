@@ -16,6 +16,7 @@ import { renderMarkdown } from "./markdown.js";
 import { $, html, raw, readStore, writeStore } from "./util.js";
 import {
   aiVoiceAvailable,
+  serverSttAvailable,
   naturalDeviceVoice,
   checkMicrophone,
   devicePlatform,
@@ -106,6 +107,7 @@ export class PlatooChat {
       showSettings: false,
       settings: { ...DEFAULT_SETTINGS, ...(readStore(SETTINGS_KEY) ?? {}) },
       aiVoice: false,
+      serverStt: false,
       deviceVoiceName: null,
       micState: "prompt", // ok | prompt | denied | none
       showMicHelp: false,
@@ -121,6 +123,7 @@ export class PlatooChat {
     this.mount();
 
     void aiVoiceAvailable().then((ai) => this.set({ aiVoice: ai }));
+    void serverSttAvailable().then((stt) => this.set({ serverStt: stt }));
     const pickVoice = () => this.set({ deviceVoiceName: thaiDeviceVoices()[0]?.name ?? null });
     pickVoice();
     window.speechSynthesis?.addEventListener?.("voiceschanged", pickVoice);
@@ -169,7 +172,7 @@ export class PlatooChat {
     return this.engine === "ai" || Boolean(this.s.deviceVoiceName) || "speechSynthesis" in window;
   }
   get canListen() {
-    return this.s.micState !== "none" && hasMicrophone() && (hasBrowserRecognition() || this.s.aiVoice);
+    return this.s.micState !== "none" && hasMicrophone() && (hasBrowserRecognition() || this.s.serverStt);
   }
   get busy() {
     return this.s.phase === "thinking" || this.s.phase === "transcribing";
@@ -267,7 +270,7 @@ export class PlatooChat {
     const session = this.session;
     stopSpeaking();
     this.set({ notice: null, interim: "", phase: "listening" });
-    const engine = preferServer ? "server" : preferredListenEngine(this.s.aiVoice);
+    const engine = preferServer ? "server" : preferredListenEngine(this.s.serverStt);
     const l = listen(
       {
         onInterim: (interim) => this.set({ interim }),
@@ -302,7 +305,7 @@ export class PlatooChat {
         this.listening = null;
         this.set({ level: 0, interim: "", phase: "idle" });
         // The browser recogniser failed (e.g. no network to its speech service) → try the server.
-        if (error.message.startsWith("recognizer:") && engine === "browser" && this.s.aiVoice) {
+        if (error.message.startsWith("recognizer:") && engine === "browser" && this.s.serverStt) {
           this.startListening(true);
           return;
         }
@@ -466,7 +469,7 @@ export class PlatooChat {
       box.innerHTML = this.messagesHtml();
       box.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
     }
-    if (changed("phase", "notice", "micState", "showMicHelp", "aiVoice", "settings")) part("voice").innerHTML = this.voiceHtml();
+    if (changed("phase", "notice", "micState", "showMicHelp", "aiVoice", "serverStt", "settings")) part("voice").innerHTML = this.voiceHtml();
     if (changed("phase")) {
       this.el.classList.toggle("is-speaking", s.phase === "speaking");
       for (const b of this.el.querySelectorAll("[data-chat=quick]")) b.disabled = this.busy;
@@ -483,9 +486,9 @@ export class PlatooChat {
         <input type="checkbox" data-setting="handsFree" ${st.handsFree ? "checked" : ""} /></label>
       <div><p>เสียงพูด</p><div class="voice-engines">
         <button type="button" data-chat="engine" data-engine="auto" class="${st.engine === "auto" ? "is-on" : ""}">
-          <strong>อัตโนมัติ (แนะนำ)</strong><small>${naturalDeviceVoice() ? `ใช้ ${naturalDeviceVoice().name} — พูดได้ทันที` : "เสียง AI ธรรมชาติ"}</small></button>
+          <strong>อัตโนมัติ (แนะนำ)</strong><small>${naturalDeviceVoice() ? `ใช้ ${naturalDeviceVoice().name} — พูดได้ทันที` : this.s.aiVoice ? "เสียง AI ธรรมชาติ" : "เสียงของเครื่อง"}</small></button>
         <button type="button" data-chat="engine" data-engine="ai" class="${st.engine === "ai" ? "is-on" : ""}" ${this.s.aiVoice ? "" : "disabled"}>
-          <strong>เสียง AI (ธรรมชาติ)</strong><small>${this.s.aiVoice ? "Gemini · ต้องต่ออินเทอร์เน็ต" : "ยังไม่พร้อมใช้"}</small></button>
+          <strong>เสียง AI (ธรรมชาติ)</strong><small>${this.s.aiVoice ? "จากเซิร์ฟเวอร์ · ต้องต่ออินเทอร์เน็ต" : "ยังไม่พร้อมใช้"}</small></button>
         <button type="button" data-chat="engine" data-engine="device" class="${st.engine === "device" ? "is-on" : ""}">
           <strong>เสียงของเครื่อง</strong><small>${this.s.deviceVoiceName ?? "ไม่พบเสียงภาษาไทยในเครื่อง"}</small></button>
       </div></div>

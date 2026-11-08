@@ -38,7 +38,7 @@ describe("Azure voice", () => {
         : new Response(JSON.stringify({ outputs: [{ data: Buffer.alloc(300).toString("base64"), mime_type: "audio/l16;rate=24000" }] }), { status: 200 })
     );
     vi.stubGlobal("fetch", fetchMock);
-    const voice = await loadVoice({ AZURE_SPEECH_KEY: "k", AZURE_SPEECH_REGION: "eastasia", GEMINI_API_KEY: "g" });
+    const voice = await loadVoice({ AZURE_SPEECH_KEY: "k", AZURE_SPEECH_REGION: "eastasia", GEMINI_API_KEY: "g", GEMINI_TTS: "1" });
 
     const wav = await voice.synthesizeSpeech("ทดสอบ");
     expect(wav.subarray(0, 4).toString()).toBe("RIFF");
