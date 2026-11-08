@@ -76,8 +76,9 @@ const logoOf = (d) => d.logo || withDepartmentInfo(d).logo;
 /** A building's logo: the logo of the first department inside it that has one. */
 /** Emblems made for buildings that are not a department (offices, shared spaces), by building id. */
 const BUILDING_IMAGES = {
-  auditorium: "/images/buildings/auditorium.webp",
-  "activity-building": "/images/buildings/activity-building.webp",
+  auditorium: "/images/buildings/auditorium.jpg",
+  canteen: "/images/buildings/auditorium.jpg", // the badge shows หอประชุม / โรงอาหาร
+  "activity-building": "/images/buildings/activity-building.jpg",
   "general-subjects": "/images/buildings/general-subjects.jpg",
   "student-development": "/images/buildings/student-development.jpg",
   "building-85": "/images/buildings/building-85.jpg",
@@ -209,7 +210,7 @@ function headerHtml() {
     <div class="header-actions">
       <span class="online-status ${state.online ? "" : "offline"}"><i></i> ${state.online ? "ออนไลน์" : "ออฟไลน์"}</span>
       <button class="icon-button" data-action="theme" aria-label="${state.theme === "dark" ? "ใช้ธีมสว่าง" : "ใช้ธีมมืด"}">${raw(icon(state.theme === "dark" ? "sun" : "moon"))}</button>
-      <button class="install-button" data-action="go" data-view="map"><span>เปิดแผนที่</span>${raw(icon("map"))}</button>
+      <button class="install-button" data-action="go" data-view="map" aria-label="เปิดแผนที่"><span>เปิดแผนที่</span>${raw(icon("map"))}</button>
     </div>
   </header>`;
 }
@@ -308,7 +309,7 @@ function mapShellHtml() {
       </div>
       <img class="section-mascot map-heading-mascot" src="/mascots/map.webp" alt="" aria-hidden="true" />
       <div class="map-heading-actions">
-        ${!KIOSK ? raw(html`<button class="locate-button" data-action="gps-on">${raw(icon("pin"))} <span>ตำแหน่งของฉัน</span></button>`) : ""}
+        ${!KIOSK ? raw(html`<button class="locate-button" data-action="gps-on" aria-label="ตำแหน่งของฉัน">${raw(icon("pin"))} <span>ตำแหน่งของฉัน</span></button>`) : ""}
         <small id="location-note"></small>
       </div>
     </div>
@@ -911,6 +912,16 @@ const onMap = (e) => e.target instanceof Element && Boolean(e.target.closest("#m
 document.addEventListener("gesturestart", (e) => { if (onMap(e)) e.preventDefault(); }, { passive: false });
 document.addEventListener("gesturechange", (e) => { if (onMap(e)) e.preventDefault(); }, { passive: false });
 document.addEventListener("touchmove", (e) => { if (e.touches.length > 1 && onMap(e)) e.preventDefault(); }, { passive: false });
+
+// Esc closes the panel on top (department / news / quiz details, building card, place list) —
+// for iPads with a keyboard and the kiosk PC. The chat window handles its own Esc.
+document.addEventListener("keydown", (e) => {
+  if (e.key !== "Escape" || e.target?.closest?.(".platoo-chat")) return;
+  const close = [...document.querySelectorAll(".dept-detail .card-close, .building-card .card-close, .mobile-panel-close")]
+    .filter((b) => b.getClientRects().length)
+    .pop();
+  close?.click();
+});
 
 /* ------------------------------------------------------------------ phone GPS */
 

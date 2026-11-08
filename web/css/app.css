@@ -461,7 +461,7 @@
 @media (min-width: 1024px) { .platoo-ui .notice-list h2 { font-size: 20px; } .platoo-ui .notice-row strong { font-size: 16px; } .platoo-ui .notice-date { font-size: 14px; min-width: 90px; } }
 @media (min-width: 641px) and (max-width: 900px) {
   .platoo-ui .desktop-nav button { white-space: nowrap; }
-  .platoo-ui .app-header .install-button { width: 46px; padding: 0; justify-content: center; font-size: 0; }
+  .platoo-ui .app-header .install-button { width: 46px; min-height: 40px; padding: 0; justify-content: center; font-size: 0; }
   .platoo-ui .app-header .install-button svg { width: 20px; }
 }
 .platoo-ui .desktop-nav button { white-space: nowrap; }
@@ -582,3 +582,30 @@
 /* Pinch on the map zooms the map only: the page itself may scroll here but never pinch-zoom. */
 .platoo-ui #map-canvas { touch-action: pan-x pan-y; }
 .platoo-ui #map-canvas .leaflet-container, .platoo-ui #map-canvas .map3d-canvas, .platoo-ui #map-canvas .map3d-labels { touch-action: none; }
+
+/* Phones and iPads: Thai below 11px is hard to read — lift every small label to 11px. */
+@media (max-width: 1023px) {
+  .platoo-ui .kiosk-assistant .assistant-label,
+  .platoo-ui .kiosk-greeting > span,
+  .platoo-ui .kiosk-stats > div > span,
+  .platoo-ui .kiosk-card-copy small,
+  .platoo-ui .kiosk-menu-heading > span,
+  .platoo-ui .gps-error, .platoo-ui .map-heading-actions > small,
+  .platoo-ui .map-page-heading .map-kicker,
+  .platoo-ui .page-title > div > span,
+  .platoo-ui .panel-heading > div > small,
+  .platoo-ui .map-guide > span > strong,
+  .platoo-ui .map-guide > span > small,
+  .platoo-ui .floating-ai-copy > small,
+  .platoo-ui .map-layout small { font-size: 11px; }
+}
+/* "ดูข่าวทั้งหมด…" link: a comfortable tap height. */
+.platoo-ui .news-more { display: inline-flex; align-items: center; min-height: 40px; padding-block: 8px; }
+/* Phones: a location message ("ไม่ได้รับอนุญาต…") gets its own line under the title instead of squeezing it. */
+@media (max-width: 640px) {
+  .platoo-ui .map-page-heading { height: auto; flex-wrap: wrap; row-gap: 2px; }
+  .platoo-ui .map-heading-actions { display: contents; }
+  .platoo-ui .map-heading-actions > small:not(:empty) { order: 3; flex-basis: 100%; max-width: calc(100% - 84px); text-align: left; line-height: 1.4; } /* 84px: room for the mascot on the right */
+}
+/* The location message beside the map title: never below 11px on any screen. */
+.platoo-ui .map-heading-actions > small { font-size: 11px; }

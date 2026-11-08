@@ -10,7 +10,7 @@ describe("Thai typed with the keyboard on English", () => {
     expect(englishKeysToThai(typed)).toBe(thai);
   });
 
-  it.each(["hello", "thank you", "wifi", "ok", "ICT", "ไปช่างยนต์", ""])("leaves %j alone", (text) => {
+  it.each(["hello", "thank you", "wifi", "ok", "ICT", "ไปช่างยนต์", "", "<script>alert(1)</script>", "www.sstc.ac.th", "e-mail", "admin@test.com"])("leaves %j alone", (text) => {
     expect(fixWrongKeyboard(text)).toBeNull();
   });
 });

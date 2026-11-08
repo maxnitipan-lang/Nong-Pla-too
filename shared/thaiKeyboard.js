@@ -32,6 +32,8 @@ export function englishKeysToThai(text) {
 export function fixWrongKeyboard(text) {
   const t = String(text ?? "").trim();
   if (!t || THAI.test(t) || !/[a-z;'\[\],./]/i.test(t)) return null;
+  // Web addresses and emails are typed on purpose.
+  if (/^(https?:\/\/|www\.)|@[a-z0-9-]+\.[a-z]|\.(com|net|org|ac\.th|co\.th|go\.th|th)\b/i.test(t)) return null;
   const converted = englishKeysToThai(t);
   const thaiChars = Array.from(converted).filter((c) => THAI.test(c)).length;
   const letters = Array.from(t).filter((c) => !/\s/.test(c)).length;
@@ -40,5 +42,11 @@ export function fixWrongKeyboard(text) {
   const words = t.split(/\s+/);
   const englishish = words.filter((w) => /^[a-z]+$/i.test(w) && /[aeiouy]/i.test(w) && w.length >= 2).length;
   if (englishish === words.length && !/[;'\[\],./]/.test(t)) return null;
+  // English words joined by symbols ("<script>alert(1)</script>", "e-mail", "www.sstc.ac.th"):
+  // most letters sit in runs that look like English words.
+  const runs = t.match(/[a-z]+/gi) ?? [];
+  const inEnglishRuns = runs.filter((r) => r.length >= 3 && /[aeiou]/i.test(r)).reduce((n, r) => n + r.length, 0);
+  const allLetters = runs.reduce((n, r) => n + r.length, 0);
+  if (allLetters && inEnglishRuns / allLetters >= 0.6) return null;
   return converted;
 }
