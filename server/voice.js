@@ -20,7 +20,6 @@ const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const TTS_MODEL = process.env.TTS_MODEL || "gemini-3.8-flash-tts";
 const TTS_VOICE = process.env.TTS_VOICE || "Puck";
 const STT_MODEL = process.env.STT_MODEL || process.env.CHAT_MODEL || "gemini-3.1-flash-lite";
-const TTS_STYLE = "น้ำเสียงผู้ชายวัยรุ่น เป็นมิตร สดใส สุภาพ พูดชัดเจน ความเร็วปกติ";
 
 const MAX_TTS_CHARS = 1200;
 const MAX_STT_BYTES = 6 * 1024 * 1024; // ~3 min of 16 kHz mono WAV
@@ -126,7 +125,8 @@ export async function synthesizeSpeech(text) {
           input: [
             {
               type: "user_input",
-              content: [{ type: "text", text, annotations: [{ type: "speech_metadata", style: TTS_STYLE }] }],
+              // Only the words to say: a style instruction in the text gets read out loud.
+              content: [{ type: "text", text }],
             },
           ],
           response_format: { type: "audio" },
@@ -138,7 +138,7 @@ export async function synthesizeSpeech(text) {
       postJson(
         `${API_BASE}/models/${TTS_MODEL}:generateContent`,
         {
-          contents: [{ parts: [{ text: `พูดด้วย${TTS_STYLE}: ${text}` }] }],
+          contents: [{ parts: [{ text }] }],
           generationConfig: {
             responseModalities: ["AUDIO"],
             speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: TTS_VOICE } } },
@@ -270,16 +270,16 @@ export function registerVoiceRoutes(app) {
 
 /**
  * Google takes ~6 s to make any sentence, however short. Make the voice for the
- * wait phrases, the greeting and every ready-made answer once at start-up, so those
+ * greeting and the most-asked ready-made answers once at start-up, so those
  * play instantly. Pieces are cut exactly like the browser cuts them (shared/speechText.js),
  * otherwise the cache would never match. One request every 2 s; stops on quota errors.
  */
 export async function warmVoiceCache({ gapMs = 2000, limit = 45 } = {}) {
   if (!API_KEY) return { made: 0 };
-  const [{ cleanForSpeech, speechPieces, WAIT_PHRASES, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
+  const [{ cleanForSpeech, speechPieces, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
     await Promise.all([import("../shared/speechText.js"), import("./chatFaq.js"), import("./db.js")]);
   const settings = await getCampusSettings().catch(() => null);
-  const texts = [...WAIT_PHRASES, GREETING_PHRASE, ...(settings ? readyAnswerTexts(settings) : [])];
+  const texts = [GREETING_PHRASE, ...(settings ? readyAnswerTexts(settings) : [])];
   const pieces = [...new Set(texts.flatMap(t => speechPieces(cleanForSpeech(t))))].slice(0, limit);
   let made = 0;
   for (const piece of pieces) {

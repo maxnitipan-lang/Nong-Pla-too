@@ -56,8 +56,5 @@ export function speechPieces(text, max = 110, restMax = 220) {
 }
 
 
-/** Said straight away while a voice answer is being prepared (their audio is made in advance). */
-export const WAIT_PHRASES = ["รอสักครู่นะครับ", "เดี๋ยวน้องปลาทูหาให้นะครับ", "ขอคิดแป๊บนึงนะครับ"];
-
 /** The kiosk greeting, also made in advance. */
 export const GREETING_PHRASE = "สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ";
