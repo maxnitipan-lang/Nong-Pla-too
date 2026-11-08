@@ -293,7 +293,7 @@ export function registerVoiceRoutes(app) {
  * play instantly. The text must match what the browser sends (shared/speechText.js cleanForSpeech),
  * otherwise the cache would never match. One request every 2 s; stops on quota errors.
  */
-export async function warmVoiceCache({ gapMs = 2000, limit = 45 } = {}) {
+export async function warmVoiceCache({ gapMs = 2000, limit = Number(process.env.VOICE_PREWARM_LIMIT ?? 1) } = {}) {
   if (!API_KEY) return { made: 0 };
   const [{ cleanForSpeech, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
     await Promise.all([import("../shared/speechText.js"), import("./chatFaq.js"), import("./db.js")]);

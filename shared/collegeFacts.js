@@ -97,3 +97,42 @@ export function programmeLines() {
     ([level, rows]) => `${level}: ${rows.map(([type, name]) => `${name} (${type})`).join(", ")}`
   );
 }
+
+/**
+ * Executives — names and positions only (from www.sstc.ac.th/person_408 and the
+ * college's organisation chart, 2568). Personal phone numbers and emails are left out on purpose.
+ */
+export const EXECUTIVES = [
+  ["นายอรุณ เกลื่อนพันธ์", "ผู้อำนวยการวิทยาลัยเทคนิคสมุทรสงคราม"],
+  ["นายธนวัฒน์ สีเมฆ", "รองผู้อำนวยการ"],
+  ["นายสรยุทธ อุ่นใจ", "รองผู้อำนวยการ"],
+  ["นายอภิชัย คล้ำปลอด", "รองผู้อำนวยการ"],
+  ["นายปิติกร ช่ำอ่อน", "ผู้ช่วยรองผู้อำนวยการฝ่ายบริหารทรัพยากร"],
+  ["นางกัณคริษฐา แสวงกิจ", "ผู้ช่วยรองผู้อำนวยการฝ่ายแผนงานและความร่วมมือ"],
+  ["นางสมส่ง พูลผล", "ผู้ช่วยรองผู้อำนวยการฝ่ายวิชาการ"],
+  ["นายปรรณวัฒน์ ทองสวัสดิ์", "ผู้ช่วยรองผู้อำนวยการฝ่ายพัฒนากิจการนักเรียน นักศึกษา"],
+];
+
+/** Student numbers, semester 1/2568 (www.sstc.ac.th/data_1541, reports of 30 Apr – 28 May 2568). */
+export const STUDENTS_AS_OF = "ภาคเรียนที่ 1/2568";
+export const STUDENTS = {
+  "ปวช.": { total: 1487, years: { "ปวช.1": 564, "ปวช.2": 479, "ปวช.3": 444 } },
+  "ปวส.": { total: 890, years: { "ปวส.1": 496, "ปวส.2": 394 } },
+  "ปริญญาตรี (ทล.บ.)": { total: 69 },
+};
+
+/** Bachelor's programmes (เทคโนโลยีบัณฑิต) taught at the college — from the same student report. */
+export const BACHELOR_PROGRAMMES = ["เทคโนโลยีแม่พิมพ์โลหะ", "เทคโนโลยีแม่พิมพ์พลาสติก", "เทคโนโลยีธุรกิจดิจิทัล"];
+
+/** Executives, students and bachelor's programmes as lines for the chat assistant. */
+export function peopleLines() {
+  const total = Object.values(STUDENTS).reduce((sum, s) => sum + s.total, 0);
+  return [
+    `ผู้บริหาร: ${EXECUTIVES.map(([name, role]) => `${name} (${role})`).join(", ")}`,
+    `จำนวนนักเรียนนักศึกษา ${STUDENTS_AS_OF}: รวมประมาณ ${total.toLocaleString("en-US")} คน — ${Object.entries(STUDENTS)
+      .map(([level, s]) => `${level} ${s.total.toLocaleString("en-US")} คน${s.years ? ` (${Object.entries(s.years).map(([y, n]) => `${y} ${n}`).join(", ")})` : ""}`)
+      .join("; ")}`,
+    `ระดับปริญญาตรี (เทคโนโลยีบัณฑิต ทล.บ.): ${BACHELOR_PROGRAMMES.join(", ")}`,
+    "ข้อมูลรายชื่อครูแต่ละสาขายังไม่มีในระบบ — ถ้าถามชื่อครู ให้แนะนำติดต่อสาขานั้นหรืองานบุคคล",
+  ];
+}

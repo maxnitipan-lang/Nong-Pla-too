@@ -10,7 +10,7 @@
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
-import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, programmeLines } from "../shared/collegeFacts.js";
+import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, peopleLines, programmeLines } from "../shared/collegeFacts.js";
 import { answerFromFaq } from "./chatFaq.js";
 import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
 import { cleanForSpeech } from "../shared/speechText.js";
@@ -40,7 +40,16 @@ function departmentLines(buildings) {
       seen.add(raw.name);
       const d = withDepartmentInfo(raw);
       lines.push(
-        [`- ${d.name}`, `อยู่ที่: ${b.name}`, d.description && `เรียน: ${d.description}`, d.careers?.length && `อาชีพ: ${d.careers.join(", ")}`]
+        [
+          `- ${d.name}`,
+          `อยู่ที่: ${b.name}`,
+          d.programmes &&
+            `เปิดสอน: ${Object.entries(d.programmes)
+              .map(([level, names]) => (names.length ? `${level} ${names.join(", ")}` : `${level} ไม่เปิดสอน`))
+              .join(" / ")}`,
+          d.description && `เรียน: ${d.description}`,
+          d.careers?.length && `อาชีพ: ${d.careers.join(", ")}`,
+        ]
           .filter(Boolean)
           .join(" | ")
       );
@@ -87,6 +96,7 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "",
     "== ข้อมูลวิทยาลัย (จากเว็บไซต์วิทยาลัย) ==",
     ...collegeFactLines(),
+    ...peopleLines(),
     "",
     "== รายชื่ออาคาร/หน่วยงาน (แต่ละบรรทัดขึ้นต้นด้วย id ของอาคาร) ==",
     "หมายเหตุ: ชื่ออาคารสาขาวิชาส่วนใหญ่ = สาขาวิชาที่อยู่ในอาคารนั้น เวลาตอบให้พูดชื่อครั้งเดียว ห้ามพูดซ้ำแบบ 'อาคาร X มีสาขา X'",
@@ -111,7 +121,7 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "2. ใช้เฉพาะข้อมูลข้างต้น ห้ามแต่งชื่ออาคาร แผนก ข่าว ตัวเลข หรือบอกว่าหน่วยงานใดอยู่อาคารไหน ถ้ารายการอาคารไม่ได้ระบุไว้ (เช่น ห้ามเดาว่าฝ่ายกิจการนักเรียน ฝ่ายวิชาการ หรือห้องสมุดอยู่อาคาร 85 ปี) — ถ้าไม่รู้ว่าอยู่ไหน ให้แนะนำถามที่งานทะเบียนแทน",
     `3. ถ้าไม่มีข้อมูล ให้บอกสั้น ๆ 1 ประโยคว่าน้องปลาทูยังไม่มีข้อมูลเรื่องนี้ แล้วแนะนำทางเดียวที่ตรงที่สุด (เช่น สอบถามงานทะเบียน หรือโทร ${COLLEGE_FACTS.phone}) ห้ามขอโทษซ้ำหลายรอบ`,
     "3.1 ใส่เบอร์โทร/อีเมลเฉพาะเมื่อไม่มีข้อมูลตอบ หรือผู้ใช้ถามช่องทางติดต่อเท่านั้น ห้ามต่อท้ายทุกคำตอบ และห้ามปิดท้ายด้วย 'มีอะไรให้ช่วยอีกไหมครับ' ทุกครั้ง",
-    "3.2 ถ้าถามว่าสาขาไหนเหมาะกับเพศใด ให้ตอบว่าทุกสาขาเรียนได้ทุกเพศ แล้วแนะนำตามความสนใจ (ชอบงานช่าง งานคอมพิวเตอร์ งานธุรกิจ งานอาหาร) ห้ามแบ่งสาขาตามเพศ",
+    "3.2 เฉพาะเมื่อคำถามพูดถึงเพศ (ผู้หญิง ผู้ชาย) ให้ตอบว่าทุกสาขาเรียนได้ทุกเพศ แล้วแนะนำตามความสนใจ ห้ามแบ่งสาขาตามเพศ — ถ้าคำถามไม่ได้พูดถึงเพศ ไม่ต้องพูดเรื่องนี้",
     "3.3 ถ้าถามว่ามีสาขาเกี่ยวกับเรื่องใด ให้ไล่ดูรายการสาขาวิชาด้านบนให้ครบ แล้วบอกทุกสาขาที่เกี่ยวข้อง",
     "4. ถ้าผู้ใช้ถามว่าอาคาร สาขา หรือห้องอยู่ตรงไหน ให้บอกตำแหน่งจากช่อง ตำแหน่ง: ของอาคารนั้น (อยู่ฝั่งไหนของวิทยาลัย ใกล้อาคารอะไร) และชั้นถ้ามีข้อมูล",
     `5. ถ้าผู้ใช้ขอเส้นทาง / วิธีไป / นำทาง ไปอาคารใดอาคารหนึ่ง ให้เรียกฟังก์ชัน ${ROUTE_TOOL} พร้อม buildingId (id จากรายการด้านบน) ของอาคารนั้น แทนการอธิบายเส้นทางด้วยข้อความ`,
@@ -119,11 +129,16 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "   6.1 คุยเล่น/คำถามทั่วไปที่ไม่มีอันตราย (ทักทาย ถามความรู้สึก ความรู้ทั่วไปง่าย ๆ เช่น ปลาทูกินกับอะไร สมุทรสงครามมีที่เที่ยวอะไร คำศัพท์ภาษาอังกฤษสั้น ๆ): ตอบได้แบบเป็นกันเอง สนุก มีอารมณ์ขันเล็กน้อยในฐานะ 'ปลาทูแม่กลอง' 1–2 ประโยค แล้วชวนกลับมาเรื่องในวิทยาลัยแบบไม่ยัดเยียด (เช่น เสนอพาไปดูสาขาหรือแผนที่) ถ้าไม่แน่ใจข้อเท็จจริง ให้บอกว่าไม่แน่ใจ ห้ามแต่ง",
     "   6.2 เรื่องที่ไม่ควรตอบ: ทำการบ้าน/ข้อสอบ/รายงานแทน, การเมือง, ศาสนา, การพนัน/หวย, การลงทุน, เรื่องผู้ใหญ่, ความรุนแรง, ข้อมูลส่วนตัวของบุคคล: ปฏิเสธอย่างสุภาพและอบอุ่น 1 ประโยค ไม่ตำหนิผู้ถาม แล้วเสนอสิ่งที่ช่วยได้แทน (เช่น การบ้านแนะนำให้ปรึกษาครู)",
     "   6.3 ถ้าผู้ใช้ดูเครียด เศร้า หรือท้อ ให้ตอบอย่างเห็นใจ ให้กำลังใจสั้น ๆ และแนะนำให้คุยกับครูที่ปรึกษาหรือฝ่ายกิจการนักเรียน; ถ้าพูดถึงการทำร้ายตัวเอง ให้แนะนำโทรสายด่วนสุขภาพจิต 1323 ทันที",
-    "7. ตอบสั้น กระชับ อ่านง่าย ทั้งคำตอบไม่เกิน 5 บรรทัด:",
-    "   - ถ้ามีหลายรายการ (ตั้งแต่ 2 ข้อขึ้นไป) ให้ทำเป็น bullet list ขึ้นต้นบรรทัดด้วย '- ' ห้ามเขียนต่อกันยาว ๆ ในย่อหน้าเดียว",
-    "   - เกริ่นนำ 1 บรรทัดสั้น ๆ ก่อนลิสต์ แล้วขึ้นบรรทัดใหม่",
-    "   - แต่ละย่อหน้าไม่เกิน 2 ประโยค เว้นบรรทัดว่างระหว่างย่อหน้า",
-    "   - ใช้ **ตัวหนา** เฉพาะชื่ออาคารหรือคำสำคัญ ใช้พอประมาณ",
+    // Lists and bold are for the screen; spoken answers follow the voice rules below instead.
+    ...(spoken
+      ? ["7. ตอบสั้น กระชับ เป็นประโยคพูดต่อเนื่อง ไม่เกิน 3 ประโยค (ดูกติกาโหมดเสียงด้านล่าง)"]
+      : [
+          "7. ตอบสั้น กระชับ อ่านง่าย ทั้งคำตอบไม่เกิน 5 บรรทัด:",
+          "   - ถ้ามีหลายรายการ (ตั้งแต่ 2 ข้อขึ้นไป) ให้ทำเป็น bullet list ขึ้นต้นบรรทัดด้วย '- ' ห้ามเขียนต่อกันยาว ๆ ในย่อหน้าเดียว",
+          "   - เกริ่นนำ 1 บรรทัดสั้น ๆ ก่อนลิสต์ แล้วขึ้นบรรทัดใหม่",
+          "   - แต่ละย่อหน้าไม่เกิน 2 ประโยค เว้นบรรทัดว่างระหว่างย่อหน้า",
+          "   - ใช้ **ตัวหนา** เฉพาะชื่ออาคารหรือคำสำคัญ ใช้พอประมาณ",
+        ]),
     spoken
       ? [
           "",
@@ -194,7 +209,7 @@ ${answer.reply}` };
   const kiosk = options.atKiosk ? settings.kiosk : null;
   const ready = answerFromFaq(lastUser, buildings, settings, kiosk);
   if (ready) {
-    return { reply: ready.reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, source: "faq" };
+    return { reply: ready.reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, faqId: ready.faqId, source: "faq" };
   }
   const latestNews = newsAnswer(lastUser, news);
   if (latestNews) return { reply: latestNews, routeToBuildingId: null, action: "open-news", source: "news" };
@@ -303,7 +318,9 @@ ${answer.reply}` };
       }
 
       // The model sometimes doubles the polite ending ("นะครับครับ").
-      const content = message?.content?.trim().replace(/(ครับ)(\s*ครับ)+/g, "$1");
+      let content = message?.content?.trim().replace(/(ครับ)(\s*ครับ)+/g, "$1");
+      // Spoken answers are read aloud: no bold, no list markers, no blank lines.
+      if (content && options.spoken) content = content.replace(/\*\*/g, "").replace(/^\s*[-•]\s+/gm, "").replace(/\n{2,}/g, "\n");
       if (!content) throw new Error("AI ไม่ได้ตอบกลับข้อความ");
       return { reply: content, routeToBuildingId: null, source: "ai" };
     }

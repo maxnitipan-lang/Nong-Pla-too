@@ -11,7 +11,8 @@
     "format": "prettier --write .",
     "db:push": "drizzle-kit generate && drizzle-kit migrate",
     "db:seed": "node server/seed.js",
-    "news:sync": "node scripts/syncNews.js"
+    "news:sync": "node scripts/syncNews.js",
+    "ai:test": "node scripts/aiTest.js"
   },
   "dependencies": {
     "@trpc/server": "^11.6.0",

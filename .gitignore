@@ -120,3 +120,5 @@ client/public/__manus__/version.json
 
 # Local database backups (contain user data / password hashes)
 .db-backups/
+# output of pnpm ai:test
+scripts/ai-test-report.md
