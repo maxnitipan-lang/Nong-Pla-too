@@ -42,12 +42,10 @@ describe("ready-made answers (no AI call)", () => {
     expect(ask(question)).toMatchObject({ faqId: `building:${buildingId}`, routeToBuildingId: buildingId });
   });
 
+  // (Studying / jobs / tuition questions now have ready answers built from the data — see chatFaqGenerated.test.js.)
   it.each([
-    "สาขาช่างยนต์เรียนอะไรบ้าง",
-    "ค่าเทอมเท่าไหร่",
     "ข่าวล่าสุดมีอะไรบ้าง",
     "ตึกไหนมีห้องคอมพิวเตอร์",
-    "จบช่างไฟฟ้าทำงานอะไรได้",
     "ก่อสร้างอยู่ไหน", // two buildings have "ก่อสร้าง" — the AI should ask which one
   ])("leaves %s to the AI", question => {
     expect(ask(question)).toBeNull();
@@ -85,8 +83,11 @@ describe("questions that once got the wrong answer", () => {
     expect(ask(question)?.faqId).toBe(id);
   });
 
+  it("อยากเรียนช่างยนต์ต้องทำยังไง → how to apply, not where the building is", () => {
+    expect(ask("อยากเรียนช่างยนต์ต้องทำยังไง")).toMatchObject({ faqId: "dept-auto-apply", routeToBuildingId: "personnel-registration" });
+  });
+
   it.each([
-    "อยากเรียนช่างยนต์ต้องทำยังไง", // studying, not "where is it"
     "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง", // comparing departments
   ])("%s → left to the AI", (question) => {
     expect(ask(question)?.faqId).toBeUndefined();

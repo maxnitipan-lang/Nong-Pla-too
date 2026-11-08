@@ -12,8 +12,11 @@
 import faqData from "../shared/data/chatFaq.json" with { type: "json" };
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
 import { COLLEGE_FACTS } from "../shared/collegeFacts.js";
+import { GENERATED_ENTRIES, teacherAnswer } from "./chatFaqGenerated.js";
 
-const ENTRIES = faqData.entries;
+/** Hand-written answers first (they win a tie), then the ones built from the data files. */
+const ENTRIES = [...faqData.entries, ...GENERATED_ENTRIES];
+export const FAQ_ENTRY_COUNT = ENTRIES.length;
 
 /** Minimum similarity (0–1) for a Q&A entry to count as the same question. */
 export const FAQ_MIN_SCORE = 0.72;
@@ -70,6 +73,8 @@ function fill(template, settings) {
 /** Words that mean "where is it / take me there". */
 // "ยังไง" alone is not about a place ("อยากเรียนช่างยนต์ต้องทำยังไง"), only "ไป…ยังไง" is.
 const LOCATION_INTENT = /ไหน|ทางไป|นำทาง|พาไป|^ไป|ไป\S{0,30}ยังไง|เส้นทาง/;
+/** Clearly asking how to get somewhere ("ไป…", "ทางไป…", "พาไป…"). */
+const GO_INTENT = /^(จะ)?ไป|ทางไป|พาไป|นำทาง|เส้นทาง/;
 /** Questions about studying, applying or comparing departments — not "where is it". */
 const NOT_LOCATION = /อยากเรียน|สมัคร|ต่างกัน|แตกต่าง|เรียนอะไร|ทำงานอะไร|ค่าเทอม|เหมาะกับ|ดีไหม|น่าเรียน/;
 /** Generic words stripped from names so "สาขาวิชาช่างยนต์" also matches "ช่างยนต์". */
@@ -212,12 +217,17 @@ export function answerFromFaq(
   if (!trimmed || trimmed.length > MAX_LENGTH) return null;
 
   const match = bestFaqMatch(trimmed);
-  if (match && match.score >= FAQ_MIN_SCORE) {
+  // "ไปช่างยนต์ยังไง" asks for the way — never answer it with an entry that isn't about a place
+  // ("สมัครเรียนช่างยนต์ยังไง" looks alike but is about applying).
+  const text = normalizeQuestion(trimmed);
+  const asksTheWay = GO_INTENT.test(text);
+  const entryAboutPlace = entry => entry.questions.some(q => GO_INTENT.test(normalizeQuestion(q)) || /ไหน/.test(q));
+  if (match && match.score >= FAQ_MIN_SCORE && (!asksTheWay || entryAboutPlace(match.entry))) {
     const routeTo =
       match.entry.routeTo && buildings.some(b => b.id === match.entry.routeTo) ? match.entry.routeTo : null;
     return { reply: fill(match.entry.answer, settings), routeToBuildingId: routeTo, faqId: match.entry.id, action: match.entry.action ?? null };
   }
-  return buildingAnswer(trimmed, buildings, kiosk);
+  return teacherAnswer(trimmed) ?? buildingAnswer(trimmed, buildings, kiosk);
 }
 
 /** The most-asked ready-made answers as they would be sent (settings filled in) — for making their voice in advance. */

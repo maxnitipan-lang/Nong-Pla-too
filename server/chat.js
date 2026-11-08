@@ -215,7 +215,11 @@ ${answer.reply}` };
   const kiosk = options.atKiosk ? settings.kiosk : null;
   const ready = answerFromFaq(lastUser, buildings, settings, kiosk);
   if (ready) {
-    return { reply: ready.reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, faqId: ready.faqId, source: "faq" };
+    // Spoken: no bold or bullet marks (they're read out or sound odd) — list lines become one sentence.
+    const reply = options.spoken
+      ? ready.reply.replace(/\*\*/g, "").replace(/\n\s*[-•]\s+/g, " · ").replace(/\n+/g, " ").trim()
+      : ready.reply;
+    return { reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, faqId: ready.faqId, source: "faq" };
   }
   const latestNews = newsAnswer(lastUser, news);
   if (latestNews) return { reply: latestNews, routeToBuildingId: null, action: "open-news", source: "news" };

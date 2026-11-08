@@ -29,13 +29,13 @@ const CASES = [
   { group: "เส้นทาง", q: "ไปงานทะเบียนยังไง", route: "personnel-registration" },
   { group: "เส้นทาง", q: "จะไปช่างยนต์ยังไง", route: "mech-auto" },
   { group: "เส้นทาง", q: "อาคาร 85 ปีอยู่ตรงไหน", route: "building-85" },
-  { group: "เส้นทาง", q: "โรงอาหารอยู่ไหน", route: "auditorium" },
+  { group: "เส้นทาง", q: "โรงอาหารอยู่ไหน", route: "canteen" },
   { group: "เส้นทาง", q: "ที่จอดรถอยู่ไหน", route: "parking-1" },
   { group: "เส้นทาง", q: "ไปห้องผอ.", route: "director-office" },
   { group: "เส้นทาง", q: "สาขาการบัญชีอยู่อาคารไหน", any: ["พาณิชยกรรม"] },
   { group: "เส้นทาง", q: "ตึก 10 มีอะไรบ้าง", has: ["ธุรกิจดิจิทัล", "เขียนแบบ"] },
   { group: "เส้นทาง", q: "ห้องน้ำอยู่ไหน", not: ["อาคาร 85 ปี", "ผู้อำนวยการ"] },
-  { group: "เส้นทาง", q: "ห้องสมุดอยู่ไหน", not: ["อาคาร 85 ปี"] },
+  { group: "เส้นทาง", q: "ห้องสมุดอยู่ไหน", has: ["อาคาร 3"], route: "general-subjects" },
   // ---- สาขา / หลักสูตร
   { group: "สาขา", q: "มีสาขาอะไรบ้าง", faq: "majors" },
   { group: "สาขา", q: "มีสาขาคอมพิวเตอร์ไหม", has: ["เทคนิคคอมพิวเตอร์"], any: ["สารสนเทศ", "ธุรกิจดิจิทัล"] },
@@ -135,7 +135,10 @@ async function main() {
   }
 
   const voice = [];
-  for (const v of VOICE_CASES) {
+  // The server voice is optional (Azure key, or GEMINI_TTS=1) — without it the browser speaks with the device voice.
+  const status = await fetch(`${BASE}/api/voice/status`).then(r => r.json()).catch(() => ({}));
+  if (!status.ai) console.log("– [เสียง] เซิร์ฟเวอร์ไม่ได้เปิดเสียง AI (ใช้เสียงของเครื่อง) — ข้ามการทดสอบเสียง");
+  for (const v of status.ai ? VOICE_CASES : []) {
     const started = Date.now();
     const res = await fetch(`${BASE}/api/voice/tts`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: v.text }) }).catch(() => null);
     const ms = Date.now() - started;
