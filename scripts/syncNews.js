@@ -21,5 +21,6 @@ syncCollegeNews()
   })
   .catch(error => {
     console.error(error instanceof Error ? error.message : error);
+    if (error?.cause) console.error("สาเหตุจากฐานข้อมูล:", error.cause.message ?? error.cause);
     process.exit(1);
   });
