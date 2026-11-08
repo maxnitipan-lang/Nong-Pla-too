@@ -160,3 +160,12 @@
   .platoo-ui .kiosk-menu-card:nth-child(4) .button-mascot { height: 95px; }
   .platoo-ui .kiosk-card-copy strong { white-space: nowrap; }
 }
+
+/* iPad portrait / small tablets: stack the mascot above the menu so the 4 cards get the full width
+   (side by side, the card text wrapped one word per line). */
+@media (min-width: 641px) and (max-width: 1023px) and (orientation: portrait) {
+  .platoo-ui .kiosk-home { grid-template-columns: 1fr; grid-template-rows: auto auto; }
+  .platoo-ui .kiosk-assistant, .platoo-ui .kiosk-menu { min-height: 0; }
+  .platoo-ui .kiosk-assistant { padding: 18px 24px 20px; }
+  .platoo-ui .kiosk-menu-card { min-height: 150px; }
+}

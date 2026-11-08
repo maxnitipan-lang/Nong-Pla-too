@@ -562,3 +562,19 @@
 .platoo-chat .chat-action:hover { transform: translateY(-1px); }
 .platoo-chat .chat-action svg { width: 18px; height: 18px; }
 @media (min-width: 1024px) { .platoo-chat .chat-action { font-size: 17px; padding: 14px 18px; } }
+
+/* Touch: bigger invisible tap areas for small controls (phones / iPad). */
+.platoo-ui .featured-dots { gap: 14px; }
+.platoo-ui .featured-dots button { position: relative; }
+.platoo-ui .featured-dots button::before { content: ''; position: absolute; inset: -14px -6px; }
+.platoo-chat .voice-stop { min-height: 40px; padding-block: 8px; }
+
+/* iPhone / iPad Safari zooms the page in when a box under 16px is tapped — keep inputs at 16px on touch screens. */
+@media (pointer: coarse) {
+  .platoo-ui input, .platoo-ui textarea, .platoo-ui select,
+  .platoo-chat input, .platoo-chat textarea { font-size: 16px !important; }
+}
+/* On phones 100vh includes the hidden address bar; dvh is the visible height. */
+@supports (height: 100dvh) {
+  .platoo-ui .app { min-height: 100dvh; }
+}
