@@ -164,7 +164,7 @@ function officeEntries() {
     entries.push({
       id: `office-head-${i + 1}`,
       category: "บุคลากร",
-      questions: [`หัวหน้า${office}คือใคร`, `ใครเป็นหัวหน้า${office}`, `${office}ใครดูแล`, `หัวหน้า${plain}คือใคร`, `ใครดูแล${plain}`],
+      questions: [`หัวหน้า${office}คือใคร`, `ใครเป็นหัวหน้า${office}`, `${office}ใครดูแล`, `ใครดูแล${plain}`],
       answer: `หัวหน้า${office}คือ ${head} ครับ` + (where ? ` ${office}อยู่ที่${where.text} ผมเปิดเส้นทางให้แล้วครับ` : ""),
       ...(where && { routeTo: where.buildingId }),
     });
