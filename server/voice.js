@@ -1,4 +1,13 @@
-// Voice for the "น้องปลาทู" assistant, via the same Gemini key as the chat.
+// Voice for the "น้องปลาทู" assistant.
+//
+// Text to speech tries, in order:
+//   1. Azure Speech (th-TH Neural voices — clear, same voice every time, large free tier)
+//   2. Gemini TTS (same key as the chat)
+//   3. nothing → the browser uses the device's own voice
+//
+//   AZURE_SPEECH_KEY / AZURE_SPEECH_REGION   from the Azure "Speech" resource (Keys and Endpoint)
+//   AZURE_TTS_VOICE   default "th-TH-NiwatNeural" (male) — or "th-TH-PremwadeeNeural" (female)
+//   AZURE_TTS_RATE    default "+0%" (e.g. "+10%" faster, "-10%" slower)
 //
 //   POST /api/voice/tts   { text }            → audio/wav (natural Thai voice)
 //   POST /api/voice/stt   body = audio/wav    → { text } (Thai transcription)
@@ -21,10 +30,17 @@ const TTS_MODEL = process.env.TTS_MODEL || "gemini-3.8-flash-tts";
 const TTS_VOICE = process.env.TTS_VOICE || "Puck";
 const STT_MODEL = process.env.STT_MODEL || process.env.CHAT_MODEL || "gemini-3.1-flash-lite";
 
+const AZURE_KEY = process.env.AZURE_SPEECH_KEY || "";
+const AZURE_REGION = process.env.AZURE_SPEECH_REGION || "";
+const AZURE_VOICE = process.env.AZURE_TTS_VOICE || "th-TH-NiwatNeural";
+const AZURE_RATE = process.env.AZURE_TTS_RATE || "+0%";
+export const isAzureConfigured = () => AZURE_KEY.length > 0 && AZURE_REGION.length > 0;
+
 const MAX_TTS_CHARS = 1200;
 const MAX_STT_BYTES = 6 * 1024 * 1024; // ~3 min of 16 kHz mono WAV
 
-export const isVoiceConfigured = () => API_KEY.length > 0;
+/** Some AI voice exists (Azure or Gemini). Speech-to-text still needs the Gemini key. */
+export const isVoiceConfigured = () => isAzureConfigured() || API_KEY.length > 0;
 
 // ---------------------------------------------------------------------------
 // Rate limiting (per IP, sliding minute)
@@ -118,7 +134,9 @@ const ttsInFlight = new Map();
  */
 const QUOTA_PAUSE_MS = 30 * 60 * 1000;
 let quotaPausedUntil = 0;
-export const aiVoicePaused = () => Date.now() < quotaPausedUntil;
+const geminiPaused = () => Date.now() < quotaPausedUntil;
+/** No AI voice right now: Azure isn't set up and Gemini's quota is used up. */
+export const aiVoicePaused = () => !isAzureConfigured() && geminiPaused();
 
 export function synthesizeSpeech(text) {
   const cached = ttsCache.get(text);
@@ -126,12 +144,10 @@ export function synthesizeSpeech(text) {
   if (aiVoicePaused()) return Promise.reject(new Error("AI voice paused: quota used up (HTTP 429)"));
   if (ttsInFlight.has(text)) return ttsInFlight.get(text);
   const job = makeSpeech(text)
-    .catch(error => {
-      if (/HTTP 429/.test(error instanceof Error ? error.message : "")) {
-        quotaPausedUntil = Date.now() + QUOTA_PAUSE_MS;
-        console.warn("[Voice] quota used up (429): using the device voice for the next 30 minutes");
-      }
-      throw error;
+    .then(wav => {
+      if (ttsCache.size >= TTS_CACHE_MAX) ttsCache.delete(ttsCache.keys().next().value);
+      ttsCache.set(text, wav);
+      return wav;
     })
     .finally(() => ttsInFlight.delete(text));
   ttsInFlight.set(text, job);
@@ -143,12 +159,59 @@ export function synthesizeSpeech(text) {
  * asks for it — the browser's request then joins this one instead of starting from zero.
  */
 export function prepareSpeech(text) {
-  if (!API_KEY || !text) return;
+  if (!isVoiceConfigured() || !text) return;
   synthesizeSpeech(text.slice(0, MAX_TTS_CHARS)).catch(() => undefined);
 }
 
+/** Azure first, then Gemini. */
 async function makeSpeech(text) {
+  let azureError;
+  if (isAzureConfigured()) {
+    try {
+      return await azureSpeech(text);
+    } catch (error) {
+      azureError = error;
+      console.warn("[Voice] Azure TTS failed:", error instanceof Error ? error.message : error);
+    }
+  }
+  if (!API_KEY) throw azureError ?? new Error("ยังไม่ได้ตั้งค่าเสียง AI");
+  if (geminiPaused()) throw new Error("AI voice paused: quota used up (HTTP 429)");
+  try {
+    return await geminiSpeech(text);
+  } catch (error) {
+    if (/HTTP 429/.test(error instanceof Error ? error.message : "")) {
+      quotaPausedUntil = Date.now() + QUOTA_PAUSE_MS;
+      console.warn("[Voice] Gemini voice quota used up (429): paused for 30 minutes");
+    }
+    throw error;
+  }
+}
 
+const escapeXml = s => s.replace(/[<>&'"]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;", "'": "&apos;", '"': "&quot;" })[c]);
+
+/** Azure Speech REST: SSML in, 24 kHz 16-bit mono WAV out (same format as the Gemini path). */
+export async function azureSpeech(text) {
+  const ssml =
+    `<speak version="1.0" xml:lang="th-TH"><voice name="${AZURE_VOICE}">` +
+    `<prosody rate="${AZURE_RATE}">${escapeXml(text)}</prosody></voice></speak>`;
+  const res = await fetch(`https://${AZURE_REGION}.tts.speech.microsoft.com/cognitiveservices/v1`, {
+    method: "POST",
+    headers: {
+      "Ocp-Apim-Subscription-Key": AZURE_KEY,
+      "Content-Type": "application/ssml+xml",
+      "X-Microsoft-OutputFormat": "riff-24khz-16bit-mono-pcm",
+      "User-Agent": "nong-platoo",
+    },
+    body: ssml,
+    signal: AbortSignal.timeout(10_000),
+  });
+  if (!res.ok) throw new Error(`Azure HTTP ${res.status}: ${(await res.text().catch(() => "")).slice(0, 200)}`);
+  const wav = Buffer.from(await res.arrayBuffer());
+  if (wav.length < 100) throw new Error("Azure returned no audio");
+  return wav;
+}
+
+async function geminiSpeech(text) {
   let audio = null;
   let lastError;
   // Current Interactions API first, then the older generateContent shape.
@@ -199,10 +262,7 @@ async function makeSpeech(text) {
   }
   if (!audio) throw lastError instanceof Error ? lastError : new Error("ไม่ได้รับเสียงจาก AI");
 
-  const wav = toWav(Buffer.from(audio.data, "base64"), audio.mimeType);
-  if (ttsCache.size >= TTS_CACHE_MAX) ttsCache.delete(ttsCache.keys().next().value);
-  ttsCache.set(text, wav);
-  return wav;
+  return toWav(Buffer.from(audio.data, "base64"), audio.mimeType);
 }
 
 // ---------------------------------------------------------------------------
@@ -265,7 +325,7 @@ export function registerVoiceRoutes(app) {
   });
 
   app.post("/api/voice/tts", async (req, res) => {
-    if (!isVoiceConfigured()) return res.status(503).json({ error: "ยังไม่ได้ตั้งค่า GEMINI_API_KEY" });
+    if (!isVoiceConfigured()) return res.status(503).json({ error: "ยังไม่ได้ตั้งค่าเสียง AI" });
     const text = typeof req.body?.text === "string" ? req.body.text.trim().slice(0, MAX_TTS_CHARS) : "";
     if (!text) return res.status(400).json({ error: "ไม่มีข้อความ" });
     // Replies are spoken a sentence at a time (~3–5 requests per reply).
@@ -288,7 +348,7 @@ export function registerVoiceRoutes(app) {
     "/api/voice/stt",
     express.raw({ type: ["audio/wav", "audio/x-wav", "application/octet-stream"], limit: MAX_STT_BYTES }),
     async (req, res) => {
-      if (!isVoiceConfigured()) return res.status(503).json({ error: "ยังไม่ได้ตั้งค่า GEMINI_API_KEY" });
+      if (!API_KEY) return res.status(503).json({ error: "ยังไม่ได้ตั้งค่า GEMINI_API_KEY" });
       const body = req.body;
       if (!Buffer.isBuffer(body) || body.length < 1000 || body.subarray(0, 4).toString("ascii") !== "RIFF") {
         return res.status(400).json({ error: "ไฟล์เสียงไม่ถูกต้อง" });
@@ -314,8 +374,12 @@ export function registerVoiceRoutes(app) {
  * play instantly. The text must match what the browser sends (shared/speechText.js cleanForSpeech),
  * otherwise the cache would never match. One request every 2 s; stops on quota errors.
  */
-export async function warmVoiceCache({ gapMs = 2000, limit = Number(process.env.VOICE_PREWARM_LIMIT ?? 1) } = {}) {
-  if (!API_KEY) return { made: 0 };
+export async function warmVoiceCache({
+  gapMs = isAzureConfigured() ? 300 : 2000,
+  // Azure is fast and has a large free tier: pre-make the common answers too. Gemini: greeting only.
+  limit = Number(process.env.VOICE_PREWARM_LIMIT ?? (isAzureConfigured() ? 40 : 1)),
+} = {}) {
+  if (!isVoiceConfigured()) return { made: 0 };
   const [{ cleanForSpeech, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
     await Promise.all([import("../shared/speechText.js"), import("./chatFaq.js"), import("./db.js")]);
   const settings = await getCampusSettings().catch(() => null);
