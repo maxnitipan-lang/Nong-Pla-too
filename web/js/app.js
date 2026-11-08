@@ -78,6 +78,16 @@ const logoOf = (d) => d.logo || withDepartmentInfo(d).logo;
 const BUILDING_IMAGES = {
   auditorium: "/images/buildings/auditorium.webp",
   "activity-building": "/images/buildings/activity-building.webp",
+  "general-subjects": "/images/buildings/general-subjects.jpg",
+  "student-development": "/images/buildings/student-development.jpg",
+  "building-85": "/images/buildings/building-85.jpg",
+  "ivec-central-5": "/images/buildings/ivec-central-5.jpg",
+  "building-1": "/images/buildings/building-1.jpg",
+  "parking-1": "/images/buildings/parking-1.jpg",
+  "personnel-registration": "/images/buildings/personnel-registration.jpg",
+  "supplies-dept": "/images/buildings/supplies-dept.jpg",
+  "discipline-dept": "/images/buildings/discipline-dept.jpg",
+  "director-office": "/images/buildings/director-office.jpg",
 };
 const buildingLogo = (b) => BUILDING_IMAGES[b.id] ?? departmentsOf(b).map(logoOf).find(Boolean) ?? null;
 /** Buildings without a department logo (offices, shared spaces) get an icon on their map pin. */
