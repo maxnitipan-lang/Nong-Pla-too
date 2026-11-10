@@ -35,7 +35,10 @@ export function normalizeQuestion(text) {
     .replace(/อย่างไร|ยังไง|ไง/g, "ยังไง")
     .replace(/มั้ย|มั๊ย|ไหม/g, "ไหม")
     .replace(/ครับผม|ครับ|คับ|ค่ะ|คะ|จ้ะ|จ้า|จ๊ะ|นะ|หน่อย|ด้วย|ๆ/g, "")
-    .replace(/[\s.,!?'"“”‘’()\-–—/:;]+/g, "");
+    .replace(/[\s.,!?'"“”‘’()\-–—/:;]+/g, "")
+    // Typed in a hurry or by voice, tone marks often go missing ("หองนำอยูไหน") — ignore them on both sides.
+    .replace(/[็-์]/g, "")
+    .replace(/อยุ/g, "อยู");
 }
 
 function bigrams(text) {
@@ -73,20 +76,24 @@ function fill(template, settings) {
 
 // ---------------------------------------------------------------- buildings
 
+/** These patterns run on normalised text, which has no tone marks — so strip them from the patterns too. */
+const plain = re => new RegExp(re.source.replace(/[็-์]/g, ""), re.flags);
+
 /** Words that mean "where is it / take me there". */
 // "ยังไง" alone is not about a place ("อยากเรียนช่างยนต์ต้องทำยังไง"), only "ไป…ยังไง" is.
-const LOCATION_INTENT = /ไหน|ทางไป|นำทาง|พาไป|^ไป|ไป\S{0,30}ยังไง|เส้นทาง/;
+const LOCATION_INTENT = plain(/ไหน|ทางไป|นำทาง|พาไป|^ไป|ไป\S{0,30}ยังไง|เส้นทาง/);
 /** Clearly asking how to get somewhere ("ไป…", "ทางไป…", "พาไป…"). */
-const GO_INTENT = /^(จะ)?ไป|ทางไป|พาไป|นำทาง|เส้นทาง/;
+const GO_INTENT = plain(/^(จะ)?ไป|ทางไป|พาไป|นำทาง|เส้นทาง/);
 /** Questions about studying, applying or comparing departments — not "where is it". */
-const NOT_LOCATION = /อยากเรียน|สมัคร|ต่างกัน|แตกต่าง|เรียนอะไร|ทำงานอะไร|ค่าเทอม|เหมาะกับ|ดีไหม|น่าเรียน|อันไหน|สาขาไหน|กว่ากัน|ยากกว่า|ง่ายกว่า|ดีกว่า/;
+const NOT_LOCATION = plain(/อยากเรียน|สมัคร|ต่างกัน|แตกต่าง|เรียนอะไร|ทำงานอะไร|ค่าเทอม|เหมาะกับ|ดีไหม|น่าเรียน|อันไหน|สาขาไหน|กว่ากัน|ยากกว่า|ง่ายกว่า|ดีกว่า/);
 /** Generic words stripped from names so "สาขาวิชาช่างยนต์" also matches "ช่างยนต์". */
-const GENERIC = /^(สาขาวิชา|สาขา|หมวดวิชา|อาคาร|ตึก|งาน|ฝ่าย|ห้อง)/;
+const GENERIC = plain(/^(สาขาวิชา|สาขา|หมวดวิชา|อาคาร|ตึก|งาน|ฝ่าย|ห้อง)/);
 
 /** Names people may use for a building: full name, pin name, its parts, departments inside. */
 function buildingKeys(building) {
   const names = [
     building.name,
+    building.name.replace(/\s*ปี$/, ""), // "อาคาร 85 ปี" is also just "อาคาร 85"
     ...building.shortName.split("/"),
     ...(building.departments ?? []).map(d => d.name),
     ...building.floorsDetail.flatMap(f => f.rooms),
@@ -186,7 +193,7 @@ function buildingAnswer(question, buildings, kiosk) {
 // ---------------------------------------------------------------- Q&A set
 
 /** What the question is about: the question minus "where / how / go / room…" words. */
-const QUESTION_WORDS = /ห้อง|อยู่|ไหน|ยังไง|ไหม|อยาก|ต้องการ|ขอ|บอก|ทางไป|พาไป|ไป|ที่|มี|คือ|อะไร|เมื่อไร|กี่/g;
+const QUESTION_WORDS = plain(/ห้อง|อยู่|ไหน|ยังไง|ไหม|อยาก|ต้องการ|ขอ|บอก|ทางไป|พาไป|ไป|ที่|มี|คือ|อะไร|เมื่อไร|กี่/g);
 const topicOf = text => text.replace(QUESTION_WORDS, "");
 
 /** Best-matching Q&A entry and its score. */

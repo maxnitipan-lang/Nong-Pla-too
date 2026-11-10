@@ -90,3 +90,20 @@ describe("when the AI is busy", () => {
     expect(ask(q)?.faqId).toBe("canteen");
   });
 });
+
+describe("how people really type", () => {
+  it.each([
+    ["หองนำอยูไหน", "toilet"], // no tone marks
+    ["หองสมุดอยุไหน", "building:general-subjects"],
+    ["อาคาร 85 อยู่ไหน", "building:building-85"], // without "ปี"
+    ["ปวชกี่ปี", "study-years"],
+    ["toilet อยู่ไหน", "en-toilet"],
+    ["ร้องเพลงวิทยาลัยหน่อย", "chat-sing"],
+  ])("%s → %s", (question, id) => {
+    expect(ask(question)?.faqId).toBe(id);
+  });
+
+  it("missing tone marks never make a different place match (ก่อสร้าง ≠ ทางออก)", () => {
+    expect(ask("ก่อสร้างอยู่ไหน")?.faqId).not.toBe("svc-gate");
+  });
+});

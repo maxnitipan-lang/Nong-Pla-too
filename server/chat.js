@@ -193,7 +193,7 @@ const DOWN_REPLY = `ขออภัยครับ ตอนนี้น้อ�
 /** "ข่าวล่าสุดมีอะไรบ้าง" — answered straight from the news list (instant, no AI needed). */
 function newsAnswer(question, news) {
   const q = question.replace(/\s+/g, "");
-  if (!/ข่าว|ประกาศ|กิจกรรมล่าสุด/.test(q) || !/ล่าสุด|อะไรบ้าง|มีอะไร|ใหม่|วันนี้/.test(q) || !news.length) return null;
+  if (!/ข่าว|ประกาศ|กิจกรรม/.test(q) || !/ล่าสุด|อะไรบ้าง|มีอะไร|ใหม่|วันนี้|เร็ว|ช่วงนี้/.test(q) || !news.length) return null;
   const items = news.slice(0, 3).map(n => `- ${n.title}${n.date ? ` (${n.date})` : ""}`);
   return ["ข่าวล่าสุดของวิทยาลัยครับ", ...items, "", "ดูข่าวทั้งหมดพร้อมรูปได้ที่เมนูข่าวสารครับ"].join("\n");
 }
