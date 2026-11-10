@@ -29,8 +29,8 @@ describe("remembered AI answers", () => {
   it("asks the AI once; the same question again is answered from memory", async () => {
     const chat = await loadChat();
     const fetchMock = fakeAi();
-    const first = await ask(chat, "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง");
-    const second = await ask(chat, "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง");
+    const first = await ask(chat, "สาขาไหนเหมาะกับคนชอบดนตรี");
+    const second = await ask(chat, "สาขาไหนเหมาะกับคนชอบดนตรี");
     expect(first.source).toBe("ai");
     expect(second.source).toBe("ai-cache");
     expect(second.reply).toBe(first.reply);
@@ -40,8 +40,8 @@ describe("remembered AI answers", () => {
   it("nearly the same words also hit the memory", async () => {
     const chat = await loadChat();
     const fetchMock = fakeAi();
-    await ask(chat, "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง");
-    const again = await ask(chat, "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไงครับ");
+    await ask(chat, "สาขาไหนเหมาะกับคนชอบดนตรี");
+    const again = await ask(chat, "สาขาไหนเหมาะกับคนชอบดนตรีครับ");
     expect(again.source).toBe("ai-cache");
     expect(fetchMock.calls).toBe(1);
   });
@@ -57,9 +57,9 @@ describe("remembered AI answers", () => {
   it("forgets everything after an admin change", async () => {
     const chat = await loadChat();
     const fetchMock = fakeAi();
-    await ask(chat, "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง");
+    await ask(chat, "สาขาไหนเหมาะกับคนชอบดนตรี");
     chat.clearAiAnswerCache();
-    await ask(chat, "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง");
+    await ask(chat, "สาขาไหนเหมาะกับคนชอบดนตรี");
     expect(fetchMock.calls).toBe(2);
   });
 

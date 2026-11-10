@@ -57,7 +57,7 @@ describe("answers built from the data files", () => {
   });
 
   it("leaves questions it has no data for to the AI", () => {
-    for (const q of ["ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง", "ทำไมฟ้าเป็นสีฟ้า"]) expect(ask(q), q).toBeNull();
+    for (const q of ["สาขาไหนเหมาะกับคนชอบดนตรี", "ทำไมฟ้าเป็นสีฟ้า"]) expect(ask(q), q).toBeNull();
   });
 
   it("head of a department (no data) → says so, never names an office head instead", () => {

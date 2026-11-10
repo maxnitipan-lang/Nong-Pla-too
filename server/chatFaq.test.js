@@ -88,7 +88,7 @@ describe("questions that once got the wrong answer", () => {
   });
 
   it.each([
-    "ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไง", // comparing departments
+    "สาขาไหนเหมาะกับคนชอบดนตรี", // no department for this — the AI explains
   ])("%s → left to the AI", (question) => {
     expect(ask(question)?.faqId).toBeUndefined();
   });

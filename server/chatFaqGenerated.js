@@ -255,7 +255,76 @@ function executiveEntries() {
   return entries;
 }
 
-export const GENERATED_ENTRIES = [...departmentEntries(), ...applyEntries(), ...officeEntries(), ...executiveEntries(), ...buildingEntries()];
+// ---------------------------------------------------------------- comparisons and interests
+
+/** A department to compare or recommend: its name as people say it and one line on what it studies. */
+function unit(id) {
+  if (id === "it") return { name: "เทคโนโลยีสารสนเทศ (IT)", say: ["เทคโนโลยีสารสนเทศ", "ไอที"], what: "เรียนเขียนโปรแกรม ระบบเครือข่าย ฐานข้อมูล และเว็บไซต์" };
+  if (id === "electronics") return { name: "อิเล็กทรอนิกส์", say: ["อิเล็กทรอนิกส์"], what: "เรียนวงจร ไมโครคอนโทรลเลอร์ ประกอบและซ่อมอุปกรณ์อิเล็กทรอนิกส์" };
+  const d = DEPARTMENTS.find(x => x.id === id);
+  const info = withDepartmentInfo({ name: d.info });
+  return { name: d.say[0], say: d.say, what: info.description };
+}
+
+const PAIRS = [
+  ["auto", "machine"], ["electrical", "electronics"], ["computer-tech", "it"], ["accounting", "marketing"],
+  ["office", "digital-business"], ["home-ec", "food"], ["mechatronics", "electrical"], ["welding", "machine"],
+  ["drafting", "construction"], ["electronics", "mechatronics"], ["computer-tech", "digital-business"], ["accounting", "office"],
+  ["electronics", "it"], ["electrical", "construction"],
+];
+
+function comparisonEntries() {
+  return PAIRS.map(([a, b]) => {
+    const A = unit(a), B = unit(b);
+    const [x, y] = [A.say[0], B.say[0]];
+    return {
+      id: `compare-${a}-${b}`,
+      category: "สาขาวิชา",
+      questions: [
+        `${x}กับ${y}ต่างกันยังไง`, `${y}กับ${x}ต่างกันยังไง`, `${x}กับ${y}ต่างกันไหม`,
+        `${x}กับ${y}อันไหนดีกว่า`, `${x}กับ${y}อันไหนยากกว่า`, `${x}กับ${y}เรียนต่างกันยังไง`,
+      ],
+      answer:
+        `สองสาขานี้เรียนคนละแนวครับ\n- ${A.name}: ${A.what}\n- ${B.name}: ${B.what}\n` +
+        "ไม่มีสาขาไหนดีกว่ากัน เลือกจากสิ่งที่ชอบได้เลย หรือลองเกมเลือกสาขา 2 ข้อครับ",
+      action: "dept-quiz",
+    };
+  });
+}
+
+/** "ชอบซ่อมรถควรเรียนอะไร", "อยากเป็นเชฟเรียนสาขาไหน" → the departments that fit. */
+const INTERESTS = [
+  { id: "cars", like: ["ซ่อมรถ", "รถยนต์", "เครื่องยนต์"], be: ["ช่างซ่อมรถ"], depts: ["auto"] },
+  { id: "cooking", like: ["ทำอาหาร", "ทำขนม", "เบเกอรี่"], be: ["เชฟ", "พ่อครัว", "แม่ครัว"], depts: ["food", "home-ec"] },
+  { id: "coding", like: ["เขียนโปรแกรม", "ทำเว็บ", "เล่นเกมคอม"], be: ["โปรแกรมเมอร์", "นักพัฒนาเว็บ"], depts: ["it", "computer-tech", "digital-business"] },
+  { id: "numbers", like: ["คำนวณ", "ตัวเลข", "คิดเลข"], be: ["พนักงานบัญชี", "นักบัญชี"], depts: ["accounting"] },
+  { id: "selling", like: ["ขายของ", "ค้าขาย", "ขายของออนไลน์"], be: ["นักการตลาด", "แม่ค้าออนไลน์"], depts: ["marketing", "digital-business"] },
+  { id: "robots", like: ["หุ่นยนต์", "ระบบอัตโนมัติ"], be: ["วิศวกรหุ่นยนต์"], depts: ["mechatronics"] },
+  { id: "electric", like: ["งานไฟฟ้า", "เดินสายไฟ", "ซ่อมไฟ"], be: ["ช่างไฟ", "ช่างไฟฟ้า"], depts: ["electrical"] },
+  { id: "welding", like: ["เชื่อมเหล็ก", "งานเหล็ก"], be: ["ช่างเชื่อม"], depts: ["welding"] },
+  { id: "building", like: ["ออกแบบบ้าน", "สร้างบ้าน", "งานก่อสร้าง"], be: ["ผู้รับเหมา", "โฟร์แมน"], depts: ["construction"] },
+  { id: "drawing", like: ["วาดแบบ", "เขียนแบบ"], be: ["ช่างเขียนแบบ"], depts: ["drafting", "construction"] },
+  { id: "office", like: ["งานเอกสาร", "ทำงานออฟฟิศ"], be: ["เลขานุการ", "เจ้าหน้าที่ธุรการ"], depts: ["office"] },
+  { id: "machines", like: ["ซ่อมเครื่องจักร", "งานกลึง", "งานโรงงาน"], be: ["ช่างกล", "ช่างซ่อมบำรุง"], depts: ["machine", "mechatronics"] },
+  { id: "crafts", like: ["งานประดิษฐ์", "จัดดอกไม้", "ตัดเย็บ"], be: ["ช่างตัดเย็บ"], depts: ["home-ec"] },
+  { id: "gadgets", like: ["อิเล็กทรอนิกส์", "ซ่อมมือถือ", "วงจร"], be: ["ช่างอิเล็กทรอนิกส์", "ช่างซ่อมมือถือ"], depts: ["electronics"] },
+];
+
+function interestEntries() {
+  return INTERESTS.map(i => {
+    const units = i.depts.map(unit);
+    const questions = [
+      ...i.like.flatMap(w => [`ชอบ${w}ควรเรียนสาขาไหน`, `ชอบ${w}เรียนอะไรดี`, `ชอบ${w}ควรเรียนอะไร`]),
+      ...i.be.flatMap(w => [`อยากเป็น${w}ต้องเรียนอะไร`, `อยากเป็น${w}เรียนสาขาไหน`]),
+    ];
+    const answer = units.length === 1
+      ? `แนะนำสาขา${units[0].name}ครับ ${units[0].what}`
+      : `แนะนำ ${units.length} สาขาครับ\n${units.map(u => `- ${u.name}: ${u.what}`).join("\n")}`;
+    return { id: `interest-${i.id}`, category: "สาขาวิชา", questions, answer, action: "open-departments" };
+  });
+}
+
+export const GENERATED_ENTRIES = [...departmentEntries(), ...applyEntries(), ...officeEntries(), ...executiveEntries(), ...buildingEntries(), ...comparisonEntries(), ...interestEntries()];
 
 // ---------------------------------------------------------------- "ครู X คือใคร"
 

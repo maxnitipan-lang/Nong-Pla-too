@@ -17,6 +17,9 @@ import { GENERATED_ENTRIES, teacherAnswer } from "./chatFaqGenerated.js";
 /** Hand-written answers first (they win a tie), then the ones built from the data files. */
 const ENTRIES = [...faqData.entries, ...GENERATED_ENTRIES];
 export const FAQ_ENTRY_COUNT = ENTRIES.length;
+const CATEGORY_OF = new Map(ENTRIES.map(e => [e.id, e.category]));
+/** The category of a ready answer ("คุยเล่น", "สาขาวิชา" …), by id. */
+export const faqCategory = id => CATEGORY_OF.get(id) ?? null;
 
 /** Minimum similarity (0–1) for a Q&A entry to count as the same question. */
 export const FAQ_MIN_SCORE = 0.72;
@@ -76,7 +79,7 @@ const LOCATION_INTENT = /ไหน|ทางไป|นำทาง|พาไป|
 /** Clearly asking how to get somewhere ("ไป…", "ทางไป…", "พาไป…"). */
 const GO_INTENT = /^(จะ)?ไป|ทางไป|พาไป|นำทาง|เส้นทาง/;
 /** Questions about studying, applying or comparing departments — not "where is it". */
-const NOT_LOCATION = /อยากเรียน|สมัคร|ต่างกัน|แตกต่าง|เรียนอะไร|ทำงานอะไร|ค่าเทอม|เหมาะกับ|ดีไหม|น่าเรียน/;
+const NOT_LOCATION = /อยากเรียน|สมัคร|ต่างกัน|แตกต่าง|เรียนอะไร|ทำงานอะไร|ค่าเทอม|เหมาะกับ|ดีไหม|น่าเรียน|อันไหน|สาขาไหน|กว่ากัน|ยากกว่า|ง่ายกว่า|ดีกว่า/;
 /** Generic words stripped from names so "สาขาวิชาช่างยนต์" also matches "ช่างยนต์". */
 const GENERIC = /^(สาขาวิชา|สาขา|หมวดวิชา|อาคาร|ตึก|งาน|ฝ่าย|ห้อง)/;
 
