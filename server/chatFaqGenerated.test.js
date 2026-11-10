@@ -57,7 +57,7 @@ describe("answers built from the data files", () => {
   });
 
   it("leaves questions it has no data for to the AI", () => {
-    for (const q of ["สาขาไหนเหมาะกับคนชอบดนตรี", "ทำไมฟ้าเป็นสีฟ้า"]) expect(ask(q), q).toBeNull();
+    for (const q of ["สาขาไหนเหมาะกับคนชอบดนตรี"]) expect(ask(q), q).toBeNull();
   });
 
   it("head of a department (no data) → says so, never names an office head instead", () => {
@@ -106,4 +106,11 @@ describe("how people really type", () => {
   it("missing tone marks never make a different place match (ก่อสร้าง ≠ ทางออก)", () => {
     expect(ask("ก่อสร้างอยู่ไหน")?.faqId).not.toBe("svc-gate");
   });
+});
+
+describe("never leaves วิทยาลัยเทคนิคสมุทรสงคราม", () => {
+  it.each(["ทำไมฟ้าเป็นสีฟ้า", "สมุทรสงครามมีที่เที่ยวอะไรบ้าง", "ปลาทูกินกับอะไรอร่อย", "มหาวิทยาลัยไหนดี", "ของฝากสมุทรสงคราม"])(
+    "%s → a polite 'only about the college' reply",
+    q => expect(ask(q)?.reply).toContain("เฉพาะเรื่องของวิทยาลัยเทคนิคสมุทรสงคราม")
+  );
 });
