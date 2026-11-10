@@ -2,8 +2,89 @@
 // server (server/voice.js pre-makes the AI voice for ready-made answers — the pieces must match
 // exactly what the browser will ask for, or the pre-made audio is never used).
 
+// ---------------------------------------------------------------- pronunciation
+
+const DIGIT_WORDS = ["ศูนย์", "หนึ่ง", "สอง", "สาม", "สี่", "ห้า", "หก", "เจ็ด", "แปด", "เก้า"];
+/** "034-711440" → "ศูนย์ สาม สี่, เจ็ด หนึ่ง หนึ่ง สี่ สี่ ศูนย์" — phone numbers are read digit by digit. */
+const spellDigits = s => s.split("-").map(part => Array.from(part, d => DIGIT_WORDS[Number(d)] ?? d).join(" ")).join(", ");
+
+const MONTHS = {
+  "ม.ค.": "มกราคม", "ก.พ.": "กุมภาพันธ์", "มี.ค.": "มีนาคม", "เม.ย.": "เมษายน", "พ.ค.": "พฤษภาคม", "มิ.ย.": "มิถุนายน",
+  "ก.ค.": "กรกฎาคม", "ส.ค.": "สิงหาคม", "ก.ย.": "กันยายน", "ต.ค.": "ตุลาคม", "พ.ย.": "พฤศจิกายน", "ธ.ค.": "ธันวาคม",
+};
+const escapeRe = s => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/**
+ * Thai abbreviations are read letter by letter (ปวช. = "ปอ วอ ชอ"), or as the full word.
+ * Longest first, so "ปวส." is not eaten by a shorter entry.
+ */
+const THAI_ABBR = [
+  ["อพ.สธ.", "ออ พอ สอ ทอ"],
+  ["ทล.บ.", "เทคโนโลยีบัณฑิต"],
+  ["สอฐ.", "สถาบันการอาชีวศึกษา"],
+  ["ปวช.", "ปอ วอ ชอ"],
+  ["ปวส.", "ปอ วอ สอ"],
+  ["ปวช", "ปอ วอ ชอ"],
+  ["ปวส", "ปอ วอ สอ"],
+  ["อวท.", "ออ วอ ทอ"],
+  ["กยศ.", "กอ ยอ สอ"],
+  ["กยศ", "กอ ยอ สอ"],
+  ["พ.ศ.", "พุทธศักราช"],
+  ["รองฯ", "รองผู้อำนวยการ"],
+  ["ผอ.", "ผู้อำนวยการ"],
+  ["ดร.", "ดอกเตอร์"],
+  ["มส.", "มอ สอ"],
+  ["ฯลฯ", "และอื่น ๆ"],
+];
+
+/** English letters as Thai speakers say them (voices often read "ICT" as a word). */
+const ENGLISH_ABBR = {
+  ICT: "ไอซีที", IT: "ไอที", AI: "เอไอ", CVM: "ซีวีเอ็ม", MC3: "เอ็มซีสาม", CNC: "ซีเอ็นซี", CAD: "แคด",
+  PLC: "พีแอลซี", OVEC: "โอเว็ค", SSTC: "เอสเอสทีซี", GPS: "จีพีเอส", QR: "คิวอาร์", PDF: "พีดีเอฟ", WIFI: "ไวไฟ",
+};
+
+const LETTERS = {
+  a: "เอ", b: "บี", c: "ซี", d: "ดี", e: "อี", f: "เอฟ", g: "จี", h: "เอช", i: "ไอ", j: "เจ", k: "เค", l: "แอล", m: "เอ็ม",
+  n: "เอ็น", o: "โอ", p: "พี", q: "คิว", r: "อาร์", s: "เอส", t: "ที", u: "ยู", v: "วี", w: "ดับเบิลยู", x: "เอ็กซ์", y: "วาย", z: "แซด",
+};
+const ADDRESS_WORDS = { com: "คอม", gmail: "จีเมล", net: "เน็ต", org: "ออร์ก", go: "โก" };
+
+/** Make abbreviations, numbers and addresses sound right when read aloud. */
+export function pronounce(text) {
+  let t = String(text);
+  // Web and email addresses: "dot", "at", short parts spelled letter by letter ("sstc" = เอส เอส ที ซี).
+  const part = p => ADDRESS_WORDS[p.toLowerCase()] ?? (p.length <= 4 ? Array.from(p.toLowerCase(), c => LETTERS[c] ?? c).join(" ") : p);
+  const address = s => s.split(/([@.])/).map(p => (p === "@" ? " แอท " : p === "." ? " ดอท " : part(p))).join("");
+  t = t.replace(/[\w.-]+@[\w-]+(\.[\w-]+)+/g, address);
+  t = t.replace(/\bwww\.([\w-]+(\.[\w-]+)+)/gi, (_, rest) => `ดับเบิลยูดับเบิลยูดับเบิลยู ดอท ${address(rest)}`);
+  // Phone numbers and hotlines: digit by digit.
+  t = t.replace(/\b0\d{1,2}-\d{3}-?\d{3,4}\b|\b0\d{8,9}\b/g, spellDigits);
+  t = t.replace(/(?<!\d)(1323|1669|1300|1155|191|199|1323)(?!\d)/g, spellDigits);
+  // Times: "08:00 น." → "8 นาฬิกา", "16:30" → "16 นาฬิกา 30 นาที".
+  t = t.replace(/(?<!\d)(\d{1,2}):(\d{2})(\s*น\.)?/g, (_, h, m) => `${Number(h)} นาฬิกา${m === "00" ? "" : ` ${Number(m)} นาที`}`);
+  // Dates: "19 ต.ค. 69" → "19 ตุลาคม 2569".
+  for (const [abbr, month] of Object.entries(MONTHS))
+    t = t.replace(new RegExp(`${escapeRe(abbr)}(\\s*)(\\d{2,4})?`, "g"), (_, sp, y) =>
+      y ? `${month} ${y.length === 2 ? `25${y}` : y}` : `${month}${sp}`);
+  // ม.3 / ม.6 = "มอ สาม" (a school year), not "metre".
+  t = t.replace(/ม\.\s*(\d)/g, "มอ $1");
+  // Grades: "ติด 0 / ร / มส." → read the letters.
+  t = t.replace(/(?<![ก-๙])ร(?=\s*\/)/g, "รอ");
+  for (const [abbr, spoken] of THAI_ABBR) t = t.replace(new RegExp(`${escapeRe(abbr)}(?![ก-๙])`, "g"), ` ${spoken} `);
+  // Only words already in capitals ("ICT"), so "Fix it Center" keeps its "it".
+  t = t.replace(/\bWi-?Fi\b/gi, "ไวไฟ").replace(/\b[A-Z][A-Z0-9]{1,5}\b/g, w => ENGLISH_ABBR[w] ?? w);
+  // "1/2568" (term/year) → "1 ทับ 2568"; separators become pauses.
+  t = t.replace(/(\d)\s*\/\s*(\d)/g, "$1 ทับ $2").replace(/\s*[·•]\s*/g, ", ").replace(/\s+\/\s+/g, " หรือ ");
+  // Ranges: "8 นาฬิกา–16 นาฬิกา", "จันทร์–ศุกร์" → "… ถึง …".
+  // Only between numbers, times or days — "ทางเข้า–ออก" is "in and out", not "in to out".
+  t = t.replace(/(\d|นาฬิกา|นาที|จันทร์|อังคาร|พุธ|พฤหัสบดี|พฤหัส|ศุกร์|เสาร์|อาทิตย์)\s*[–—]\s*(?=[\dก-๙])/g, "$1 ถึง ")
+    .replace(/(\d)-(\d)(?!\d*-)/g, "$1 ถึง $2")
+    .replace(/\s*[–—]\s*/g, " ");
+  return t.replace(/\s{2,}/g, " ").trim();
+}
+
 export function cleanForSpeech(text) {
-  return text
+  return pronounce(text)
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [label](url) → label
     .replace(/https?:\/\/\S+/g, " ") // bare URLs
