@@ -31,6 +31,7 @@ import {
   upsertCampusNews,
 } from "./db.js";
 import { saveImage } from "./images.js";
+import { clearAiAnswerCache } from "./chat.js";
 import { syncCollegeNews } from "./newsScraper.js";
 import { adminProcedure, editorProcedure, router, staffProcedure } from "./_core/trpc.js";
 
@@ -40,6 +41,8 @@ const idInput = z.object({ id: z.string().trim().min(1).max(64) });
 async function run(fn) {
   try {
     await fn();
+    // Buildings, news or settings changed: remembered AI answers may be out of date.
+    clearAiAnswerCache();
     return { success: true };
   } catch (error) {
     throw new TRPCError({

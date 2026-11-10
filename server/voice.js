@@ -21,7 +21,7 @@
 //   GEMINI_API_KEY / CHAT_API_KEY   same key as the chatbot
 //   TTS_MODEL   default "gemini-3.8-flash-tts"     (Thai-capable; the -lite TTS is not)
 //   TTS_VOICE   default "Puck" (upbeat)  — see https://ai.google.dev/gemini-api/docs/speech-generation
-//   STT_MODEL   default = CHAT_MODEL or "gemini-3.1-flash-lite"
+//   STT_MODEL   default = CHAT_MODEL or "gemini-3.5-flash-lite"
 
 import express from "express";
 
@@ -29,7 +29,7 @@ const API_KEY = process.env.GEMINI_API_KEY || process.env.CHAT_API_KEY || "";
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const TTS_MODEL = process.env.TTS_MODEL || "gemini-3.8-flash-tts";
 const TTS_VOICE = process.env.TTS_VOICE || "Puck";
-const STT_MODEL = process.env.STT_MODEL || process.env.CHAT_MODEL || "gemini-3.1-flash-lite";
+const STT_MODEL = process.env.STT_MODEL || process.env.CHAT_MODEL || "gemini-3.5-flash-lite";
 
 const AZURE_KEY = process.env.AZURE_SPEECH_KEY || "";
 const AZURE_REGION = process.env.AZURE_SPEECH_REGION || "";

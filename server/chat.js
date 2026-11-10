@@ -5,13 +5,13 @@
 // overriding CHAT_BASE_URL + CHAT_MODEL + the key.
 //
 //   GEMINI_API_KEY   your key from https://aistudio.google.com/apikey
-//   CHAT_MODEL       (optional) default "gemini-3.1-flash-lite"
+//   CHAT_MODEL       (optional) default "gemini-3.5-flash-lite" (fastest that was free of 503s, พ.ย. 2569)
 //   CHAT_BASE_URL    (optional) default Gemini's OpenAI-compatible base
 //   CHAT_API_KEY     (optional) alternative to GEMINI_API_KEY for other providers
 
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
 import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, peopleLines, programmeLines } from "../shared/collegeFacts.js";
-import { answerFromFaq } from "./chatFaq.js";
+import { answerFromFaq, normalizeQuestion, similarity } from "./chatFaq.js";
 import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
 import { cleanForSpeech } from "../shared/speechText.js";
 import { prepareSpeech } from "./voice.js";
@@ -23,12 +23,12 @@ const CHAT_BASE_URL = process.env.CHAT_BASE_URL || "https://generativelanguage.g
 // A pinned flash-lite model: generous free-tier quota AND consistently fast
 // (~3-5s). The "-latest" alias has been resolving to a build that takes
 // 30-60s per reply, which makes the chat look hung.
-const CHAT_MODEL = process.env.CHAT_MODEL || "gemini-3.1-flash-lite";
+const CHAT_MODEL = process.env.CHAT_MODEL || "gemini-3.5-flash-lite";
 /**
  * Backup models, tried in order when the main one is busy or out of quota (comma-separated).
  * Only used with Google's endpoint; set CHAT_FALLBACK_MODELS="" to turn off.
  */
-const FALLBACK_MODELS = (process.env.CHAT_FALLBACK_MODELS ?? (process.env.CHAT_BASE_URL ? "" : "gemini-3.5-flash-lite,gemini-flash-lite-latest"))
+const FALLBACK_MODELS = (process.env.CHAT_FALLBACK_MODELS ?? (process.env.CHAT_BASE_URL ? "" : "gemini-flash-lite-latest,gemini-3.1-flash-lite"))
   .split(",")
   .map(s => s.trim())
   .filter(Boolean);
@@ -213,9 +213,63 @@ async function closeReadyAnswer(history, options) {
 /** When the AI is busy, accept a ready answer this close (normally 0.72). */
 const CLOSE_SCORE = 0.5;
 
+// ---------------------------------------------------------------- remembered AI answers
+
+/** AI answers kept for repeat questions: the same question gets the same answer, instantly and free. */
+const AI_CACHE_MS = 6 * 60 * 60 * 1000;
+const AI_CACHE_MAX = 400;
+const aiCache = new Map(); // key → { question, digits, answer, at }
+
+/** "แล้วปวสล่ะ", "อันนั้นอยู่ไหน" only make sense after the earlier messages — never remembered. */
+const FOLLOW_UP = /^(แล้ว|และ|ส่วน)|ล่ะ|อันนั้น|อันนี้|ที่ว่า|ข้างบน|เมื่อกี้|นั้น(ล่ะ|หรือ)|มันคือ/;
+
+function cacheSlot(history, options) {
+  const users = history.filter(m => m.role === "user");
+  const question = users.at(-1)?.content?.trim() ?? "";
+  if (question.length < 4 || (users.length > 1 && FOLLOW_UP.test(question))) return null;
+  const key = normalizeQuestion(question);
+  if (!key) return null;
+  const mode = `${options.spoken ? "s" : "t"}${options.atKiosk ? "k" : "p"}`;
+  return { key: `${mode}|${key}`, mode, question: key, digits: key.match(/\d+/g)?.join(",") ?? "" };
+}
+
+function cachedAnswer(slot) {
+  if (!slot) return null;
+  const now = Date.now();
+  let hit = aiCache.get(slot.key);
+  if (!hit) {
+    // Nearly the same words ("ช่างไฟฟ้ากับอิเล็กทรอนิกส์ต่างกันยังไงครับ" / "…ต่างกันไง"), same numbers.
+    for (const [key, entry] of aiCache)
+      if (key.startsWith(`${slot.mode}|`) && entry.digits === slot.digits && similarity(entry.question, slot.question) >= 0.9) {
+        hit = entry;
+        break;
+      }
+  }
+  if (!hit || now - hit.at > AI_CACHE_MS) return null;
+  return { ...hit.answer, source: "ai-cache" };
+}
+
+function rememberAnswer(slot, answer) {
+  if (!slot || answer.source !== "ai") return;
+  if (aiCache.size >= AI_CACHE_MAX) aiCache.delete(aiCache.keys().next().value);
+  aiCache.set(slot.key, { question: slot.question, digits: slot.digits, answer, at: Date.now() });
+}
+
+/** Forget remembered AI answers (e.g. after the buildings or news change in admin). */
+export function clearAiAnswerCache() {
+  aiCache.clear();
+}
+
 export async function askCampusChat(history, options = {}) {
   try {
+    const slot = cacheSlot(history, options);
+    const remembered = cachedAnswer(slot);
+    if (remembered) {
+      if (options.aiVoice) prepareSpeech(cleanForSpeech(remembered.reply));
+      return remembered;
+    }
     const answer = await answerChat(history, options);
+    rememberAnswer(slot, answer);
     // The browser will read this aloud with the AI voice: start making that voice now.
     if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
     return answer;
