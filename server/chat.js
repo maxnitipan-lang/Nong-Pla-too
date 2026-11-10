@@ -24,6 +24,24 @@ const CHAT_BASE_URL = process.env.CHAT_BASE_URL || "https://generativelanguage.g
 // (~3-5s). The "-latest" alias has been resolving to a build that takes
 // 30-60s per reply, which makes the chat look hung.
 const CHAT_MODEL = process.env.CHAT_MODEL || "gemini-3.1-flash-lite";
+/**
+ * Backup models, tried in order when the main one is busy or out of quota (comma-separated).
+ * Only used with Google's endpoint; set CHAT_FALLBACK_MODELS="" to turn off.
+ */
+const FALLBACK_MODELS = (process.env.CHAT_FALLBACK_MODELS ?? (process.env.CHAT_BASE_URL ? "" : "gemini-3.5-flash-lite,gemini-flash-lite-latest"))
+  .split(",")
+  .map(s => s.trim())
+  .filter(Boolean);
+
+/** Models resting after a 429/503 (model → time it may be tried again). */
+const resting = new Map();
+const restModel = (model, ms) => resting.set(model, Date.now() + ms);
+/** Main model first, then the backups — skipping resting ones (unless every model is resting). */
+export function modelsToTry(now = Date.now()) {
+  const all = [...new Set([CHAT_MODEL, ...FALLBACK_MODELS])];
+  const awake = all.filter(m => (resting.get(m) ?? 0) <= now);
+  return awake.length ? awake : all;
+}
 const CHAT_API_KEY = process.env.CHAT_API_KEY || process.env.GEMINI_API_KEY || "";
 
 const ROUTE_TOOL = "show_walking_route";
@@ -253,8 +271,7 @@ ${answer.reply}` };
   // fresh so the model always has current building/news data.
   const turns = history.filter(m => m.role === "user" || m.role === "assistant").slice(-10);
 
-  const requestBody = JSON.stringify({
-    model: CHAT_MODEL,
+  const payload = {
     messages: [
       { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk, turns.some(m => m.role === "user" && ABOUT_PEOPLE.test(m.content))) },
       ...turns,
@@ -280,20 +297,22 @@ ${answer.reply}` };
           },
         ]
       : undefined,
-  });
+  };
 
   let lastStatus = 0;
   let lastNetworkError = "";
-  // 503 = transient capacity, worth a quick retry. 429 = per-minute quota, retrying
-  // in-request won't help so fail fast with a clear message.
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (attempt > 0) await new Promise(r => setTimeout(r, 500 * attempt));
+  // Google's free tier counts each model separately, and one model can be overloaded (503)
+  // while others answer fine — so a busy / out-of-quota model hands over to the next one.
+  const models = modelsToTry();
+  for (let i = 0; i < models.length; i++) {
+    const model = models[i];
+    const isLast = i === models.length - 1;
 
     let res;
     // Gemini can hold the connection open without ever responding; without a
     // timeout the tRPC call hangs forever and the chat spinner never clears.
-    // The signal also aborts a stalled body read below.
-    const signal = AbortSignal.timeout(30_000);
+    // The signal also aborts a stalled body read below. Shorter while backups remain.
+    const signal = AbortSignal.timeout(isLast ? 30_000 : 15_000);
     try {
       res = await fetch(`${CHAT_BASE_URL}/chat/completions`, {
         method: "POST",
@@ -301,7 +320,7 @@ ${answer.reply}` };
           "Content-Type": "application/json",
           Authorization: `Bearer ${CHAT_API_KEY}`,
         },
-        body: requestBody,
+        body: JSON.stringify({ ...payload, model }),
         signal,
       });
     } catch (error) {
@@ -310,6 +329,7 @@ ${answer.reply}` };
         : error instanceof Error
           ? error.message
           : "unknown network error";
+      restModel(model, 2 * 60_000);
       continue;
     }
 
@@ -355,10 +375,13 @@ ${answer.reply}` };
     }
 
     lastStatus = res.status;
-    if (res.status === 429) {
-      throw new Error("ถามบ่อยเกินไป (เกินโควตาต่อนาทีของ AI ฟรี) — รอสักครู่แล้วลองใหม่");
+    // Busy (503), out of quota (429) or a hiccup (500): rest this model and try the next one.
+    if (res.status === 429 || res.status === 503 || res.status === 500 || (res.status === 404 && !isLast)) {
+      restModel(model, res.status === 404 ? 60 * 60_000 : res.status === 429 ? 10 * 60_000 : 2 * 60_000);
+      console.warn(`[Chat] ${model} answered ${res.status}${isLast ? "" : " — trying the next model"}`);
+      continue;
     }
-    if (res.status !== 503) {
+    {
       const detail = await res.text().catch(() => "");
       let apiMessage = "";
       try {
@@ -371,6 +394,9 @@ ${answer.reply}` };
     }
   }
 
+  if (lastStatus === 429) {
+    throw new Error("ถามบ่อยเกินไป (เกินโควตาของ AI ฟรีทุกรุ่น) — รอสักครู่แล้วลองใหม่");
+  }
   if (lastStatus) {
     throw new Error(`บริการ AI มีผู้ใช้งานหนาแน่น (${lastStatus}) — กรุณาลองใหม่อีกครั้งในอีกสักครู่`);
   }
