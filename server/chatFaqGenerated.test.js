@@ -108,9 +108,13 @@ describe("how people really type", () => {
   });
 });
 
-describe("never leaves วิทยาลัยเทคนิคสมุทรสงคราม", () => {
-  it.each(["ทำไมฟ้าเป็นสีฟ้า", "สมุทรสงครามมีที่เที่ยวอะไรบ้าง", "ปลาทูกินกับอะไรอร่อย", "มหาวิทยาลัยไหนดี", "ของฝากสมุทรสงคราม"])(
-    "%s → a polite 'only about the college' reply",
-    q => expect(ask(q)?.reply).toContain("เฉพาะเรื่องของวิทยาลัยเทคนิคสมุทรสงคราม")
-  );
+describe("off-topic: answered, but still the college's assistant", () => {
+  it("local questions get a real answer that steers back to the college", () => {
+    expect(ask("สมุทรสงครามมีที่เที่ยวอะไรบ้าง")?.reply).toMatch(/อัมพวา.*วิทยาลัย/s);
+    expect(ask("ปลาทูกินกับอะไรอร่อย")?.reply).toContain("น้ำพริกกะปิ");
+  });
+
+  it("never recommends other schools", () => {
+    expect(ask("มหาวิทยาลัยไหนดี")?.faqId).toBe("other-school");
+  });
 });
