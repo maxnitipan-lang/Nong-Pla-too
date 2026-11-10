@@ -79,3 +79,14 @@ describe("answers built from the data files", () => {
     expect(ask("ค่าเทอมเท่าไหร่")?.reply).not.toMatch(/\d+\s*บาท/);
   });
 });
+
+describe("when the AI is busy", () => {
+  it("a roughly similar question still gets the nearest ready answer (looser match)", () => {
+    expect(answerFromFaq("เล่าประวัติวิทยาลัยแบบละเอียด", CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS)).toBeNull();
+    expect(answerFromFaq("เล่าประวัติวิทยาลัยแบบละเอียด", CAMPUS_BUILDINGS, CAMPUS_SETTINGS_DEFAULTS, null, 0.5)?.faqId).toBe("history");
+  });
+
+  it.each(["พาไปกินข้าวกันหน่อย", "ไปหาอะไรกินกัน", "หิวแล้ว"])("%s → the canteen (no AI needed)", q => {
+    expect(ask(q)?.faqId).toBe("canteen");
+  });
+});

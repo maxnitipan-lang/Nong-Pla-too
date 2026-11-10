@@ -215,7 +215,9 @@ export function answerFromFaq(
   buildings,
   settings,
   /** The kiosk location when asked on the kiosk — answers then say how far it is from here. */
-  kiosk = null
+  kiosk = null,
+  /** How close a question must be to a ready answer. Lower = looser (used when the AI is busy). */
+  minScore = FAQ_MIN_SCORE
 ) {
   const trimmed = question.trim();
   if (!trimmed || trimmed.length > MAX_LENGTH) return null;
@@ -226,7 +228,7 @@ export function answerFromFaq(
   const text = normalizeQuestion(trimmed);
   const asksTheWay = GO_INTENT.test(text);
   const entryAboutPlace = entry => entry.questions.some(q => GO_INTENT.test(normalizeQuestion(q)) || /ไหน/.test(q));
-  if (match && match.score >= FAQ_MIN_SCORE && (!asksTheWay || entryAboutPlace(match.entry))) {
+  if (match && match.score >= minScore && (!asksTheWay || entryAboutPlace(match.entry))) {
     const routeTo =
       match.entry.routeTo && buildings.some(b => b.id === match.entry.routeTo) ? match.entry.routeTo : null;
     return { reply: fill(match.entry.answer, settings), routeToBuildingId: routeTo, faqId: match.entry.id, action: match.entry.action ?? null };

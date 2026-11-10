@@ -180,6 +180,21 @@ function newsAnswer(question, news) {
  * Answer a chat message. If the AI service fails (busy, quota, network), the visitor gets a
  * polite reply instead of a "server error" — only a missing API key is reported as an error.
  */
+/** Looser ready-answer match, for when the AI cannot answer. */
+async function closeReadyAnswer(history, options) {
+  const question = history.filter(m => m.role === "user").at(-1)?.content ?? "";
+  const [buildings, settings] = await Promise.all([getCampusBuildings(), getCampusSettings()]);
+  const ready = answerFromFaq(question, buildings, settings, options.atKiosk ? settings.kiosk : null, CLOSE_SCORE);
+  if (!ready) return null;
+  const reply = options.spoken
+    ? ready.reply.replace(/\*\*/g, "").replace(/\n\s*[-•]\s+/g, " · ").replace(/\n+/g, " ").trim()
+    : ready.reply;
+  return { reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, faqId: ready.faqId, source: "faq-close" };
+}
+
+/** When the AI is busy, accept a ready answer this close (normally 0.72). */
+const CLOSE_SCORE = 0.5;
+
 export async function askCampusChat(history, options = {}) {
   try {
     const answer = await answerChat(history, options);
@@ -192,6 +207,10 @@ export async function askCampusChat(history, options = {}) {
     if (/GEMINI_API_KEY/.test(message)) {
       return { reply: NO_AI_REPLY, routeToBuildingId: null, source: "fallback" };
     }
+    // The AI is busy or down: a ready answer that is only roughly the same question beats
+    // "ask again later" ("พาไปกินข้าวกันหน่อย" → the canteen answer).
+    const close = await closeReadyAnswer(history, options).catch(() => null);
+    if (close) return close;
     return { reply: /429|ถามบ่อย|หนาแน่น|โควตา/.test(message) ? BUSY_REPLY : DOWN_REPLY, routeToBuildingId: null, source: "fallback" };
   }
 }
