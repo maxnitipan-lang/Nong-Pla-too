@@ -1328,6 +1328,222 @@
       ],
       "answer": "วิทยาลัยไม่มีสาขาช่างแอร์โดยตรงครับ สาขาที่ใกล้เคียงที่สุดคือช่างไฟฟ้ากำลัง (ระบบไฟฟ้าและมอเตอร์) ส่วนจะเรียนเรื่องเครื่องปรับอากาศมากแค่ไหน สอบถามแผนกช่างไฟฟ้ากำลังได้ครับ",
       "action": "open-departments"
+    },
+    {
+      "id": "dept-count",
+      "category": "ข้อมูลวิทยาลัย",
+      "action": "open-departments",
+      "questions": [
+        "วิทยาลัยมีกี่สาขา",
+        "มีกี่สาขา",
+        "มีสาขาทั้งหมดกี่สาขา",
+        "เปิดสอนกี่สาขา"
+      ],
+      "answer": "หน้าสาขาวิชามี 15 สาขาครับ แบ่งเป็น 3 กลุ่ม: ช่างอุตสาหกรรม พาณิชยกรรม / ธุรกิจ และคหกรรม / อาหาร เปิดสอนทั้ง ปวช. และ ปวส. ส่วนปริญญาตรีมีอีก 3 สาขาครับ"
+    },
+    {
+      "id": "need-computer",
+      "category": "บริการนักเรียน",
+      "questions": [
+        "ต้องมีคอมพิวเตอร์ไหม",
+        "ต้องมีโน้ตบุ๊กไหม",
+        "ต้องซื้อคอมไหม",
+        "ต้องมีแล็ปท็อปไหม"
+      ],
+      "answer": "ขึ้นอยู่กับสาขาครับ วิทยาลัยมีห้องปฏิบัติการคอมพิวเตอร์ให้ใช้เรียน ส่วนจะต้องมีเครื่องของตัวเองไหม สอบถามแผนกที่จะเรียนหรือครูที่ปรึกษาได้ครับ"
+    },
+    {
+      "id": "buy-supplies",
+      "category": "บริการนักเรียน",
+      "questions": [
+        "ซื้ออุปกรณ์การเรียนที่ไหน",
+        "ร้านเครื่องเขียนอยู่ไหน",
+        "ร้านถ่ายเอกสารอยู่ไหน",
+        "ซื้อสมุดปากกาที่ไหน",
+        "ถ่ายเอกสารที่ไหน"
+      ],
+      "answer": "น้องปลาทูยังไม่มีข้อมูลร้านเครื่องเขียนหรือร้านถ่ายเอกสารในวิทยาลัยครับ ลองถามครูที่ปรึกษาหรืองานประชาสัมพันธ์ใกล้ทางเข้าได้ครับ"
+    },
+    {
+      "id": "not-offered",
+      "category": "สาขาวิชา",
+      "action": "open-departments",
+      "questions": [
+        "อยากเป็นพยาบาลเรียนที่นี่ได้ไหม",
+        "อยากเป็นหมอเรียนอะไร",
+        "อยากเป็นครูเรียนที่นี่ได้ไหม",
+        "อยากเป็นตำรวจเรียนอะไร",
+        "อยากเป็นทหารเรียนอะไร",
+        "มีสาขาพยาบาลไหม"
+      ],
+      "answer": "วิทยาลัยเป็นสายอาชีพ ด้านช่างอุตสาหกรรม พาณิชยกรรม และคหกรรม จึงยังไม่มีสาขาด้านนี้ครับ ถ้าสนใจอาชีพนี้ ปรึกษาเส้นทางการเรียนต่อได้ที่งานแนะแนว อาคาร 85 ปี ชั้น 2 ครับ"
+    },
+    {
+      "id": "app-map",
+      "category": "เกี่ยวกับน้องปลาทู",
+      "action": "open-map",
+      "questions": [
+        "ใช้แผนที่ยังไง",
+        "ใช้งานแผนที่ยังไง",
+        "หาอาคารยังไง",
+        "นำทางยังไง",
+        "ช่วยนำทางหน่อย"
+      ],
+      "answer": "กดเมนูแผนที่ แล้วพิมพ์ชื่ออาคาร ห้อง หรือสาขาในช่องค้นหา (หรือแตะหมุดบนแผนที่) จากนั้นกด \"เริ่มนำทาง\" ครับ สลับ 2D / 3D ได้ที่ปุ่มด้านบน หรือถามผมว่า \"ห้องสมุดอยู่ไหน\" ผมเปิดเส้นทางให้เลยครับ"
+    },
+    {
+      "id": "app-qr",
+      "category": "เกี่ยวกับน้องปลาทู",
+      "questions": [
+        "สแกน QR ยังไง",
+        "QR ใช้ยังไง",
+        "เอาเส้นทางไปดูในมือถือ",
+        "ส่งเส้นทางเข้ามือถือ"
+      ],
+      "answer": "ที่ตู้ เมื่อเปิดเส้นทางแล้วจะมี QR code ขึ้นครับ เปิดกล้องมือถือส่องที่ QR แล้วแตะลิงก์ เส้นทางเดียวกันจะเปิดในมือถือ เดินตามได้เลยครับ"
+    },
+    {
+      "id": "app-dark",
+      "category": "เกี่ยวกับน้องปลาทู",
+      "questions": [
+        "เปิดโหมดมืดยังไง",
+        "เปลี่ยนเป็นธีมมืด",
+        "ปิดโหมดมืด",
+        "หน้าจอสว่างไป"
+      ],
+      "answer": "แตะปุ่มรูปพระจันทร์ (หรือดวงอาทิตย์) มุมขวาบนของหน้าจอ เพื่อสลับธีมมืด / สว่างได้เลยครับ"
+    },
+    {
+      "id": "app-install",
+      "category": "เกี่ยวกับน้องปลาทู",
+      "questions": [
+        "ติดตั้งแอปบนมือถือได้ไหม",
+        "มีแอปไหม",
+        "โหลดแอปที่ไหน",
+        "เพิ่มลงหน้าจอหลัก"
+      ],
+      "answer": "ได้ครับ เปิดเว็บนี้ในมือถือ แล้วเลือก \"เพิ่มลงในหน้าจอหลัก\" (Android: เมนู ⋮ ของ Chrome · iPhone: ปุ่มแชร์ของ Safari) จะได้ไอคอนน้องปลาทูไว้เปิดเหมือนแอปครับ"
+    },
+    {
+      "id": "app-language",
+      "category": "เกี่ยวกับน้องปลาทู",
+      "questions": [
+        "เปลี่ยนเป็นภาษาอังกฤษได้ไหม",
+        "มีภาษาอังกฤษไหม",
+        "change language",
+        "english version"
+      ],
+      "answer": "หน้าจอเป็นภาษาไทยครับ แต่พิมพ์ถามผมเป็นภาษาอังกฤษได้เลย — you can ask me in English, e.g. \"Where is the library?\""
+    },
+    {
+      "id": "en-library",
+      "category": "English",
+      "routeTo": "general-subjects",
+      "questions": [
+        "where is the library",
+        "library",
+        "how do i get to the library"
+      ],
+      "answer": "The library is on the 1st floor of Building 3 (left side). I've opened the walking route on the map. 📚"
+    },
+    {
+      "id": "en-toilet",
+      "category": "English",
+      "routeTo": "personnel-registration",
+      "questions": [
+        "where is the toilet",
+        "where is the restroom",
+        "toilet",
+        "bathroom"
+      ],
+      "answer": "The main public toilet is at the Registration building (no. 19), near the Plernfae café. There are more beside Buildings 9, 10 and 13. I've opened the route to the main one."
+    },
+    {
+      "id": "en-registration",
+      "category": "English",
+      "routeTo": "personnel-registration",
+      "questions": [
+        "how do i get to the registration office",
+        "where is the registration office",
+        "registration"
+      ],
+      "answer": "The Registration office is in building no. 19, in the middle of the campus. I've opened the walking route on the map."
+    },
+    {
+      "id": "en-canteen",
+      "category": "English",
+      "routeTo": "canteen",
+      "questions": [
+        "where is the canteen",
+        "where can i eat",
+        "canteen",
+        "food"
+      ],
+      "answer": "The canteen is next to Auditorium 1 (no. 17 on the map). I've opened the walking route. 🍚"
+    },
+    {
+      "id": "en-nurse",
+      "category": "English",
+      "routeTo": "general-subjects",
+      "questions": [
+        "where is the nurse room",
+        "first aid",
+        "i feel sick",
+        "clinic"
+      ],
+      "answer": "The nurse room is on the 1st floor of Building 3 (right side). I've opened the route. In an emergency call 1669."
+    },
+    {
+      "id": "en-parking",
+      "category": "English",
+      "routeTo": "parking-1",
+      "questions": [
+        "where can i park",
+        "parking",
+        "car park"
+      ],
+      "answer": "Parking is at Parking 1, behind the guard post near the main gate. I've opened the route."
+    },
+    {
+      "id": "en-cafe",
+      "category": "English",
+      "routeTo": "plernfae-cafe",
+      "questions": [
+        "is there a cafe here",
+        "coffee",
+        "where can i buy a drink"
+      ],
+      "answer": "Yes — Plernfae café is in the middle of the campus, near Registration. I've opened the route. ☕"
+    },
+    {
+      "id": "en-director",
+      "category": "English",
+      "routeTo": "director-office",
+      "questions": [
+        "where is the director office",
+        "director office",
+        "i want to meet the director"
+      ],
+      "answer": "The Director's Office is building no. 20. The director is Mr. Arun Kluenpan. I've opened the route."
+    },
+    {
+      "id": "en-about",
+      "category": "English",
+      "questions": [
+        "what is this college",
+        "tell me about this college",
+        "about the college"
+      ],
+      "answer": "Samut Songkhram Technical College (founded 1941) is a vocational college offering certificate (ปวช.), diploma (ปวส.) and technology bachelor programmes in industrial trades, business and home economics. Ask me about any building or department!"
+    },
+    {
+      "id": "en-students",
+      "category": "English",
+      "questions": [
+        "how many students are there",
+        "number of students"
+      ],
+      "answer": "About 2,446 students: 1,487 certificate (ปวช.), 890 diploma (ปวส.) and 69 bachelor students."
     }
   ]
 }

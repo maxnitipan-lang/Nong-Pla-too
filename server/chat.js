@@ -207,7 +207,7 @@ async function closeReadyAnswer(history, options) {
   const question = history.filter(m => m.role === "user").at(-1)?.content ?? "";
   const [buildings, settings] = await Promise.all([getCampusBuildings(), getCampusSettings()]);
   const ready = answerFromFaq(question, buildings, settings, options.atKiosk ? settings.kiosk : null, CLOSE_SCORE);
-  if (!ready || NOT_CLOSE.has(faqCategory(ready.faqId))) return null;
+  if (!ready || NOT_CLOSE.has(faqCategory(ready.faqId)) || TEMPLATE_ID.test(ready.faqId)) return null;
   const reply = options.spoken
     ? ready.reply.replace(/\*\*/g, "").replace(/\n\s*[-•]\s+/g, " · ").replace(/\n+/g, " ").trim()
     : ready.reply;
@@ -218,6 +218,8 @@ async function closeReadyAnswer(history, options) {
 const CLOSE_SCORE = 0.55;
 /** Small talk is only right for the exact small-talk question — never as a "close enough" answer. */
 const NOT_CLOSE = new Set(["ทักทาย", "คุยเล่น", "เกี่ยวกับน้องปลาทู"]);
+/** Answers built from templates (per department, per building …) — only for a near-exact question. */
+const TEMPLATE_ID = /^(interest|compare|dept|office-head|division|building|teachers|person)[-:]/;
 
 // ---------------------------------------------------------------- remembered AI answers
 

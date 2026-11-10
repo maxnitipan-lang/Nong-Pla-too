@@ -308,6 +308,8 @@ const INTERESTS = [
   { id: "machines", like: ["ซ่อมเครื่องจักร", "งานกลึง", "งานโรงงาน"], be: ["ช่างกล", "ช่างซ่อมบำรุง"], depts: ["machine", "mechatronics"] },
   { id: "crafts", like: ["งานประดิษฐ์", "จัดดอกไม้", "ตัดเย็บ"], be: ["ช่างตัดเย็บ"], depts: ["home-ec"] },
   { id: "gadgets", like: ["อิเล็กทรอนิกส์", "ซ่อมมือถือ", "วงจร"], be: ["ช่างอิเล็กทรอนิกส์", "ช่างซ่อมมือถือ"], depts: ["electronics"] },
+  { id: "content", like: ["ทำคลิป", "ตัดต่อวิดีโอ", "ทำคอนเทนต์"], be: ["ยูทูบเบอร์", "คอนเทนต์ครีเอเตอร์", "อินฟลูเอนเซอร์"], depts: ["digital-business"] },
+  { id: "apps", like: ["ทำแอป", "ทำแอปมือถือ", "ทำเกม"], be: ["นักพัฒนาแอป", "คนทำเกม"], depts: ["it", "computer-tech"] },
 ];
 
 function interestEntries() {
@@ -324,7 +326,30 @@ function interestEntries() {
   });
 }
 
-export const GENERATED_ENTRIES = [...departmentEntries(), ...applyEntries(), ...officeEntries(), ...executiveEntries(), ...buildingEntries(), ...comparisonEntries(), ...interestEntries()];
+/** Facts that change with the date (the college's age). */
+function datedEntries(now = new Date()) {
+  const yearBE = now.getFullYear() + 543;
+  const age = yearBE - 2484; // founded 18 เมษายน พ.ศ. 2484
+  return [
+    {
+      id: "college-age",
+      category: "ข้อมูลวิทยาลัย",
+      questions: ["วิทยาลัยอายุกี่ปี", "วิทยาลัยอายุกี่ปีแล้ว", "วิทยาลัยเปิดมากี่ปี", "วิทยาลัยก่อตั้งมากี่ปีแล้ว", "ตั้งมานานแค่ไหน"],
+      answer: `วิทยาลัยก่อตั้งเมื่อ 18 เมษายน พ.ศ. 2484 ปีนี้ (พ.ศ. ${yearBE}) ครบ ${age} ปีครับ เดิมชื่อโรงเรียนช่างไม้สมุทรสงคราม`,
+    },
+    {
+      id: "bachelor-detail",
+      category: "สาขาวิชา",
+      questions: ["ปริญญาตรีแม่พิมพ์คืออะไร", "ปริญญาตรีธุรกิจดิจิทัลเรียนอะไร", "เทคโนโลยีธุรกิจดิจิทัลปริญญาตรีเรียนอะไร", "ปริญญาตรีมีสาขาอะไร", "ทลบคืออะไร", "ต่อปริญญาตรีที่นี่เรียนอะไร"],
+      answer:
+        "ปริญญาตรีสายเทคโนโลยี (ทล.บ.) รับผู้จบ ปวส. มี 3 สาขาครับ\n- เทคโนโลยีแม่พิมพ์โลหะ\n- เทคโนโลยีแม่พิมพ์พลาสติก\n- เทคโนโลยีธุรกิจดิจิทัล\n" +
+        "รายละเอียดวิชาที่เรียน สอบถามภาควิชาแม่พิมพ์ (อาคาร 10) หรือภาควิชาเทคโนโลยีธุรกิจดิจิทัล (อาคาร 10 ชั้น 3) ได้ครับ",
+      routeTo: "building-10",
+    },
+  ];
+}
+
+export const GENERATED_ENTRIES = [...datedEntries(), ...departmentEntries(), ...applyEntries(), ...officeEntries(), ...executiveEntries(), ...buildingEntries(), ...comparisonEntries(), ...interestEntries()];
 
 // ---------------------------------------------------------------- "ครู X คือใคร"
 
