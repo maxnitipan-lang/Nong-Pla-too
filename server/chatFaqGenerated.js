@@ -374,12 +374,28 @@ const PEOPLE = (() => {
 /** Asking about a person: "ครูอำนาจสอนอะไร", "อาจารย์ปิติคือใคร", "รองฯ สรยุทธ". */
 const PERSON_INTENT = /ครู|อาจารย์|อ\.|คือใคร|เป็นใคร|สอนอะไร|สอนสาขา|อยู่สาขา|อยู่แผนก|รองผอ|รองฯ|หัวหน้า/;
 
+// Executive offices, from the campus map PDF (8 Nov 2569).
+const OFFICES = {
+  สรยุทธ: { where: "อาคาร 85 ปี ชั้น 2 (ฝั่งซ้าย)", building: "building-85" },
+  อภิชัย: { where: "อาคาร 85 ปี ชั้น 2 (ฝั่งซ้าย)", building: "building-85" },
+  ธนวัฒน์: { where: "อาคาร 85 ปี ชั้น 2 (ฝั่งขวา)", building: "building-85" },
+};
+
 export function teacherAnswer(question) {
   const text = question.replace(/\s+/g, "");
   if (!PERSON_INTENT.test(text)) return null;
   const found = PEOPLE.filter(p => text.includes(p.first) || text.includes(p.fullName.replace(/\s+/g, "")));
   if (!found.length || found.length > 3) return null;
   const lines = found.map(p => `${p.fullName} เป็น${p.roles.join(" และ")}`);
+  // "ห้องรองฯ X อยู่ไหน": add the office from the 2569 campus map.
+  const office = /ไหน|ห้อง|ทางไป|พาไป|นำทาง/.test(text) ? found.map(p => OFFICES[p.first]).find(Boolean) : null;
+  if (office) {
+    return {
+      reply: `${lines.join(" · ")} ครับ ห้องทำงานอยู่ที่**${office.where}** ผมเปิดเส้นทางให้แล้วครับ`,
+      routeToBuildingId: office.building,
+      faqId: `person:${found.map(p => p.first).join(",")}`,
+    };
+  }
   return {
     reply: `${lines.join(" · ")} ครับ (ข้อมูลบุคลากร ณ ${STAFF_AS_OF})`,
     routeToBuildingId: null,
