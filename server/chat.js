@@ -195,7 +195,7 @@ const EN_DOWN_REPLY = `Sorry, Nong Platoo can't answer right now. Please try aga
 /** English version: added to the system prompt. */
 const ENGLISH_RULE = `
 
-LANGUAGE: The visitor asked in English. Always reply in clear, simple English, even though the data above is in Thai. Never reply in Thai. Translate building and department names, and keep the Thai name in brackets the first time, e.g. "Building 85 (อาคาร 85 ปี)". Use "Nong Platoo" for yourself.`;
+LANGUAGE: The visitor asked in English. Always reply in clear, simple English, even though the data above is in Thai. Never reply in Thai. Translate building and department names, and keep the Thai name in brackets the first time, e.g. "Building 85 (อาคาร 85 ปี)". Use "Nong Platoo" for yourself. Do not add "sir" or "madam" (that is not how the Thai ครับ translates).`;
 /** In English, only the English ready answers fit (the rest are Thai). */
 const englishReady = (ready, options) => !ready || options.lang !== "en" || /^en-/.test(ready.faqId ?? "") ? ready : null;
 const DOWN_REPLY = `ขออภัยครับ ตอนนี้น้องปลาทูตอบคำถามนี้ไม่ได้ชั่วคราว ลองถามใหม่อีกครั้ง หรือโทรสอบถามวิทยาลัย ${COLLEGE_FACTS.phone} ได้เลยครับ`;
@@ -440,7 +440,11 @@ ${answer.reply}` };
         const target = buildingId ? byId.get(buildingId) : undefined;
         if (target) {
           return {
-            reply: message?.content?.trim() || `เปิดแผนที่เส้นทางเดินไป "${target.name}" ให้แล้วครับ 👇`,
+            reply:
+              message?.content?.trim() ||
+              (options.lang === "en"
+                ? `I've opened the walking route to "${target.name}" on the map 👇`
+                : `เปิดแผนที่เส้นทางเดินไป "${target.name}" ให้แล้วครับ 👇`),
             routeToBuildingId: target.id,
             source: "ai",
           };

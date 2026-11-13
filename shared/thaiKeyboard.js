@@ -40,7 +40,7 @@ export function fixWrongKeyboard(text) {
   if (thaiChars < letters * 0.8) return null;
   // Real English has vowels; wrong-layout Thai mostly does not (or has punctuation keys).
   const words = t.split(/\s+/);
-  const englishish = words.filter((w) => /^[a-z]+$/i.test(w) && /[aeiouy]/i.test(w) && w.length >= 2).length;
+  const englishish = words.filter((w) => /^[a-z]+$/i.test(w) && /[aeiouy]/i.test(w) && (w.length >= 2 || /^[ia]$/i.test(w))).length; // "I am lost"
   if (englishish === words.length && !/[;'\[\],./]/.test(t)) return null;
   // English words joined by symbols ("<script>alert(1)</script>", "e-mail", "www.sstc.ac.th"):
   // most letters sit in runs that look like English words.

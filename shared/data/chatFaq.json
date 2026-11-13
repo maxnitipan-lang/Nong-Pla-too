@@ -1495,7 +1495,9 @@
       "routeTo": "canteen",
       "questions": [
         "where is the canteen",
+        "how do i get to the canteen",
         "where can i eat",
+        "i am hungry",
         "canteen",
         "food",
         "canteen อยู่ไหน"
