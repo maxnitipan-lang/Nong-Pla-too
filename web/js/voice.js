@@ -197,26 +197,21 @@ function isEnglishText(text) {
   return latin > 20 && thai < latin / 4;
 }
 
-function englishDeviceVoice() {
-  const voices = window.speechSynthesis.getVoices().filter(v => /^en[-_]/i.test(v.lang));
-  return voices.find(v => /natural|online|neural|google/i.test(v.name)) ?? voices[0] ?? null;
-}
-
 function speakOnDevice(text, rate, onStart) {
   let stopped = false;
   const done = (async () => {
     if (!window.speechSynthesis) return;
     await voicesReady();
-    // An English answer (the visitor asked in English) is read with an English voice.
-    const english = isEnglishText(text);
-    const voice = english ? englishDeviceVoice() : thaiDeviceVoices()[0];
+    // One voice for everything: English answers are read by the same Thai voice, so Nong Platoo
+    // always sounds like the same character (the device voice is free — no AI tokens).
+    const voice = thaiDeviceVoices()[0];
     window.speechSynthesis.cancel();
     let first = true;
     for (const piece of chunk(text)) {
       if (stopped) return;
       await new Promise(resolve => {
         const u = new SpeechSynthesisUtterance(piece);
-        u.lang = english ? "en-US" : "th-TH";
+        u.lang = "th-TH";
         if (voice) u.voice = voice;
         u.rate = rate;
         // Some browsers (Chrome on Android, Safari) never fire onend for an utterance — without
@@ -275,10 +270,9 @@ async function fetchAiAudio(text, signal) {
 /** Speak `text`. AI voice falls back to the device voice if it fails. */
 export function speak(rawText, options) {
   stopSpeaking();
-  // English answers skip the Thai reading rules ("IT" would become Thai sounds) and the Thai AI voice.
+  // English answers skip the Thai reading rules ("IT" would become Thai sounds); same voice as Thai.
   const english = isEnglishText(rawText);
   const text = english ? String(rawText).replace(/[*#_`>]/g, "").replace(/\s+/g, " ").trim() : cleanForSpeech(rawText);
-  if (english) options = { ...options, engine: "device" };
   if (!text) return { done: Promise.resolve(), stop: () => undefined };
   const rate = Math.min(1.3, Math.max(0.7, options.rate ?? 1));
 
