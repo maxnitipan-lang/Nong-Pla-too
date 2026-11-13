@@ -185,11 +185,13 @@ export const appRouter = router({
           atKiosk: z.boolean().optional(),
           /** New (optional): the reply will be read with the AI voice → start making it right away. */
           aiVoice: z.boolean().optional(),
+          /** New (optional): "en" = the visitor uses the English version → reply in English. */
+          lang: z.enum(["th", "en"]).optional(),
         })
       )
       .mutation(async ({ input }) => {
         try {
-          return await askCampusChat(input.messages, { spoken: input.spoken, atKiosk: input.atKiosk, aiVoice: input.aiVoice });
+          return await askCampusChat(input.messages, { spoken: input.spoken, atKiosk: input.atKiosk, aiVoice: input.aiVoice, lang: input.lang });
         } catch (error) {
           throw new TRPCError({
             code: "INTERNAL_SERVER_ERROR",

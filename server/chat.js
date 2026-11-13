@@ -190,6 +190,14 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
 const NO_AI_REPLY =
   "น้องปลาทูตอบคำถามนี้ไม่ได้ตอนนี้ครับ ลองถามเรื่องพื้นฐาน เช่น \"ไปงานทะเบียนยังไง\" \"มีสาขาอะไรบ้าง\" หรือ \"เบอร์โทรวิทยาลัย\" ได้เลยครับ";
 const BUSY_REPLY = "ตอนนี้มีคนถามน้องปลาทูเยอะมากครับ รอสักครู่แล้วถามใหม่อีกครั้งนะครับ";
+const EN_BUSY_REPLY = "Many people are asking Nong Platoo right now. Please wait a moment and ask again.";
+const EN_DOWN_REPLY = `Sorry, Nong Platoo can't answer right now. Please try again, or call the college at ${COLLEGE_FACTS.phone}.`;
+/** English version: added to the system prompt. */
+const ENGLISH_RULE = `
+
+LANGUAGE: The visitor is using the English version of the app. Always reply in clear, simple English, even if the visitor writes in Thai or the data above is in Thai. Never reply in Thai. Translate building and department names, and keep the Thai name in brackets the first time, e.g. "Building 85 (อาคาร 85 ปี)". Use "Nong Platoo" for yourself.`;
+/** In English, only the English ready answers fit (the rest are Thai). */
+const englishReady = (ready, options) => !ready || options.lang !== "en" || /^en-/.test(ready.faqId ?? "") ? ready : null;
 const DOWN_REPLY = `ขออภัยครับ ตอนนี้น้องปลาทูตอบคำถามนี้ไม่ได้ชั่วคราว ลองถามใหม่อีกครั้ง หรือโทรสอบถามวิทยาลัย ${COLLEGE_FACTS.phone} ได้เลยครับ`;
 
 /** "ข่าวล่าสุดมีอะไรบ้าง" — answered straight from the news list (instant, no AI needed). */
@@ -208,7 +216,7 @@ function newsAnswer(question, news) {
 async function closeReadyAnswer(history, options) {
   const question = history.filter(m => m.role === "user").at(-1)?.content ?? "";
   const [buildings, settings] = await Promise.all([getCampusBuildings(), getCampusSettings()]);
-  const ready = answerFromFaq(question, buildings, settings, options.atKiosk ? settings.kiosk : null, CLOSE_SCORE);
+  const ready = englishReady(answerFromFaq(question, buildings, settings, options.atKiosk ? settings.kiosk : null, CLOSE_SCORE), options);
   if (!ready || NOT_CLOSE.has(faqCategory(ready.faqId)) || TEMPLATE_ID.test(ready.faqId)) return null;
   const reply = options.spoken
     ? ready.reply.replace(/\*\*/g, "").replace(/\n\s*[-•]\s+/g, " · ").replace(/\n+/g, " ").trim()
@@ -239,7 +247,7 @@ function cacheSlot(history, options) {
   if (question.length < 4 || (users.length > 1 && FOLLOW_UP.test(question))) return null;
   const key = normalizeQuestion(question);
   if (!key) return null;
-  const mode = `${options.spoken ? "s" : "t"}${options.atKiosk ? "k" : "p"}`;
+  const mode = `${options.spoken ? "s" : "t"}${options.atKiosk ? "k" : "p"}${options.lang === "en" ? "e" : ""}`;
   return { key: `${mode}|${key}`, mode, question: key, digits: key.match(/\d+/g)?.join(",") ?? "" };
 }
 
@@ -293,14 +301,15 @@ export async function askCampusChat(history, options = {}) {
     // "ask again later" ("พาไปกินข้าวกันหน่อย" → the canteen answer).
     const close = await closeReadyAnswer(history, options).catch(() => null);
     if (close) return close;
-    return { reply: /429|ถามบ่อย|หนาแน่น|โควตา/.test(message) ? BUSY_REPLY : DOWN_REPLY, routeToBuildingId: null, source: "fallback" };
+    const en = options.lang === "en";
+    return { reply: /429|ถามบ่อย|หนาแน่น|โควตา/.test(message) ? (en ? EN_BUSY_REPLY : BUSY_REPLY) : en ? EN_DOWN_REPLY : DOWN_REPLY, routeToBuildingId: null, source: "fallback" };
   }
 }
 
 async function answerChat(history, options) {
   // "g[njv" = "เบื่อ" typed with the keyboard on English: answer the Thai, and say so.
   const lastIndex = history.findLastIndex(m => m.role === "user");
-  const fixed = lastIndex >= 0 ? fixWrongKeyboard(history[lastIndex].content) : null;
+  const fixed = lastIndex >= 0 && options.lang !== "en" ? fixWrongKeyboard(history[lastIndex].content) : null;
   if (fixed) {
     history = history.map((m, i) => (i === lastIndex ? { ...m, content: fixed } : m));
     const answer = await answerChat(history, options);
@@ -314,7 +323,7 @@ ${answer.reply}` };
   // ready-made set — instant, and no AI tokens spent.
   const lastUser = history.filter(m => m.role === "user").at(-1)?.content ?? "";
   const kiosk = options.atKiosk ? settings.kiosk : null;
-  const ready = answerFromFaq(lastUser, buildings, settings, kiosk);
+  const ready = englishReady(answerFromFaq(lastUser, buildings, settings, kiosk), options);
   if (ready) {
     // Spoken: no bold or bullet marks (they're read out or sound odd) — list lines become one sentence.
     const reply = options.spoken
@@ -322,7 +331,7 @@ ${answer.reply}` };
       : ready.reply;
     return { reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, faqId: ready.faqId, source: "faq" };
   }
-  const latestNews = newsAnswer(lastUser, news);
+  const latestNews = options.lang === "en" ? null : newsAnswer(lastUser, news);
   if (latestNews) return { reply: latestNews, routeToBuildingId: null, action: "open-news", source: "news" };
 
   if (!CHAT_API_KEY) {
@@ -337,7 +346,7 @@ ${answer.reply}` };
 
   const payload = {
     messages: [
-      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk, turns.some(m => m.role === "user" && ABOUT_PEOPLE.test(m.content))) },
+      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk, turns.some(m => m.role === "user" && ABOUT_PEOPLE.test(m.content))) + (options.lang === "en" ? ENGLISH_RULE : "") },
       ...turns,
     ],
     temperature: 0.3,

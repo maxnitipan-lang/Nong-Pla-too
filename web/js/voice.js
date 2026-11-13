@@ -1,4 +1,5 @@
 import { chunk, cleanForSpeech, speechPieces } from "../../shared/speechText.js";
+import { isEnglish, speechLang } from "./i18n.js";
 // (Converted from client/src/lib/voice.ts — same behaviour.)
 // Voice in / voice out for the น้องปลาทู assistant.
 //
@@ -167,7 +168,7 @@ export function thaiDeviceVoices() {
   };
   return window.speechSynthesis
     .getVoices()
-    .filter(v => v.lang.toLowerCase().replace("_", "-").startsWith("th"))
+    .filter(v => v.lang.toLowerCase().replace("_", "-").startsWith(isEnglish() ? "en" : "th"))
     .sort((a, b) => score(b) - score(a));
 }
 
@@ -202,7 +203,7 @@ function speakOnDevice(text, rate, onStart) {
       if (stopped) return;
       await new Promise(resolve => {
         const u = new SpeechSynthesisUtterance(piece);
-        u.lang = "th-TH";
+        u.lang = speechLang();
         if (voice) u.voice = voice;
         u.rate = rate;
         // Some browsers (Chrome on Android, Safari) never fire onend for an utterance — without
@@ -261,7 +262,9 @@ async function fetchAiAudio(text, signal) {
 /** Speak `text`. AI voice falls back to the device voice if it fails. */
 export function speak(rawText, options) {
   stopSpeaking();
-  const text = cleanForSpeech(rawText);
+  // English: plain text (the Thai reading rules would turn "IT" into Thai sounds), device voice only.
+  const text = isEnglish() ? String(rawText).replace(/[*#_`>]/g, "").replace(/s+/g, " ").trim() : cleanForSpeech(rawText);
+  if (isEnglish()) options = { ...options, engine: "device" };
   if (!text) return { done: Promise.resolve(), stop: () => undefined };
   const rate = Math.min(1.3, Math.max(0.7, options.rate ?? 1));
 
@@ -405,7 +408,7 @@ function startLevelMeter(analyser, onLevel) {
 function listenWithBrowser(cb) {
   const Ctor = recognitionCtor();
   const rec = new Ctor();
-  rec.lang = "th-TH";
+  rec.lang = speechLang();
   rec.continuous = false;
   rec.interimResults = true;
   rec.maxAlternatives = 1;

@@ -11,6 +11,7 @@
 //   "nongplatoo:reset" kiosk idle: forget the conversation and close
 
 import { apiPost } from "./api.js";
+import { isEnglish } from "./i18n.js";
 import { icon } from "./icons.js";
 import { renderMarkdown } from "./markdown.js";
 import { $, html, raw, readStore, writeStore } from "./util.js";
@@ -33,12 +34,20 @@ import {
   unlockAudio,
 } from "./voice.js";
 
-const GREETING = "สวัสดีครับ ผมน้องปลาทู 🐟\n\nแตะปุ่มไมค์แล้วพูดได้เลย หรือพิมพ์ถามเรื่องอาคาร สาขา ข่าวสาร และขอเส้นทางได้ครับ";
-const QUICK_QUESTIONS = [
-  { icon: "navigate", label: "ขอเส้นทางไปสาขาช่างยนต์" },
-  { icon: "pin", label: "สาขาการบัญชีอยู่อาคารไหน" },
-  { icon: "building", label: "วิทยาลัยมีสาขาอะไรบ้าง" },
-];
+const GREETING = isEnglish()
+  ? "Hello, I'm Nong Platoo 🐟\n\nTap the mic and speak, or type a question about buildings, programs, news or directions."
+  : "สวัสดีครับ ผมน้องปลาทู 🐟\n\nแตะปุ่มไมค์แล้วพูดได้เลย หรือพิมพ์ถามเรื่องอาคาร สาขา ข่าวสาร และขอเส้นทางได้ครับ";
+const QUICK_QUESTIONS = isEnglish()
+  ? [
+      { icon: "navigate", label: "How do I get to Auto Mechanics?" },
+      { icon: "pin", label: "Which building is Accounting in?" },
+      { icon: "building", label: "What programs does the college offer?" },
+    ]
+  : [
+      { icon: "navigate", label: "ขอเส้นทางไปสาขาช่างยนต์" },
+      { icon: "pin", label: "สาขาการบัญชีอยู่อาคารไหน" },
+      { icon: "building", label: "วิทยาลัยมีสาขาอะไรบ้าง" },
+    ];
 const PHASE_TEXT = {
   idle: "แตะไมค์แล้วพูดได้เลย",
   listening: "กำลังฟัง… พูดได้เลยครับ",
@@ -239,7 +248,8 @@ export class PlatooChat {
           spoken: fromVoice || undefined,
           atKiosk: this.atKiosk || undefined,
           // Tell the server to start making the AI voice for the answer straight away.
-          aiVoice: (this.s.settings.speakReplies && this.engine === "ai") || undefined,
+          aiVoice: (this.s.settings.speakReplies && this.engine === "ai" && !isEnglish()) || undefined,
+          lang: isEnglish() ? "en" : undefined,
         },
         controller.signal,
       );

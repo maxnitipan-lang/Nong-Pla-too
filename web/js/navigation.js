@@ -11,6 +11,7 @@
 
 import { OFF_CAMPUS_M, currentStepIndex, distanceM, locateOnPath, planCampusRoute, snapToNetwork } from "/shared/walkNetwork.js";
 import { apiPost } from "./api.js";
+import { speechLang, translate } from "./i18n.js";
 import { buildingLatLng, getBestPosition } from "./directions.js";
 
 /** Farther than this from the route while navigating → plan again from here. */
@@ -22,8 +23,8 @@ const ARRIVED_M = 12;
 function speak(text) {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = "th-TH";
+  const u = new SpeechSynthesisUtterance(speechLang() === "en-US" ? translate(text) : text);
+  u.lang = speechLang();
   u.rate = 0.95;
   window.speechSynthesis.speak(u);
 }
