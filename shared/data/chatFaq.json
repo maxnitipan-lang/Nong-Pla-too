@@ -86,8 +86,7 @@
         "สบายดีไหม",
         "เป็นไงบ้าง",
         "วันนี้เป็นยังไงบ้าง",
-        "สบายดีป่าว",
-        "how are you"
+        "สบายดีป่าว"
       ],
       "answer": "สบายดีครับ ขอบคุณที่ถามนะครับ 😊 วันนี้น้องปลาทูพร้อมพาเดินชมวิทยาลัยเต็มที่เลย อยากไปที่ไหนหรืออยากรู้อะไร บอกผมได้เลยครับ"
     },
@@ -732,7 +731,6 @@
         "ซ่อมของ",
         "ซ่อมพัดลม",
         "ซ่อมเครื่องใช้ไฟฟ้า",
-        "fix it center",
         "ศูนย์ซ่อม",
         "ซ่อมหม้อหุงข้าว",
         "ของเสียซ่อมที่ไหน"
@@ -1072,8 +1070,7 @@
       "questions": [
         "ขอโทษ",
         "โทษที",
-        "ขอโทษนะ",
-        "sorry"
+        "ขอโทษนะ"
       ],
       "answer": "ไม่เป็นไรเลยครับ 😊 มีอะไรให้ช่วยต่อไหมครับ"
     },
@@ -1082,7 +1079,6 @@
       "category": "คุยเล่น",
       "questions": [
         "โอเค",
-        "ok",
         "เข้าใจแล้ว",
         "ได้เลย",
         "รับทราบ",
@@ -1895,6 +1891,696 @@
       ],
       "answer": "The latest news and events are on the News page (in Thai, from the college website).",
       "action": "open-news"
+    },
+    {
+      "id": "en-how-are-you",
+      "category": "English",
+      "questions": [
+        "how are you",
+        "how are you doing",
+        "how's it going"
+      ],
+      "answer": "I'm great, thanks for asking 😊 I'm ready to show you around the college. Where would you like to go?"
+    },
+    {
+      "id": "en-ai",
+      "category": "English",
+      "questions": [
+        "are you a robot",
+        "are you ai",
+        "are you a real person",
+        "are you human"
+      ],
+      "answer": "I'm the college's AI assistant. To talk with a staff member, please contact the Registration office or Public Relations near the gate."
+    },
+    {
+      "id": "en-where-from",
+      "category": "English",
+      "questions": [
+        "why are you a fish",
+        "why platoo",
+        "what is platoo",
+        "why mackerel"
+      ],
+      "answer": "I'm a Mae Klong mackerel (pla too) 🐟, the most famous food of Samut Songkhram, so I became the college's assistant. My head is bent because I love bowing to say hello!"
+    },
+    {
+      "id": "en-who-made",
+      "category": "English",
+      "questions": [
+        "who made you",
+        "who created you",
+        "who built you"
+      ],
+      "answer": "I was made to be the guide and information assistant of Samutsongkhram Technical College, helping everyone find places on campus and learn about our programs."
+    },
+    {
+      "id": "en-compliment",
+      "category": "English",
+      "questions": [
+        "you are smart",
+        "good job",
+        "great",
+        "awesome",
+        "you are cute",
+        "nice"
+      ],
+      "answer": "Thank you so much! 😊 Happy to help. What else can I do for you?"
+    },
+    {
+      "id": "en-sorry",
+      "category": "English",
+      "questions": [
+        "sorry",
+        "my bad",
+        "excuse me"
+      ],
+      "answer": "No problem at all 😊 Anything else I can help with?"
+    },
+    {
+      "id": "en-ok",
+      "category": "English",
+      "questions": [
+        "ok",
+        "okay",
+        "got it",
+        "i see",
+        "cool"
+      ],
+      "answer": "Great 😊 Ask me anything else any time."
+    },
+    {
+      "id": "en-confused",
+      "category": "English",
+      "questions": [
+        "i don't understand",
+        "what",
+        "huh",
+        "that's wrong"
+      ],
+      "answer": "Sorry about that! Try one short question at a time, for example \"Where is the library?\" or \"What does Auto Mechanics study?\""
+    },
+    {
+      "id": "en-bored",
+      "category": "English",
+      "questions": [
+        "i'm bored",
+        "i am bored",
+        "let's play a game",
+        "play a game"
+      ],
+      "answer": "Want to play the program quiz? 🎯 Answer just 2 questions and I'll guess which program suits you. Tap the button below to start.",
+      "action": "dept-quiz"
+    },
+    {
+      "id": "en-stress",
+      "category": "English",
+      "questions": [
+        "i'm stressed",
+        "i am sad",
+        "i feel sad",
+        "i'm tired of studying"
+      ],
+      "answer": "I'm cheering for you 💙 Take a deep breath and a short break. If something is weighing on you, talk to your advisor or the Guidance office (Building 85, floor 2). You're not alone."
+    },
+    {
+      "id": "en-crisis",
+      "category": "English",
+      "questions": [
+        "i want to die",
+        "i want to hurt myself",
+        "i feel hopeless"
+      ],
+      "answer": "I'm worried about you 💙 You are not alone. Please call the Mental Health Hotline 1323 (24 hours), or talk to an advisor at the Guidance office (Building 85, floor 2). In an emergency call 1669."
+    },
+    {
+      "id": "en-joke",
+      "category": "English",
+      "questions": [
+        "tell me a joke",
+        "say something funny",
+        "make me laugh"
+      ],
+      "answer": "Why does the Mae Klong mackerel bend its neck? …It stayed in the bamboo basket a bit too long! 😄 Want to explore the college now? Ask \"What programs are there?\""
+    },
+    {
+      "id": "en-sing",
+      "category": "English",
+      "questions": [
+        "sing a song",
+        "can you sing"
+      ],
+      "answer": "I can't sing, I just blow bubbles 🫧 But you might hear music at events in the Activity Building."
+    },
+    {
+      "id": "en-weather",
+      "category": "English",
+      "questions": [
+        "what is the weather today",
+        "is it going to rain",
+        "weather"
+      ],
+      "answer": "I can't check the weather, but if it's hot or raining I can find you the nearest building. Where would you like to go?"
+    },
+    {
+      "id": "en-time",
+      "category": "English",
+      "questions": [
+        "what time is it",
+        "time now"
+      ],
+      "answer": "Please check the clock on the screen or your phone. College offices are open 08:00–16:30, Monday to Friday."
+    },
+    {
+      "id": "en-homework",
+      "category": "English",
+      "questions": [
+        "help me with my homework",
+        "do my homework",
+        "solve this math problem"
+      ],
+      "answer": "I can't help with homework. Please ask your subject teacher. For anything about the college, ask me any time!"
+    },
+    {
+      "id": "en-politics",
+      "category": "English",
+      "questions": [
+        "what do you think about politics",
+        "who should i vote for",
+        "politics"
+      ],
+      "answer": "I'd rather not give opinions on that. I can help with college things like buildings, programs, news and directions."
+    },
+    {
+      "id": "en-personal",
+      "category": "English",
+      "questions": [
+        "do you have a girlfriend",
+        "are you single",
+        "how old are you"
+      ],
+      "answer": "I'm a Mae Klong mackerel living right here at Samutsongkhram Technical College 🐟 Still single, I'm too busy showing people around! How can I help?"
+    },
+    {
+      "id": "en-hours",
+      "category": "English",
+      "questions": [
+        "office hours",
+        "what time does the college open",
+        "opening hours",
+        "when is the office open",
+        "what time do classes start"
+      ],
+      "answer": "College offices are open 08:00–16:30, Monday to Friday. Class times follow each program's timetable; ask your advisor or department for yours."
+    },
+    {
+      "id": "en-history",
+      "category": "English",
+      "questions": [
+        "history of the college",
+        "when was the college founded",
+        "how old is the college",
+        "what was the old name"
+      ],
+      "answer": "The college was founded on 18 April 1941 as the Samut Songkhram Carpentry School, teaching carpentry at Wat Phet Samut Worawihan. It moved to Lat Yai in 1960 and grew into today's technical college."
+    },
+    {
+      "id": "en-vision",
+      "category": "English",
+      "questions": [
+        "what is the vision",
+        "college vision",
+        "motto",
+        "college identity",
+        "what is the vision of the college",
+        "college philosophy"
+      ],
+      "answer": "Vision: \"To produce and develop high-performance workers who meet professional standards and the national qualifications framework.\" Identity: \"Good skills, good morals, following the Sufficiency Economy philosophy.\""
+    },
+    {
+      "id": "en-size",
+      "category": "English",
+      "questions": [
+        "how big is the college",
+        "how many buildings",
+        "campus size"
+      ],
+      "answer": "The campus covers about 53 rai (about 8.6 hectares) with 15 teaching and workshop buildings and 353 rooms. See every building on the map."
+    },
+    {
+      "id": "en-director-name",
+      "category": "English",
+      "questions": [
+        "who is the director",
+        "director name",
+        "who runs the college",
+        "who are the executives",
+        "who is the director of the college",
+        "who is the principal"
+      ],
+      "answer": "The director is Mr. Arun Kluenphan. The deputy directors are Mr. Thanawat Simek, Mr. Sorayut Unjai and Mr. Aphichai Khlamplot."
+    },
+    {
+      "id": "en-vice-director",
+      "category": "English",
+      "routeTo": "building-85",
+      "questions": [
+        "where is the deputy director office",
+        "deputy director room",
+        "vice director office"
+      ],
+      "answer": "The deputy directors' rooms are in Building 85, floor 2 (Mr. Sorayut and Mr. Aphichai on the left, Mr. Thanawat on the right). I've opened the route."
+    },
+    {
+      "id": "en-bachelor",
+      "category": "English",
+      "questions": [
+        "do you have a bachelor degree",
+        "bachelor's degree",
+        "can i get a degree here",
+        "university degree"
+      ],
+      "answer": "Yes. The college offers a Bachelor of Technology in 3 programs: Metal Mold Technology, Plastic Mold Technology and Digital Business Technology. Ask the Registration office about applying."
+    },
+    {
+      "id": "en-dual",
+      "category": "English",
+      "routeTo": "building-85",
+      "questions": [
+        "what is the dual system",
+        "dual vocational education",
+        "internship",
+        "work while studying"
+      ],
+      "answer": "The dual system means you study at the college and train at a real company at the same time. Pay depends on the company. Ask the Dual Vocational Education office, Building 85, floor 2."
+    },
+    {
+      "id": "en-count",
+      "category": "English",
+      "questions": [
+        "how many programs",
+        "how many departments",
+        "number of programs"
+      ],
+      "answer": "There are 15 programs in 3 groups: industrial trades, business, and home economics and food, at both Vocational Certificate and Higher Vocational Diploma levels, plus 3 bachelor's programs.",
+      "action": "open-departments"
+    },
+    {
+      "id": "en-best",
+      "category": "English",
+      "questions": [
+        "which program is best",
+        "what should i study",
+        "which program should i choose",
+        "recommend a program"
+      ],
+      "answer": "Each program is great in its own way. It depends on what you enjoy! Play the program quiz: answer 2 questions and I'll suggest programs for you 🎯",
+      "action": "dept-quiz"
+    },
+    {
+      "id": "en-gender",
+      "category": "English",
+      "questions": [
+        "can girls study here",
+        "can girls study auto mechanics",
+        "is it only for boys",
+        "can women study engineering"
+      ],
+      "answer": "Every program is open to everyone, girls and boys 😊 Choose what you like and are good at. Try the program quiz for ideas!",
+      "action": "dept-quiz"
+    },
+    {
+      "id": "en-computer-programs",
+      "category": "English",
+      "questions": [
+        "i like computers",
+        "computer programs",
+        "which program is about computers",
+        "i want to learn programming"
+      ],
+      "answer": "Programs about computers:\n- **Computer Technician:** building and repairing computers, networks\n- **Information Technology:** programming, websites, IT systems\n- **Digital Business Technology:** business computing, digital media, online selling",
+      "action": "open-departments"
+    },
+    {
+      "id": "en-not-offered",
+      "category": "English",
+      "questions": [
+        "do you have nursing",
+        "can i study medicine",
+        "do you teach law",
+        "do you have aviation"
+      ],
+      "answer": "The college focuses on vocational programs in industrial trades, business and home economics, so that program isn't offered. The Guidance office (Building 85, floor 2) can help you plan further study."
+    },
+    {
+      "id": "en-tuition",
+      "category": "English",
+      "questions": [
+        "how much is the tuition",
+        "how much does it cost",
+        "school fees",
+        "tuition fee"
+      ],
+      "answer": "I don't have the exact tuition yet. Please ask the Finance office, Building 85, floor 1, or call 034-711440."
+    },
+    {
+      "id": "en-scholarship",
+      "category": "English",
+      "routeTo": "general-subjects",
+      "questions": [
+        "scholarship",
+        "is there a scholarship",
+        "financial aid",
+        "student loan"
+      ],
+      "answer": "For scholarships, contact Student Welfare in Building 3, floor 1 (right side, next to the nurse's room). I've opened the route."
+    },
+    {
+      "id": "en-documents",
+      "category": "English",
+      "routeTo": "personnel-registration",
+      "questions": [
+        "transcript",
+        "certificate of enrollment",
+        "student certificate",
+        "i need a document"
+      ],
+      "answer": "For transcripts and study documents, please contact the Registration office. I've opened the route."
+    },
+    {
+      "id": "en-grades",
+      "category": "English",
+      "routeTo": "building-85",
+      "questions": [
+        "my grades",
+        "exam results",
+        "retake an exam",
+        "where can i check my grades"
+      ],
+      "answer": "For grades and re-exams, contact the Assessment office, Building 85, floor 1. For a grade report or certificate, go to Registration. I've opened the route."
+    },
+    {
+      "id": "en-guidance",
+      "category": "English",
+      "routeTo": "building-85",
+      "questions": [
+        "guidance",
+        "career advice",
+        "i need advice about further study",
+        "counselor"
+      ],
+      "answer": "For study, further education or career advice, visit the Advisors and Guidance office, Building 85, floor 2. I've opened the route."
+    },
+    {
+      "id": "en-activities",
+      "category": "English",
+      "routeTo": "building-85",
+      "questions": [
+        "student activities",
+        "clubs",
+        "student organization",
+        "how do i join a club"
+      ],
+      "answer": "For student activities and the Vocational Student Organization, contact Student Activities in Building 85, floor 1 (right side). I've opened the route."
+    },
+    {
+      "id": "en-discipline",
+      "category": "English",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "school rules",
+        "student discipline",
+        "i need permission to leave",
+        "uniform rules"
+      ],
+      "answer": "For rules, behaviour and permission to leave, contact the Student Discipline office near the college gate. I've opened the route."
+    },
+    {
+      "id": "en-lost-item",
+      "category": "English",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "i lost my phone",
+        "lost and found",
+        "i lost something",
+        "i lost my wallet"
+      ],
+      "answer": "Please report it to the Student Discipline / Public Relations office near the college gate. I've opened the route."
+    },
+    {
+      "id": "en-gate",
+      "category": "English",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "where is the entrance",
+        "where is the exit",
+        "main gate",
+        "how do i get out",
+        "where is the main gate",
+        "where is the gate"
+      ],
+      "answer": "The main entrance is on the road side, next to Student Discipline and Public Relations. I've opened the route."
+    },
+    {
+      "id": "en-visit",
+      "category": "English",
+      "questions": [
+        "can i visit the college",
+        "school tour",
+        "campus tour",
+        "group visit"
+      ],
+      "answer": "You're welcome! For a group visit or a guided tour, please call 034-711440 first. When you arrive, stop at Public Relations near the gate, or explore with my map."
+    },
+    {
+      "id": "en-repair",
+      "category": "English",
+      "routeTo": "fix-it-center",
+      "questions": [
+        "fix it center",
+        "repair center",
+        "can you fix my phone",
+        "where can i repair something"
+      ],
+      "answer": "The Fix it Center (community repair center) is near the college entrance. I've opened the route."
+    },
+    {
+      "id": "en-media",
+      "category": "English",
+      "routeTo": "ict-building",
+      "questions": [
+        "media office",
+        "photos of the college",
+        "public relations office",
+        "press"
+      ],
+      "answer": "For college photos and media, contact the Digital and Communications Center, Building 11, floor 1 (front). I've opened the route."
+    },
+    {
+      "id": "en-jobs",
+      "category": "English",
+      "routeTo": "personnel-registration",
+      "questions": [
+        "are you hiring",
+        "job vacancy",
+        "teacher job",
+        "work at the college"
+      ],
+      "answer": "For teacher and staff jobs, contact Human Resources (middle of the Registration building) and see announcements on www.sstc.ac.th. I've opened the route."
+    },
+    {
+      "id": "en-dorm",
+      "category": "English",
+      "questions": [
+        "is there a dormitory",
+        "dorm",
+        "where can i stay",
+        "accommodation"
+      ],
+      "answer": "I don't have dormitory information yet. Please call the college at 034-711440."
+    },
+    {
+      "id": "en-bus",
+      "category": "English",
+      "questions": [
+        "is there a school bus",
+        "how do i get to the college",
+        "bus to the college",
+        "transport"
+      ],
+      "answer": "I don't have school bus information yet. The college is at 89 Moo 12, Ekkachai Road, Lat Yai, Mueang, Samut Songkhram 75000. Use Google Maps, or call 034-711440."
+    },
+    {
+      "id": "en-term-dates",
+      "category": "English",
+      "questions": [
+        "when does the semester start",
+        "academic calendar",
+        "holidays",
+        "when is the exam"
+      ],
+      "answer": "I don't have the academic calendar yet. Check the News page or www.sstc.ac.th for the latest announcements.",
+      "action": "open-news"
+    },
+    {
+      "id": "en-safety",
+      "category": "English",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "is the college safe",
+        "bullying",
+        "someone is bullying me",
+        "drugs"
+      ],
+      "answer": "Safety is handled by the Student Discipline office near the gate. If you feel unsafe or are bullied, tell a teacher or that office right away. Emergency: 191 · Drug help hotline: 1165."
+    },
+    {
+      "id": "en-charge",
+      "category": "English",
+      "questions": [
+        "where can i charge my phone",
+        "charging",
+        "power outlet"
+      ],
+      "answer": "I don't have information on charging points yet. Please ask Public Relations near the gate, or a teacher in a nearby building."
+    },
+    {
+      "id": "en-friend",
+      "category": "English",
+      "questions": [
+        "i can't find my friend",
+        "find my friend",
+        "meeting point"
+      ],
+      "answer": "Try calling your friend first. If you can't reach them, meet at an easy spot like Public Relations near the gate or the Plernfae Cafe in the middle of campus."
+    },
+    {
+      "id": "en-cafe2",
+      "category": "English",
+      "routeTo": "plernfae-cafe",
+      "questions": [
+        "where can i get coffee",
+        "cafe",
+        "coffee shop",
+        "drinks"
+      ],
+      "answer": "Visit the Plernfae Cafe near Registration in the middle of campus ☕ I've opened the route."
+    },
+    {
+      "id": "en-sick",
+      "category": "English",
+      "routeTo": "general-subjects",
+      "questions": [
+        "i'm sick",
+        "nurse",
+        "i'm hurt"
+      ],
+      "answer": "The nurse's room is in Building 3, floor 1 (right side). I've opened the route. If it's serious, call 1669 right away."
+    },
+    {
+      "id": "en-library-use",
+      "category": "English",
+      "routeTo": "general-subjects",
+      "questions": [
+        "can i borrow books",
+        "library opening",
+        "study room",
+        "read books"
+      ],
+      "answer": "You can borrow, return or read books at the Library, Building 3, floor 1 (left side). I've opened the route."
+    },
+    {
+      "id": "en-app-map",
+      "category": "English",
+      "questions": [
+        "how do i use the map",
+        "how to use the map",
+        "how do i find a place"
+      ],
+      "answer": "Open the Map menu, type a building, room or program in the search box (or tap a pin), then tap \"Start directions\". Switch 2D / 3D with the button at the top. Or just ask me, e.g. \"Where is the library?\"",
+      "action": "open-map"
+    },
+    {
+      "id": "en-app-qr",
+      "category": "English",
+      "questions": [
+        "how do i scan the qr code",
+        "qr code",
+        "send route to my phone"
+      ],
+      "answer": "At the kiosk, a QR code appears after a route opens. Point your phone camera at it and tap the link; the same route opens on your phone."
+    },
+    {
+      "id": "en-app-install",
+      "category": "English",
+      "questions": [
+        "can i install the app",
+        "install app",
+        "download the app"
+      ],
+      "answer": "Yes! Open this website on your phone and choose \"Add to Home Screen\" (Android: Chrome ⋮ menu · iPhone: Safari Share button). You'll get a Nong Platoo icon like an app."
+    },
+    {
+      "id": "en-app-dark",
+      "category": "English",
+      "questions": [
+        "dark mode",
+        "how do i turn on dark mode"
+      ],
+      "answer": "Tap the moon (or sun) button at the top right of the screen to switch between dark and light mode."
+    },
+    {
+      "id": "en-voice",
+      "category": "English",
+      "questions": [
+        "can i talk to you",
+        "voice",
+        "can you hear me",
+        "how do i use the microphone"
+      ],
+      "answer": "Tap the mic button and speak. Voice input works in Thai; for English, please type your question."
+    },
+    {
+      "id": "en-travel",
+      "category": "English",
+      "questions": [
+        "places to visit",
+        "what to see in samut songkhram",
+        "tourist attractions",
+        "amphawa"
+      ],
+      "answer": "Popular places in Samut Songkhram: Amphawa Floating Market, Maeklong Railway Market, Don Hoi Lot and the King Rama II Memorial Park 🚤 On campus, I can show you around!"
+    },
+    {
+      "id": "en-souvenir",
+      "category": "English",
+      "questions": [
+        "souvenirs",
+        "what to buy",
+        "local food"
+      ],
+      "answer": "Famous local goods: Mae Klong mackerel (pla too), Khom lychees, pomelo and coconut sugar 🥥"
+    },
+    {
+      "id": "en-province",
+      "category": "English",
+      "questions": [
+        "tell me about samut songkhram",
+        "where is samut songkhram",
+        "maeklong"
+      ],
+      "answer": "Samut Songkhram is Thailand's smallest province. Locals call it \"Mae Klong\" after the Mae Klong River 🌊 It's home to Samutsongkhram Technical College."
+    },
+    {
+      "id": "en-other-school",
+      "category": "English",
+      "questions": [
+        "is this better than other schools",
+        "compare with other colleges",
+        "recommend another school"
+      ],
+      "answer": "I can only help with Samutsongkhram Technical College, so I can't compare. Here's what we offer: Vocational Certificate, Higher Vocational Diploma and bachelor's programs, 15 programs, hands-on learning in real workshops.",
+      "action": "open-departments"
     },
     {
       "id": "school-hours",
