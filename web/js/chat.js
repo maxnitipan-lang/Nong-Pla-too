@@ -270,7 +270,8 @@ export class PlatooChat {
     const session = this.session;
     stopSpeaking();
     this.set({ notice: null, interim: "", phase: "listening" });
-    const engine = preferServer ? "server" : preferredListenEngine(this.s.serverStt);
+    // preferServer: "browser" = the AI listener just failed, use the browser's Thai one this time.
+    const engine = preferServer === "browser" ? "browser" : preferServer ? "server" : preferredListenEngine(this.s.serverStt && !this.sttDown);
     const l = listen(
       {
         onInterim: (interim) => this.set({ interim }),
@@ -305,8 +306,15 @@ export class PlatooChat {
         this.listening = null;
         this.set({ level: 0, interim: "", phase: "idle" });
         // The browser recogniser failed (e.g. no network to its speech service) → try the server.
-        if (error.message.startsWith("recognizer:") && engine === "browser" && this.s.serverStt) {
+        if (error.message.startsWith("recognizer:") && engine === "browser" && this.s.serverStt && !this.sttDown) {
           this.startListening(true);
+          return;
+        }
+        // The AI listener is busy or down → the browser recogniser (Thai) for the next 2 minutes.
+        if (error.stt && engine === "server" && hasBrowserRecognition()) {
+          this.sttDown = true;
+          setTimeout(() => (this.sttDown = false), 2 * 60 * 1000);
+          this.startListening("browser");
           return;
         }
         this.set({ notice: error.message.startsWith("recognizer:") ? "ระบบฟังเสียงของเบราว์เซอร์ใช้ไม่ได้ — พิมพ์คำถามแทนได้ครับ" : error.message });

@@ -11,7 +11,7 @@
 //   AZURE_TTS_RATE    default "+0%" (e.g. "+10%" faster, "-10%" slower)
 //
 //   POST /api/voice/tts   { text }            → audio/wav (natural Thai voice)
-//   POST /api/voice/stt   body = audio/wav    → { text } (Thai transcription)
+//   POST /api/voice/stt   body = audio/wav    → { text } (Thai or English, as spoken)
 //
 // The browser prefers its own speech engines when they're good enough (Chrome's
 // live recognition, an installed Thai voice) and falls back to these routes
@@ -281,7 +281,8 @@ export async function transcribeSpeech(wav) {
             { inline_data: { mime_type: "audio/wav", data: wav.toString("base64") } },
             {
               text:
-                "ถอดความเสียงพูดในไฟล์นี้เป็นข้อความภาษาไทยตามที่พูดจริงทุกคำ " +
+                "ถอดความเสียงพูดในไฟล์นี้ตามที่พูดจริงทุกคำ ในภาษาที่ผู้พูดใช้: พูดไทยให้เขียนเป็นภาษาไทย " +
+                "พูดอังกฤษให้เขียนเป็นภาษาอังกฤษ (ห้ามแปล ห้ามเขียนคำอังกฤษเป็นตัวอักษรไทย) " +
                 "ตอบเฉพาะข้อความที่ถอดได้ ไม่ต้องอธิบาย ไม่ต้องใส่เวลา (timestamp) หรือคำบรรยายเสียง " +
                 "ถ้าไม่มีเสียงคนพูด ให้ตอบว่างเปล่า",
             },

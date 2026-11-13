@@ -547,8 +547,9 @@ function listenWithServer(cb) {
     cb.onProcessing?.();
     const wav = encodeWav16k(chunks, sampleRate);
     const res = await fetch("/api/voice/stt", { method: "POST", headers: { "Content-Type": "audio/wav" }, body: wav });
-    if (res.status === 429) throw new Error("พูดถามบ่อยเกินไป — รอสักครู่แล้วลองใหม่");
-    if (!res.ok) throw new Error("ฟังเสียงไม่สำเร็จ — ลองพูดใหม่ หรือพิมพ์คำถามแทน");
+    // stt = the server could not transcribe → the caller may fall back to the browser recogniser.
+    if (res.status === 429) throw Object.assign(new Error("พูดถามบ่อยเกินไป — รอสักครู่แล้วลองใหม่"), { stt: true });
+    if (!res.ok) throw Object.assign(new Error("ฟังเสียงไม่สำเร็จ — ลองพูดใหม่ หรือพิมพ์คำถามแทน"), { stt: true });
     const json = await res.json();
     return (json.text ?? "").trim();
   })();
@@ -628,11 +629,11 @@ export function listen(cb, prefer) {
 }
 
 /**
- * Which recogniser to use: iPhones record + transcribe on the server (Safari's own
- * recogniser needs Siri and often returns nothing); everyone else uses the
- * browser's live recogniser when present.
+ * Which recogniser to use: the server (AI) whenever it can listen — it hears Thai and English
+ * and writes each in its own language, so an English question gets an English answer.
+ * The browser recogniser only knows one language (Thai) and is the fallback.
  */
 export function preferredListenEngine(serverAvailable) {
-  if (serverAvailable && (isIOS() || !hasBrowserRecognition())) return "server";
+  if (serverAvailable) return "server";
   return hasBrowserRecognition() ? "browser" : "server";
 }
