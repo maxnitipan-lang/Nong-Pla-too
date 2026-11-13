@@ -195,7 +195,7 @@ const EN_DOWN_REPLY = `Sorry, Nong Platoo can't answer right now. Please try aga
 /** English version: added to the system prompt. */
 const ENGLISH_RULE = `
 
-LANGUAGE: The visitor is using the English version of the app. Always reply in clear, simple English, even if the visitor writes in Thai or the data above is in Thai. Never reply in Thai. Translate building and department names, and keep the Thai name in brackets the first time, e.g. "Building 85 (อาคาร 85 ปี)". Use "Nong Platoo" for yourself.`;
+LANGUAGE: The visitor asked in English. Always reply in clear, simple English, even though the data above is in Thai. Never reply in Thai. Translate building and department names, and keep the Thai name in brackets the first time, e.g. "Building 85 (อาคาร 85 ปี)". Use "Nong Platoo" for yourself.`;
 /** In English, only the English ready answers fit (the rest are Thai). */
 const englishReady = (ready, options) => !ready || options.lang !== "en" || /^en-/.test(ready.faqId ?? "") ? ready : null;
 const DOWN_REPLY = `ขออภัยครับ ตอนนี้น้องปลาทูตอบคำถามนี้ไม่ได้ชั่วคราว ลองถามใหม่อีกครั้ง หรือโทรสอบถามวิทยาลัย ${COLLEGE_FACTS.phone} ได้เลยครับ`;
@@ -278,7 +278,15 @@ export function clearAiAnswerCache() {
   aiCache.clear();
 }
 
+/** "where is the library": English letters, no Thai — and not Thai typed on an English keyboard. */
+function isEnglishQuestion(text) {
+  const t = String(text ?? "").trim();
+  return /[a-z]{2,}/i.test(t) && !/[฀-๿]/.test(t) && !fixWrongKeyboard(t);
+}
+
 export async function askCampusChat(history, options = {}) {
+  // Asked in English → answered in English (ready English answers first, then the AI).
+  if (!options.lang && isEnglishQuestion(history.filter(m => m.role === "user").at(-1)?.content)) options = { ...options, lang: "en" };
   try {
     const slot = cacheSlot(history, options);
     const remembered = cachedAnswer(slot);

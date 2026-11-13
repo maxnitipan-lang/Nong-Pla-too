@@ -9,8 +9,6 @@
         "สวัสดีครับ",
         "หวัดดี",
         "ดีครับ",
-        "hello",
-        "hi",
         "สวัสดีน้องปลาทู",
         "ทักทาย"
       ],
@@ -23,8 +21,6 @@
         "ขอบคุณ",
         "ขอบคุณครับ",
         "ขอบใจ",
-        "thank you",
-        "thanks",
         "ขอบคุณมาก",
         "ขอบคุณน้องปลาทู"
       ],
@@ -38,7 +34,6 @@
         "บ๊ายบาย",
         "ลาก่อน",
         "ไปละ",
-        "bye",
         "แค่นี้",
         "ไม่มีอะไรแล้ว"
       ],
@@ -839,7 +834,6 @@
       "id": "svc-wifi",
       "category": "บริการนักเรียน",
       "questions": [
-        "wifi",
         "ไวไฟ",
         "รหัสไวไฟ",
         "อินเทอร์เน็ตใช้ไม่ได้",
@@ -1044,7 +1038,6 @@
       "questions": [
         "อรุณสวัสดิ์",
         "สวัสดีตอนเช้า",
-        "good morning",
         "สวัสดีตอนบ่าย",
         "สวัสดีตอนเย็น"
       ],
@@ -1572,6 +1565,334 @@
         "number of students"
       ],
       "answer": "About 2,446 students: 1,487 certificate (ปวช.), 890 diploma (ปวส.) and 69 bachelor students."
+    },
+    {
+      "id": "en-hello",
+      "category": "English",
+      "questions": [
+        "hello",
+        "hi",
+        "hey",
+        "good morning",
+        "good afternoon",
+        "hello nong platoo"
+      ],
+      "answer": "Hello! I'm Nong Platoo, the guide of Samutsongkhram Technical College 🐟 Ask me about buildings, programs or directions."
+    },
+    {
+      "id": "en-thanks",
+      "category": "English",
+      "questions": [
+        "thank you",
+        "thanks",
+        "thank you very much",
+        "thanks a lot"
+      ],
+      "answer": "You're welcome! Ask me any time 🐟"
+    },
+    {
+      "id": "en-bye",
+      "category": "English",
+      "questions": [
+        "bye",
+        "goodbye",
+        "see you"
+      ],
+      "answer": "Goodbye! Have a nice day at the college 🐟"
+    },
+    {
+      "id": "en-who",
+      "category": "English",
+      "questions": [
+        "who are you",
+        "what is your name",
+        "what are you",
+        "what can you do"
+      ],
+      "answer": "I'm Nong Platoo, the AI guide of Samutsongkhram Technical College. I can show you where buildings and offices are, open walking routes on the map, and tell you about programs and news."
+    },
+    {
+      "id": "en-programs",
+      "category": "English",
+      "questions": [
+        "what programs do you have",
+        "what programs does the college offer",
+        "what can i study here",
+        "what courses are there",
+        "list of departments",
+        "which departments are there"
+      ],
+      "answer": "We offer vocational programs in three groups:\n- **Industrial:** Auto Mechanics, Machine Shop, Metal Welding, Electrical Power, Electronics, Construction, Mechanical Drafting, Mechatronics and Robotics\n- **Business and IT:** Accounting, Marketing, Retail Business, Digital Office Management, Information Technology, Computer Technician, Digital Business Technology\n- **Home Economics:** Home Economics, Food and Nutrition\n\nOpen the Programs page to see each one.",
+      "action": "open-departments"
+    },
+    {
+      "id": "en-levels",
+      "category": "English",
+      "questions": [
+        "what levels do you teach",
+        "how many years do i study",
+        "what is the vocational certificate",
+        "how long is the course"
+      ],
+      "answer": "There are two main levels: the **Vocational Certificate** (3 years, after grade 9) and the **Higher Vocational Diploma** (2 years, after grade 12 or the Vocational Certificate). Some programs also continue to a Bachelor of Technology."
+    },
+    {
+      "id": "en-apply",
+      "category": "English",
+      "routeTo": "personnel-registration",
+      "questions": [
+        "how do i apply",
+        "how to apply",
+        "admission",
+        "how can i enroll",
+        "when is the application",
+        "i want to study here"
+      ],
+      "answer": "To apply, please contact the **Registration office** (งานทะเบียน), or see the admission news on www.sstc.ac.th. You can also call 034-711440. I've opened the route to Registration."
+    },
+    {
+      "id": "en-contact",
+      "category": "English",
+      "questions": [
+        "phone number",
+        "contact",
+        "what is the phone number",
+        "address",
+        "where is the college",
+        "website",
+        "email"
+      ],
+      "answer": "Samutsongkhram Technical College: 89 Moo 12, Ekkachai Road, Lat Yai, Mueang, Samut Songkhram 75000 · Phone 034-711440 · Website www.sstc.ac.th"
+    },
+    {
+      "id": "en-auto",
+      "category": "English",
+      "routeTo": "mech-auto",
+      "questions": [
+        "where is auto mechanics",
+        "auto mechanics",
+        "car mechanics department",
+        "automotive department"
+      ],
+      "answer": "Auto Mechanics is in **Building 6**. I've opened the walking route on the map."
+    },
+    {
+      "id": "en-electronics",
+      "category": "English",
+      "routeTo": "electronics-it",
+      "questions": [
+        "where is electronics",
+        "where is the it department",
+        "information technology department",
+        "electronics department",
+        "it department"
+      ],
+      "answer": "Electronics, Information Technology and Computer Technology are in **Building 7**. I've opened the route on the map."
+    },
+    {
+      "id": "en-electrical",
+      "category": "English",
+      "routeTo": "electrical-construction",
+      "questions": [
+        "where is electrical",
+        "electrical department",
+        "electrical power department"
+      ],
+      "answer": "Electrical Power is in **Building 8, left side** (Construction is on the right side). I've opened the route."
+    },
+    {
+      "id": "en-construction",
+      "category": "English",
+      "routeTo": "construction-workshop",
+      "questions": [
+        "where is construction",
+        "construction department",
+        "civil construction"
+      ],
+      "answer": "Construction is in **Building 8, right side** (Electrical Power is on the left side). I've opened the route."
+    },
+    {
+      "id": "en-machine",
+      "category": "English",
+      "routeTo": "machine-shop",
+      "questions": [
+        "where is machine shop",
+        "machine shop department",
+        "machine tools",
+        "machinist"
+      ],
+      "answer": "Machine Shop is in **Building 9** (floors 1, 2 and 4; Basic Technical is on floor 3). I've opened the route."
+    },
+    {
+      "id": "en-ict",
+      "category": "English",
+      "routeTo": "ict-building",
+      "questions": [
+        "where is the ict building",
+        "ict building",
+        "where is welding",
+        "welding department",
+        "where is mechatronics",
+        "robotics department",
+        "ict center"
+      ],
+      "answer": "**Building 11 (ICT Building)**: Digital and Communications Center and the CVM Center on floor 1, Metal Welding on floor 2, Mechatronics and Robotics on floor 3, and the ICT Center on floor 4. I've opened the route."
+    },
+    {
+      "id": "en-commerce",
+      "category": "English",
+      "routeTo": "commerce",
+      "questions": [
+        "where is accounting",
+        "accounting department",
+        "where is marketing",
+        "business computer",
+        "commerce building",
+        "digital office management"
+      ],
+      "answer": "**Building 4 (Business)**: Business Computer and the audio-visual room on floor 1, Marketing and Retail Business on floor 2, Accounting on floor 3, Digital Office Management on floor 4. I've opened the route."
+    },
+    {
+      "id": "en-home-ec",
+      "category": "English",
+      "routeTo": "home-economics",
+      "questions": [
+        "where is home economics",
+        "home economics department"
+      ],
+      "answer": "Home Economics is in **Building 5**. I've opened the route."
+    },
+    {
+      "id": "en-food",
+      "category": "English",
+      "routeTo": "food-nutrition",
+      "questions": [
+        "where is food and nutrition",
+        "cooking department",
+        "food department",
+        "bakery"
+      ],
+      "answer": "Food and Nutrition is in **Building 13**. I've opened the route."
+    },
+    {
+      "id": "en-auditorium",
+      "category": "English",
+      "routeTo": "auditorium",
+      "questions": [
+        "where is the auditorium",
+        "auditorium",
+        "hall",
+        "assembly hall"
+      ],
+      "answer": "This is **Auditorium 1**. I've opened the route on the map."
+    },
+    {
+      "id": "en-football",
+      "category": "English",
+      "routeTo": "football-field",
+      "questions": [
+        "where is the football field",
+        "football field",
+        "sports field",
+        "where can i play football"
+      ],
+      "answer": "The **football field** is on the campus map. I've opened the route."
+    },
+    {
+      "id": "en-fees",
+      "category": "English",
+      "routeTo": "building-85",
+      "questions": [
+        "where do i pay fees",
+        "pay tuition",
+        "finance office",
+        "where can i pay"
+      ],
+      "answer": "Pay fees at the **Finance office**, Building 85, floor 1 (left side). I've opened the route."
+    },
+    {
+      "id": "en-bank",
+      "category": "English",
+      "routeTo": "school-bank",
+      "questions": [
+        "is there a bank",
+        "school bank",
+        "atm",
+        "where can i deposit money"
+      ],
+      "answer": "There is a **School Bank** on campus. I've opened the route."
+    },
+    {
+      "id": "en-meeting",
+      "category": "English",
+      "questions": [
+        "where are the meeting rooms",
+        "meeting room",
+        "conference room"
+      ],
+      "answer": "Meeting rooms: Auditorium 1 · MC3 room (Building 9, floor 2) · Mold room (Building 10, floor 2) · CVM room (Building 11, floor 1) · Audio-visual room (Building 4, floor 1) · Student Organization room (Building 85, floor 1) · Activity Building · Twin Gable Building."
+    },
+    {
+      "id": "en-wifi",
+      "category": "English",
+      "routeTo": "ict-building",
+      "questions": [
+        "wifi",
+        "wifi password",
+        "internet",
+        "is there wifi"
+      ],
+      "answer": "For Wi-Fi and internet access, please ask the **ICT Center** on floor 4 of Building 11. I've opened the route."
+    },
+    {
+      "id": "en-lost",
+      "category": "English",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "i am lost",
+        "i'm lost",
+        "help me",
+        "i need help",
+        "where am i"
+      ],
+      "answer": "No problem! Open the map to see where you are, or ask the **Student Affairs / Public Relations** office near the gate. I've opened the route there."
+    },
+    {
+      "id": "en-emergency",
+      "category": "English",
+      "routeTo": "general-subjects",
+      "questions": [
+        "emergency",
+        "call police",
+        "ambulance",
+        "fire"
+      ],
+      "answer": "In an emergency call **191** (police) or **1669** (ambulance). For first aid on campus, go to the nurse's room in Building 3, floor 1."
+    },
+    {
+      "id": "en-map",
+      "category": "English",
+      "questions": [
+        "show me the map",
+        "open the map",
+        "campus map",
+        "map"
+      ],
+      "answer": "Here is the campus map. Tap any pin to see the building and walking route.",
+      "action": "open-map"
+    },
+    {
+      "id": "en-news",
+      "category": "English",
+      "questions": [
+        "news",
+        "latest news",
+        "what's new",
+        "events",
+        "announcements"
+      ],
+      "answer": "The latest news and events are on the News page (in Thai, from the college website).",
+      "action": "open-news"
     },
     {
       "id": "school-hours",

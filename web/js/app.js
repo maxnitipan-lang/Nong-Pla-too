@@ -8,7 +8,6 @@ import { CAMPUS_BUILDINGS, CAMPUS_CATEGORIES, CAMPUS_OVERVIEW, DEFAULT_DEPARTMEN
 import { PROGRAMMES, PROGRAMMES_AS_OF } from "/shared/collegeFacts.js";
 import { DEPARTMENT_GROUPS, DEPARTMENT_QUIZ, suggestDepartments, withDepartmentInfo } from "/shared/departmentInfo.js";
 import { englishKeysToThai } from "/shared/thaiKeyboard.js";
-import { getLang, setLang, startTranslating } from "./i18n.js";
 import { distanceM, planCampusRoute } from "/shared/walkNetwork.js";
 import { loadBuildings, loadNews, loadSettings, loadWalkNetwork, savedBuildings, savedNews } from "./api.js";
 import { buildingLatLng, buildingSearchText, formatDistance, hasCoords, phoneRouteUrl, walkMinutes, walkingDeepLink } from "./directions.js";
@@ -210,7 +209,6 @@ function headerHtml() {
       : ""}
     <div class="header-actions">
       <span class="online-status ${state.online ? "" : "offline"}"><i></i> ${state.online ? "ออนไลน์" : "ออฟไลน์"}</span>
-      <button class="lang-button" data-action="lang" aria-label="${getLang() === "en" ? "ภาษาไทย" : "English"}" lang="${getLang() === "en" ? "th" : "en"}">${getLang() === "en" ? "TH" : "EN"}</button>
       <button class="icon-button" data-action="theme" aria-label="${state.theme === "dark" ? "ใช้ธีมสว่าง" : "ใช้ธีมมืด"}">${raw(icon(state.theme === "dark" ? "sun" : "moon"))}</button>
       <button class="install-button" data-action="go" data-view="map" aria-label="เปิดแผนที่"><span>เปิดแผนที่</span>${raw(icon("map"))}</button>
     </div>
@@ -1014,11 +1012,6 @@ const actions = {
     localStorage.setItem("theme", state.theme);
     render();
   },
-  // TH / EN: the page is re-drawn from scratch in the new language.
-  lang: () => {
-    setLang(getLang() === "en" ? "th" : "en");
-    location.reload();
-  },
   chat: () => openChat(false),
   voice: () => openChat(true),
   filter: (el) => {
@@ -1265,7 +1258,6 @@ async function start() {
 
   await loadData();
   render();
-  startTranslating();
 
   // Deep link from the kiosk QR: /app?place=<id>&go=1 → straight into navigation.
   if (!KIOSK && params.get("go") === "1" && params.get("place")) startNavigation(params.get("place"));
