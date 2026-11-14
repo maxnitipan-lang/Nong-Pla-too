@@ -248,22 +248,10 @@ const INFO = [
     careers: ["ช่างก่อสร้าง", "ผู้ควบคุมงาน", "ผู้รับเหมา"],
   },
   {
-    // Bachelor of Technology only (รับผู้จบ ปวส.), Building 10.
-    match: /แม่พิมพ์/,
-    programmes: { "ป.ตรี": ["เทคโนโลยีแม่พิมพ์ (ทล.บ.)"] },
-    careerGroup: "อุตสาหกรรมการผลิต",
-    icon: "🏭",
-    group: "industry",
-    tags: ["machine", "build"],
-    style: "hands",
-    description: "ปริญญาตรีสายเทคโนโลยี (ทล.บ.) สำหรับผู้จบ ปวส. เรียนการออกแบบและสร้างแม่พิมพ์สำหรับงานผลิตในโรงงานอุตสาหกรรม",
-    skills: ["ออกแบบแม่พิมพ์", "ใช้เครื่องจักรกลและ CNC", "ควบคุมงานผลิต"],
-    careers: ["ช่างเทคนิคแม่พิมพ์", "นักออกแบบแม่พิมพ์", "หัวหน้างานในโรงงานผลิต"],
-  },
-  {
     match: /ช่างกลโรงงาน/,
     // Official programme names (www.sstc.ac.th/data_1545, 14 พ.ค. 2567)
-    programmes: { "ปวช.": ["ช่างกลโรงงาน"], "ปวส.": ["เทคนิคการผลิต"] },
+    // ป.ตรี: Mold Technology is the Machine Shop department's bachelor's degree.
+    programmes: { "ปวช.": ["ช่างกลโรงงาน"], "ปวส.": ["เทคนิคการผลิต"], "ป.ตรี": ["เทคโนโลยีแม่พิมพ์ (ทล.บ.)"] },
     careerGroup: "อุตสาหกรรมการผลิต",
     logo: "/images/departments/machine-shop.jpg",
     icon: "⚙️",
