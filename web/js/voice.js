@@ -190,11 +190,49 @@ function voicesReady() {
   });
 }
 
+/** English answer → text for an English voice: no markdown, emoji or Thai words. */
+export function speakableEnglish(raw) {
+  return String(raw)
+    .replace(/\s*\([^()]*[฀-๿][^()]*\)/g, "") // "(อาคาร 85 ปี)"
+    .replace(/[฀-๿]+/g, "")
+    .replace(/\p{Extended_Pictographic}/gu, "")
+    .replace(/[*#_`>]/g, "")
+    .replace(/\s*\n\s*[-•]\s*/g, ". ")
+    .replace(/\s+([,.!?])/g, "$1")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 /** Mostly English letters, almost no Thai (Thai names in brackets are fine). */
 function isEnglishText(text) {
   const thai = (String(text).match(/[฀-๿]/g) ?? []).length;
   const latin = (String(text).match(/[a-z]/gi) ?? []).length;
-  return latin > 20 && thai < latin / 4;
+  return latin > 8 && thai < latin / 4;
+}
+
+/**
+ * A clear English voice for English answers (a Thai voice reading English is hard to understand).
+ * Natural voices first, male ones next ("Nong Platoo" is a boy), US/UK accents before others.
+ */
+export function englishDeviceVoice() {
+  if (typeof window === "undefined" || !window.speechSynthesis) return null;
+  const score = v => {
+    const n = v.name.toLowerCase();
+    let s = 0;
+    if (/natural|neural|premium|enhanced/.test(n)) s += 8;
+    else if (/google/.test(n)) s += 6;
+    else if (/online/.test(n)) s += 5;
+    if (/multilingual/.test(n)) s += 1;
+    if (/\b(guy|andrew|brian|christopher|eric|roger|steffan|ryan|thomas|david|daniel|alex|fred|aaron|male)\b/.test(n)) s += 3;
+    if (/^en[-_](us|gb)/i.test(v.lang)) s += 2;
+    return s;
+  };
+  return (
+    window.speechSynthesis
+      .getVoices()
+      .filter(v => /^en[-_]/i.test(v.lang))
+      .sort((a, b) => score(b) - score(a))[0] ?? null
+  );
 }
 
 function speakOnDevice(text, rate, onStart) {
@@ -202,16 +240,16 @@ function speakOnDevice(text, rate, onStart) {
   const done = (async () => {
     if (!window.speechSynthesis) return;
     await voicesReady();
-    // One voice for everything: English answers are read by the same Thai voice, so Nong Platoo
-    // always sounds like the same character (the device voice is free — no AI tokens).
-    const voice = thaiDeviceVoices()[0];
+    // Thai answers: the Thai voice. English answers: a clear English voice.
+    const english = isEnglishText(text);
+    const voice = (english && englishDeviceVoice()) || thaiDeviceVoices()[0];
     window.speechSynthesis.cancel();
     let first = true;
     for (const piece of chunk(text)) {
       if (stopped) return;
       await new Promise(resolve => {
         const u = new SpeechSynthesisUtterance(piece);
-        u.lang = "th-TH";
+        u.lang = voice?.lang ?? (english ? "en-US" : "th-TH");
         if (voice) u.voice = voice;
         u.rate = rate;
         // Some browsers (Chrome on Android, Safari) never fire onend for an utterance — without
@@ -270,9 +308,11 @@ async function fetchAiAudio(text, signal) {
 /** Speak `text`. AI voice falls back to the device voice if it fails. */
 export function speak(rawText, options) {
   stopSpeaking();
-  // English answers skip the Thai reading rules ("IT" would become Thai sounds); same voice as Thai.
+  // English answers skip the Thai reading rules ("IT" would become Thai sounds), and the Thai
+  // names in brackets ("Building 85 (อาคาร 85 ปี)") are left out: an English voice can't read them.
   const english = isEnglishText(rawText);
-  const text = english ? String(rawText).replace(/[*#_`>]/g, "").replace(/\s+/g, " ").trim() : cleanForSpeech(rawText);
+  const text = english ? speakableEnglish(rawText) : cleanForSpeech(rawText);
+  if (english) options = { ...options, engine: "device" };
   if (!text) return { done: Promise.resolve(), stop: () => undefined };
   const rate = Math.min(1.3, Math.max(0.7, options.rate ?? 1));
 

@@ -14,3 +14,12 @@ describe("cleanForSpeech", () => {
     );
   });
 });
+
+describe("speakableEnglish", () => {
+  it("drops Thai names, markdown and emoji for the English voice", async () => {
+    const { speakableEnglish } = await import("./voice.js");
+    expect(speakableEnglish("Accounting is in **Building 4 (อาคาร 4 พาณิชยกรรม)** on floor 3 📚\n- Marketing: floor 2")).toBe(
+      "Accounting is in Building 4 on floor 3. Marketing: floor 2"
+    );
+  });
+});
