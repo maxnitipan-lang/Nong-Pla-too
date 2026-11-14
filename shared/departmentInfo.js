@@ -34,20 +34,73 @@ export const DEPARTMENT_QUIZ = [
       { id: "people", icon: "🤝", label: "พบปะ พูดคุยกับผู้คน" },
     ],
   },
+  {
+    question: "ตอนเรียน ชอบวิชาไหนที่สุด?",
+    key: "subject",
+    options: [
+      { id: "math", icon: "➗", label: "คณิตศาสตร์", tags: ["business", "electric", "build"] },
+      { id: "science", icon: "🔬", label: "วิทยาศาสตร์", tags: ["electric", "machine", "computer"] },
+      { id: "computer", icon: "⌨️", label: "คอมพิวเตอร์", tags: ["computer", "creative"] },
+      { id: "art", icon: "🖌️", label: "ศิลปะ", tags: ["creative", "build", "cook"] },
+      { id: "work", icon: "🪚", label: "การงานอาชีพ", tags: ["machine", "build", "cook"] },
+      { id: "language", icon: "💬", label: "ภาษา และสังคม", tags: ["office", "business"] },
+    ],
+  },
+  {
+    question: "อนาคตอยากทำงานที่ไหน?",
+    key: "place",
+    options: [
+      { id: "factory", icon: "🏭", label: "โรงงาน / อู่ซ่อม", tags: ["machine", "electric"] },
+      { id: "site", icon: "👷", label: "ไซต์ก่อสร้าง / งานออกแบบอาคาร", tags: ["build"] },
+      { id: "office", icon: "🏢", label: "ออฟฟิศ / บริษัท", tags: ["office", "business"] },
+      { id: "tech", icon: "🚀", label: "บริษัทไอที / เทคโนโลยี", tags: ["computer", "electric"] },
+      { id: "food", icon: "🍽️", label: "ร้านอาหาร / โรงแรม", tags: ["cook"] },
+      { id: "own", icon: "🛍️", label: "เปิดกิจการ / ขายออนไลน์", tags: ["business", "creative", "cook"] },
+    ],
+  },
+  {
+    question: "เพื่อน ๆ บอกว่าคุณเป็นคนแบบไหน?",
+    key: "trait",
+    options: [
+      { id: "fixer", icon: "🧩", label: "ชอบแก้ปัญหา ซ่อมของเก่ง", tags: ["machine", "electric", "computer"] },
+      { id: "careful", icon: "📐", label: "ละเอียด รอบคอบ เป๊ะ", tags: ["business", "build", "office"] },
+      { id: "creative", icon: "💡", label: "ช่างคิด มีไอเดียใหม่ ๆ", tags: ["creative", "cook", "computer"] },
+      { id: "social", icon: "😄", label: "เข้ากับคนง่าย ชอบช่วยเหลือ", tags: ["office", "business"], style: "people" },
+    ],
+  },
 ];
 
-/** Departments that best fit the quiz answers, best first (at most `limit`). */
+/**
+ * Departments that best fit the quiz answers, best first (at most `limit`), each with `match`
+ * (0–100 %). What you like most (question 1) counts most; the way you like to work counts next;
+ * every other answer adds a little when it fits the department.
+ */
 export function suggestDepartments(departments, answers, limit = 3) {
+  const optionOf = (q) => q.options.find((o) => o.id === answers[q.key]);
+  let max = 0;
+  const weights = [];
+  for (const q of DEPARTMENT_QUIZ) {
+    const o = optionOf(q);
+    if (!o) continue;
+    const w = q.key === "tag" ? 4 : q.key === "style" ? 2 : 1;
+    weights.push([q, o, w]);
+    max += w + (o.style ? 1 : 0);
+  }
   return departments
     .map((entry) => {
       const d = entry.department ?? entry;
-      const score = (d.tags?.includes(answers.tag) ? 2 : 0) + (d.style === answers.style ? 1 : 0);
+      let score = 0;
+      for (const [q, o, w] of weights) {
+        if (q.key === "style") score += d.style === o.id ? w : 0;
+        else if ((o.tags ?? [o.id]).some((t) => d.tags?.includes(t))) score += w;
+        if (o.style && d.style === o.style) score += 1;
+      }
       return { entry, score };
     })
     .filter((x) => x.score > 0)
     .sort((a, b) => b.score - a.score)
     .slice(0, limit)
-    .map((x) => x.entry);
+    .map((x) => ({ ...x.entry, match: Math.round((100 * x.score) / Math.max(1, max)) }));
 }
 
 const INFO = [

@@ -326,6 +326,39 @@
 .platoo-ui .dept-quiz-cta strong { font-size: 18px; }
 .platoo-ui .dept-quiz-cta small { color: #cdeef0; font-size: 13px; }
 .platoo-ui .dept-quiz-cta svg { width: 22px; }
+/* Game look for the program quiz banner. */
+.platoo-ui .dept-quiz-cta { position: relative; overflow: hidden; min-height: 112px; background: linear-gradient(120deg, #4b2a9a 0%, #1b6fb0 55%, #13a39a 100%); box-shadow: 0 14px 34px rgba(60,40,140,.28); }
+.platoo-ui .dept-quiz-cta:hover { transform: translateY(-3px) scale(1.005); box-shadow: 0 18px 40px rgba(60,40,140,.34); }
+.platoo-ui .dept-quiz-cta img { position: relative; z-index: 1; height: 96px; margin: -10px 0 -14px; animation: quiz-bob 2.4s ease-in-out infinite; }
+.platoo-ui .quiz-cta-text { position: relative; z-index: 1; }
+.platoo-ui .quiz-cta-text em { align-self: flex-start; padding: 3px 10px; margin-bottom: 4px; color: #3a2470; font-size: 12px; font-style: normal; font-weight: 800; background: #ffd34d; border-radius: 999px; }
+.platoo-ui .dept-quiz-cta .quiz-cta-play { display: inline-block; position: relative; z-index: 1; flex: none; padding: 11px 20px; color: #3a2470; font-size: 16px; font-weight: 800; background: #ffd34d; border-radius: 999px; box-shadow: 0 6px 0 #d9a915, 0 10px 18px rgba(0,0,0,.18); animation: quiz-pulse 1.8s ease-in-out infinite; }
+.platoo-ui .dept-quiz-cta .quiz-cta-icons { display: block; position: absolute; inset: 0; pointer-events: none; }
+.platoo-ui .quiz-cta-icons i { position: absolute; font-size: 26px; font-style: normal; opacity: .22; animation: quiz-float 6s ease-in-out infinite; }
+.platoo-ui .quiz-cta-icons i:nth-child(1) { left: 34%; top: 8%; }
+.platoo-ui .quiz-cta-icons i:nth-child(2) { left: 52%; top: 58%; animation-delay: -1.2s; }
+.platoo-ui .quiz-cta-icons i:nth-child(3) { left: 68%; top: 10%; animation-delay: -2.4s; }
+.platoo-ui .quiz-cta-icons i:nth-child(4) { left: 80%; top: 55%; animation-delay: -3.6s; }
+.platoo-ui .quiz-cta-icons i:nth-child(5) { left: 44%; top: 30%; animation-delay: -4.8s; }
+@keyframes quiz-bob { 0%, 100% { transform: translateY(0) rotate(-3deg); } 50% { transform: translateY(-6px) rotate(3deg); } }
+@keyframes quiz-pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.06); } }
+@keyframes quiz-float { 0%, 100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-10px) rotate(12deg); } }
+@media (prefers-reduced-motion: reduce) { .platoo-ui .dept-quiz-cta img, .platoo-ui .quiz-cta-play, .platoo-ui .quiz-cta-icons i { animation: none; } }
+@media (max-width: 600px) {
+  .platoo-ui .dept-quiz-cta { flex-wrap: wrap; padding: 14px 16px; }
+  .platoo-ui .dept-quiz-cta img { height: 72px; }
+  .platoo-ui .quiz-cta-text { flex: 1 1 60%; }
+  .platoo-ui .dept-quiz-cta .quiz-cta-play { flex: 1 1 100%; text-align: center; }
+}
+/* Quiz: progress bar, medals and match bars. */
+.platoo-ui .quiz-progress { height: 8px; margin: 8px 0 4px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.platoo-ui .quiz-progress i { display: block; height: 100%; background: linear-gradient(90deg, #13a39a, #ffb020); border-radius: inherit; transition: width .3s; }
+.platoo-ui .quiz-done { margin: 0; color: #6b3fa0; font-weight: 800; }
+.platoo-ui .quiz-medal { font-size: 26px; }
+.platoo-ui .quiz-match { display: block; height: 6px; margin: 4px 0 2px; background: var(--border); border-radius: 999px; overflow: hidden; }
+.platoo-ui .quiz-match i { display: block; height: 100%; background: linear-gradient(90deg, #13a39a, #ffb020); border-radius: inherit; }
+.platoo-ui .quiz-option { transition: transform .12s, border-color .12s; }
+.platoo-ui .quiz-option:hover { transform: translateY(-2px); }
 
 .platoo-ui .dept-filters { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
 .platoo-ui .dept-filters button { --dept: var(--blue); display: inline-flex; align-items: center; gap: 8px; min-height: 42px; padding: 0 16px; color: var(--text); font: inherit; font-size: 14px; font-weight: 600; background: var(--surface); border: 1px solid var(--border); border-radius: 99px; cursor: pointer; }

@@ -172,7 +172,7 @@
         "เล่นเกมกัน",
         "ทำอะไรดี"
       ],
-      "answer": "มาเล่นเกมเลือกสาขากับน้องปลาทูไหมครับ 🎯 ตอบแค่ 2 ข้อ ผมจะทายว่าสาขาไหนเหมาะกับคุณ กดปุ่มด้านล่างเริ่มได้เลยครับ",
+      "answer": "มาเล่นเกมเลือกสาขากับน้องปลาทูไหมครับ 🎯 ตอบแค่ 5 ข้อ ผมจะทายว่าสาขาไหนเหมาะกับคุณ กดปุ่มด้านล่างเริ่มได้เลยครับ",
       "action": "dept-quiz"
     },
     {
@@ -1054,7 +1054,7 @@
         "ผู้ชายเรียนคหกรรมได้ไหม",
         "ผู้หญิงเรียนอะไรดี"
       ],
-      "answer": "ทุกสาขาเรียนได้ทุกเพศครับ ทั้งชายและหญิง 😊 เลือกจากสิ่งที่ชอบและถนัดดีที่สุด ลองเล่นเกมเลือกสาขา 2 ข้อ ให้น้องปลาทูช่วยแนะนำได้เลยครับ",
+      "answer": "ทุกสาขาเรียนได้ทุกเพศครับ ทั้งชายและหญิง 😊 เลือกจากสิ่งที่ชอบและถนัดดีที่สุด ลองเล่นเกมเลือกสาขา 5 ข้อ ให้น้องปลาทูช่วยแนะนำได้เลยครับ",
       "action": "dept-quiz"
     },
     {
@@ -1068,7 +1068,7 @@
         "แนะนำสาขาหน่อย",
         "สาขาไหนหางานง่าย"
       ],
-      "answer": "แต่ละสาขาดีคนละแบบครับ ขึ้นอยู่กับว่าคุณชอบอะไร ลองเล่นเกมเลือกสาขา ตอบแค่ 2 ข้อ แล้วน้องปลาทูจะแนะนำสาขาที่เหมาะให้ครับ 🎯",
+      "answer": "แต่ละสาขาดีคนละแบบครับ ขึ้นอยู่กับว่าคุณชอบอะไร ลองเล่นเกมเลือกสาขา ตอบแค่ 5 ข้อ แล้วน้องปลาทูจะแนะนำสาขาที่เหมาะให้ครับ 🎯",
       "action": "dept-quiz"
     },
     {
@@ -2295,7 +2295,7 @@
         "let's play a game",
         "play a game"
       ],
-      "answer": "Want to play the program quiz? 🎯 Answer just 2 questions and I'll guess which program suits you. Tap the button below to start.",
+      "answer": "Want to play the program quiz? 🎯 Answer just 5 questions and I'll guess which program suits you. Tap the button below to start.",
       "action": "dept-quiz"
     },
     {
@@ -2509,7 +2509,7 @@
         "which program should i choose",
         "recommend a program"
       ],
-      "answer": "Each program is great in its own way. It depends on what you enjoy! Play the program quiz: answer 2 questions and I'll suggest programs for you 🎯",
+      "answer": "Each program is great in its own way. It depends on what you enjoy! Play the program quiz: answer 5 questions and I'll suggest programs for you 🎯",
       "action": "dept-quiz"
     },
     {

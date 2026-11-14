@@ -719,14 +719,15 @@ function quizHtml(entries, logoBox) {
   const q = DEPARTMENT_QUIZ[quiz.step];
   const picks = done ? suggestDepartments(entries.map((e, index) => ({ ...e, index })), quiz.answers) : [];
   const body = done
-    ? html`<h2>สาขาที่น่าจะเหมาะกับคุณ</h2>
+    ? html`<p class="quiz-done">🎉 เล่นจบแล้ว!</p><h2>สาขาที่น่าจะเหมาะกับคุณ</h2>
       ${picks.length
         ? raw(html`<div class="quiz-results">${picks.map((e) => raw(html`<button class="quiz-result" data-action="quiz-pick" data-index="${e.index}">
-            ${raw(logoBox(e.department))}<span><strong>${e.department.name}</strong><small>${(e.department.careers ?? []).slice(0, 3).join(" · ")}</small></span>${raw(icon("arrow"))}
+            <span class="quiz-medal" aria-hidden="true">${["🥇", "🥈", "🥉"][picks.indexOf(e)] ?? "⭐"}</span>${raw(logoBox(e.department))}<span><strong>${e.department.name}</strong><span class="quiz-match"><i style="width:${e.match}%"></i></span><small>เข้ากับคุณ ${e.match}% · ${(e.department.careers ?? []).slice(0, 2).join(" · ")}</small></span>${raw(icon("arrow"))}
           </button>`))}</div>`)
         : raw(html`<p>ยังไม่มีสาขาที่ตรงกับคำตอบ ลองดูสาขาทั้งหมด หรือถามน้องปลาทูได้เลยครับ</p>`)}
       <div class="quiz-actions"><button class="route-retry alt" data-action="quiz-restart">ทำใหม่</button><button class="route-retry" data-action="quiz-close">ดูสาขาทั้งหมด</button></div>`
     : html`<span class="quiz-step">ข้อ ${quiz.step + 1} / ${DEPARTMENT_QUIZ.length}</span>
+      <div class="quiz-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${DEPARTMENT_QUIZ.length}" aria-valuenow="${quiz.step}"><i style="width:${(100 * quiz.step) / DEPARTMENT_QUIZ.length}%"></i></div>
       <h2>${q.question}</h2>
       <div class="quiz-options">${q.options.map((o) => raw(html`<button class="quiz-option" data-action="quiz-answer" data-key="${q.key}" data-value="${o.id}"><span aria-hidden="true">${o.icon}</span>${o.label}</button>`))}</div>`;
   return html`<button class="ai-backdrop visible" data-action="quiz-close" aria-label="ปิด"></button>
@@ -847,9 +848,10 @@ function departmentsHtml() {
     </div>
     <p class="page-intro">สำรวจหลักสูตรสายอาชีพที่ตอบโจทย์อนาคต พร้อมห้องปฏิบัติการและอุปกรณ์จริง</p>
     <button class="dept-quiz-cta" data-action="dept-quiz">
+      <span class="quiz-cta-icons" aria-hidden="true"><i>🔧</i><i>💻</i><i>🍳</i><i>⚡</i><i>🎨</i></span>
       <img src="/mascots/search.webp" alt="" aria-hidden="true" />
-      <span><strong>ยังไม่รู้จะเรียนสาขาไหน?</strong><small>ตอบ 2 ข้อ ให้น้องปลาทูช่วยแนะนำสาขาที่เหมาะกับคุณ</small></span>
-      ${raw(icon("arrow"))}
+      <span class="quiz-cta-text"><em>🎮 เกมทายสาขา</em><strong>สาขาไหนใช่ตัวคุณ?</strong><small>ตอบ ${DEPARTMENT_QUIZ.length} ข้อ ใช้เวลาไม่ถึง 1 นาที แล้วลุ้นผลกับน้องปลาทู</small></span>
+      <span class="quiz-cta-play">เริ่มเล่น ▶</span>
     </button>
     ${filterBar}
     <div class="department-grid">${visible.map(card)}</div>
