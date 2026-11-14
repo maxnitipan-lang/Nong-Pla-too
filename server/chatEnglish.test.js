@@ -8,3 +8,12 @@ describe("englishOnly", () => {
     );
   });
 });
+
+describe("isUndecided", () => {
+  it("spots people who can't pick a program", async () => {
+    const { isUndecided } = await import("./chat.js");
+    for (const q of ["ตอนนี้อยากเรียนเทคนิคมากแต่ไม่รู้จะเรียนสาขาไหน", "เลือกสาขาไม่ถูกเลย", "จบ ม.3 ควรเรียนอะไรดีครับ", "สาขาไหนเหมาะกับหนู", "I don't know what to study"])
+      expect(isUndecided(q)).toBe(true);
+    for (const q of ["ห้องสมุดอยู่ไหน", "ช่างยนต์เรียนอะไร", "where is the library"]) expect(isUndecided(q)).toBe(false);
+  });
+});

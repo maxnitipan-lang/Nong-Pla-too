@@ -295,6 +295,15 @@ export function englishOnly(reply) {
     .trim();
 }
 
+/** Someone who wants to study but can't pick a program ("ไม่รู้จะเรียนสาขาไหน", "what should I study"). */
+export function isUndecided(text) {
+  const t = String(text ?? "").replace(/\s+/g, "").toLowerCase();
+  return (
+    /ไม่รู้(จะ|ว่า)?(เรียน|เลือก)|เลือก(สาขา)?ไม่ถูก|ตัดสินใจไม่ได้|(ควร|จะ)เรียน(สาขา)?(อะไร|ไหน)ดี|เรียนอะไรดี|สาขาไหน(ดี|เหมาะ)|เหมาะกับ(ผม|ฉัน|หนู|เรา|ลูก)|ช่วยเลือกสาขา|แนะนำสาขา|เกมเลือกสาขา|เกมทายสาขา/.test(t) ||
+    /don'?tknowwhattostudy|whatshouldistudy|whichprogram(suits|is(right|best)forme)|helpmechoose|programquiz/.test(t)
+  );
+}
+
 export async function askCampusChat(history, options = {}) {
   // Asked in English → answered in English (ready English answers first, then the AI).
   if (!options.lang && isEnglishQuestion(history.filter(m => m.role === "user").at(-1)?.content)) options = { ...options, lang: "en" };
@@ -308,6 +317,9 @@ export async function askCampusChat(history, options = {}) {
     let answer = await answerChat(history, options);
     // Asked in English → the whole answer in English (drop any Thai name the AI still added).
     if (options.lang === "en") answer = { ...answer, reply: englishOnly(answer.reply) };
+    // "ไม่รู้จะเรียนสาขาไหน": whatever the answer, offer the program quiz button.
+    if (!answer.action && !answer.routeToBuildingId && isUndecided(history.filter(m => m.role === "user").at(-1)?.content))
+      answer = { ...answer, action: "dept-quiz" };
     rememberAnswer(slot, answer);
     // The browser will read this aloud with the AI voice: start making that voice now.
     if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));

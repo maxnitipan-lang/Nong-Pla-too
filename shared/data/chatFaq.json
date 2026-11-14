@@ -1064,7 +1064,6 @@
         "สาขาไหนดีที่สุด",
         "เรียนสาขาไหนดี",
         "สาขาไหนน่าเรียน",
-        "ไม่รู้จะเรียนอะไร",
         "แนะนำสาขาหน่อย",
         "สาขาไหนหางานง่าย"
       ],
@@ -1732,6 +1731,28 @@
         "จบช่างกลต่อป.ตรีอะไร"
       ],
       "answer": "เทคโนโลยีแม่พิมพ์เป็นปริญญาตรีสายเทคโนโลยี (ทล.บ.) ต่อยอดจากสายช่างกลโรงงาน รับผู้จบ ปวส. ครับ ติดต่อแผนกช่างกลโรงงาน อาคาร 9 ผมเปิดเส้นทางให้แล้วครับ"
+    },
+    {
+      "id": "dept-undecided",
+      "category": "สาขาวิชา",
+      "action": "dept-quiz",
+      "questions": [
+        "ตอนนี้อยากเรียนเทคนิคมากแต่ไม่รู้จะเรียนสาขาไหน",
+        "อยากเรียนเทคนิคแต่ไม่รู้จะเรียนสาขาไหน",
+        "เลือกสาขาไม่ถูก",
+        "ช่วยเลือกสาขาให้หน่อย",
+        "อยากเรียนที่นี่แต่ยังไม่รู้จะเรียนอะไร",
+        "จบ ม.3 ควรเรียนอะไรดี",
+        "ยังตัดสินใจไม่ได้ว่าจะเรียนอะไร",
+        "อยากเล่นเกมเลือกสาขา",
+        "เกมเลือกสาขา",
+        "เรียนอะไรดี",
+        "ไม่รู้จะเรียนอะไร",
+        "ไม่รู้ตัวเองชอบอะไร",
+        "สาขาไหนเหมาะกับฉัน",
+        "แนะนำสาขาให้หน่อย"
+      ],
+      "answer": "ยังไม่รู้จะเรียนสาขาไหนไม่เป็นไรเลยครับ 😊 มาเล่นเกมทายสาขากับน้องปลาทู ตอบ 5 ข้อ ไม่ถึง 1 นาที แล้วผมจะบอกว่าสาขาไหนเข้ากับคุณที่สุด กดปุ่มด้านล่างเริ่มเล่นได้เลยครับ 🎯"
     },
     {
       "id": "en-library",
@@ -3104,6 +3125,19 @@
       ],
       "answer": "I don't have today's meeting schedule. Check the News page for the latest events, or ask Public Relations near the gate.",
       "action": "open-news"
+    },
+    {
+      "id": "en-undecided",
+      "category": "English",
+      "action": "dept-quiz",
+      "questions": [
+        "i don't know what to study",
+        "which program suits me",
+        "help me choose a program",
+        "play the program quiz",
+        "what should i study here"
+      ],
+      "answer": "Not sure which program to choose? No problem 😊 Play the program quiz with Nong Platoo: 5 quick questions, under a minute, and I'll show the programs that suit you best. Tap the button below to start! 🎯"
     }
   ]
 }
