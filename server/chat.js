@@ -195,7 +195,7 @@ const EN_DOWN_REPLY = `Sorry, Nong Platoo can't answer right now. Please try aga
 /** English version: added to the system prompt. */
 const ENGLISH_RULE = `
 
-LANGUAGE: The visitor asked in English. Always reply in clear, simple English, even though the data above is in Thai. Never reply in Thai. Translate building and department names, and keep the Thai name in brackets the first time, e.g. "Building 85 (อาคาร 85 ปี)". Use "Nong Platoo" for yourself. Do not add "sir" or "madam" (that is not how the Thai ครับ translates).`;
+LANGUAGE: The visitor asked in English. Always reply in clear, simple English, even though the data above is in Thai. Never reply in Thai and never write any Thai letters: translate every building, department, office and person name into English (e.g. "Building 85", "Accounting", "Registration office"), with no Thai name in brackets. Write Thai levels in English too: ปวช. = Vocational Certificate, ปวส. = Higher Vocational Diploma. Use "Nong Platoo" for yourself. Do not add "sir" or "madam" (that is not how the Thai ครับ translates).`;
 /** In English, only the English ready answers fit (the rest are Thai). */
 const englishReady = (ready, options) => !ready || options.lang !== "en" || /^en-/.test(ready.faqId ?? "") ? ready : null;
 const DOWN_REPLY = `ขออภัยครับ ตอนนี้น้องปลาทูตอบคำถามนี้ไม่ได้ชั่วคราว ลองถามใหม่อีกครั้ง หรือโทรสอบถามวิทยาลัย ${COLLEGE_FACTS.phone} ได้เลยครับ`;
@@ -284,6 +284,17 @@ function isEnglishQuestion(text) {
   return /[a-z]{2,}/i.test(t) && !/[฀-๿]/.test(t) && !fixWrongKeyboard(t);
 }
 
+/** "Building 85 (อาคาร 85 ปี)" → "Building 85"; ปวช./ปวส. → English names. */
+export function englishOnly(reply) {
+  return String(reply)
+    .replace(/ปวช\.?/g, "Vocational Certificate")
+    .replace(/ปวส\.?/g, "Higher Vocational Diploma")
+    .replace(/\s*[(（][^()（）]*[฀-๿][^()（）]*[)）]/g, "")
+    .replace(/[ \t]+([,.!?:])/g, "$1")
+    .replace(/[ \t]{2,}/g, " ")
+    .trim();
+}
+
 export async function askCampusChat(history, options = {}) {
   // Asked in English → answered in English (ready English answers first, then the AI).
   if (!options.lang && isEnglishQuestion(history.filter(m => m.role === "user").at(-1)?.content)) options = { ...options, lang: "en" };
@@ -294,7 +305,9 @@ export async function askCampusChat(history, options = {}) {
       if (options.aiVoice) prepareSpeech(cleanForSpeech(remembered.reply));
       return remembered;
     }
-    const answer = await answerChat(history, options);
+    let answer = await answerChat(history, options);
+    // Asked in English → the whole answer in English (drop any Thai name the AI still added).
+    if (options.lang === "en") answer = { ...answer, reply: englishOnly(answer.reply) };
     rememberAnswer(slot, answer);
     // The browser will read this aloud with the AI voice: start making that voice now.
     if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));

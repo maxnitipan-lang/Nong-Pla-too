@@ -1161,11 +1161,9 @@
       "category": "เกี่ยวกับน้องปลาทู",
       "questions": [
         "พูดอังกฤษได้ไหม",
-        "speak english",
-        "can you speak english",
         "ภาษาอังกฤษได้ไหม"
       ],
-      "answer": "Yes! You can ask me in English too — for example \"Where is the library?\" ถามเป็นภาษาไทยก็ได้ครับ 😊"
+      "answer": "ได้ครับ 😊 ถามน้องปลาทูเป็นภาษาอังกฤษได้เลย ผมจะตอบเป็นภาษาอังกฤษให้ ถามเป็นภาษาไทยก็ตอบเป็นภาษาไทยครับ"
     },
     {
       "id": "chat-slow",
@@ -1442,11 +1440,9 @@
       "category": "เกี่ยวกับน้องปลาทู",
       "questions": [
         "เปลี่ยนเป็นภาษาอังกฤษได้ไหม",
-        "มีภาษาอังกฤษไหม",
-        "change language",
-        "english version"
+        "มีภาษาอังกฤษไหม"
       ],
-      "answer": "หน้าจอเป็นภาษาไทยครับ แต่พิมพ์ถามผมเป็นภาษาอังกฤษได้เลย — you can ask me in English, e.g. \"Where is the library?\""
+      "answer": "หน้าจอเป็นภาษาไทยครับ แต่ถามน้องปลาทูเป็นภาษาอังกฤษได้เลย ผมจะตอบเป็นภาษาอังกฤษให้ทั้งหมดครับ"
     },
     {
       "id": "en-library",
@@ -1553,7 +1549,7 @@
         "tell me about this college",
         "about the college"
       ],
-      "answer": "Samut Songkhram Technical College (founded 1941) is a vocational college offering certificate (ปวช.), diploma (ปวส.) and technology bachelor programmes in industrial trades, business and home economics. Ask me about any building or department!"
+      "answer": "Samutsongkhram Technical College (founded 1941) is a vocational college offering the Vocational Certificate, the Higher Vocational Diploma and Bachelor of Technology programs in industrial trades, business and home economics. Ask me about any building or program!"
     },
     {
       "id": "en-students",
@@ -1562,7 +1558,21 @@
         "how many students are there",
         "number of students"
       ],
-      "answer": "About 2,446 students: 1,487 certificate (ปวช.), 890 diploma (ปวส.) and 69 bachelor students."
+      "answer": "About 2,446 students: 1,487 Vocational Certificate, 890 Higher Vocational Diploma and 69 bachelor's students."
+    },
+    {
+      "id": "en-language",
+      "category": "English",
+      "questions": [
+        "speak english",
+        "can you speak english",
+        "change language",
+        "english version",
+        "do you speak english",
+        "english please",
+        "can i ask in english"
+      ],
+      "answer": "Yes! Ask me in English and I'll answer in English. The screens are in Thai, but I can guide you around the college in English."
     },
     {
       "id": "en-hello",
@@ -1646,7 +1656,7 @@
         "when is the application",
         "i want to study here"
       ],
-      "answer": "To apply, please contact the **Registration office** (งานทะเบียน), or see the admission news on www.sstc.ac.th. You can also call 034-711440. I've opened the route to Registration."
+      "answer": "To apply, please contact the **Registration office**, or see the admission news on www.sstc.ac.th. You can also call 034-711440. I've opened the route to Registration."
     },
     {
       "id": "en-contact",

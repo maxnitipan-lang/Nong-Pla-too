@@ -204,7 +204,7 @@ export function speakableEnglish(raw) {
 }
 
 /** Mostly English letters, almost no Thai (Thai names in brackets are fine). */
-function isEnglishText(text) {
+export function isEnglishText(text) {
   const thai = (String(text).match(/[฀-๿]/g) ?? []).length;
   const latin = (String(text).match(/[a-z]/gi) ?? []).length;
   return latin > 8 && thai < latin / 4;

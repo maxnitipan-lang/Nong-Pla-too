@@ -23,6 +23,7 @@ import {
   hasBrowserRecognition,
   hasMicrophone,
   inAppBrowser,
+  isEnglishText,
   isSecureForMic,
   listen,
   onMicrophoneMaybeChanged,
@@ -52,6 +53,13 @@ const CHAT_ACTIONS = {
   "open-departments": "🏫 ดูสาขาวิชาทั้งหมด",
   "open-news": "📰 ดูข่าวสาร",
   "open-map": "🗺️ เปิดแผนที่",
+};
+/** The same buttons under an English answer. */
+const CHAT_ACTIONS_EN = {
+  "dept-quiz": "🎯 Start the program quiz",
+  "open-departments": "🏫 See all programs",
+  "open-news": "📰 See the news",
+  "open-map": "🗺️ Open the map",
 };
 // v2: the voice defaults to "auto" (a natural device voice if there is one, else the AI voice).
 const SETTINGS_KEY = "nong-platoo-voice-settings-v2";
@@ -512,9 +520,11 @@ export class PlatooChat {
       if (m.role === "user") {
         return html`<div class="message-row user"><div class="message user">${m.spoken ? raw(icon("mic", "said-by-voice")) : ""} ${m.content}</div></div>`;
       }
-      const again = index > 0 && this.canSpeakOut ? raw(html`<button type="button" class="listen-again" data-chat="listen-again" data-index="${index}">${raw(icon("volume-on"))} ฟังอีกครั้ง</button>`) : "";
+      // An English answer gets English buttons, so the whole reply is in one language.
+      const en = isEnglishText(m.content);
+      const again = index > 0 && this.canSpeakOut ? raw(html`<button type="button" class="listen-again" data-chat="listen-again" data-index="${index}">${raw(icon("volume-on"))} ${en ? "Play again" : "ฟังอีกครั้ง"}</button>`) : "";
       return html`<div class="message-row bot"><img class="message-mascot" src="/mascots/greeting.webp" alt="" aria-hidden="true" />
-        <div class="message bot">${raw(renderMarkdown(m.content))}${m.action ? raw(html`<button type="button" class="chat-action" data-chat="action" data-name="${m.action}">${CHAT_ACTIONS[m.action]} ${raw(icon("arrow"))}</button>`) : ""}${again}</div></div>`;
+        <div class="message bot" lang="${en ? "en" : "th"}">${raw(renderMarkdown(m.content))}${m.action ? raw(html`<button type="button" class="chat-action" data-chat="action" data-name="${m.action}">${(en ? CHAT_ACTIONS_EN : CHAT_ACTIONS)[m.action]} ${raw(icon("arrow"))}</button>`) : ""}${again}</div></div>`;
     });
     const interim = s.phase === "listening" && s.interim ? html`<div class="message-row user"><div class="message user interim">${s.interim}…</div></div>` : "";
     return `<p class="chat-date">วันนี้</p>${rows.join("")}${interim}`;
