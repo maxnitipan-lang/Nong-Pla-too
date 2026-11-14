@@ -371,7 +371,7 @@ function buildingCardHtml() {
   if (!b) return "";
   if (nav.state.status !== "idle")
     return html`<article class="building-card route-card ${state.routeCollapsed ? "collapsed" : ""}">
-      <button type="button" class="route-collapse" data-action="route-collapse" aria-label="${state.routeCollapsed ? "ขยายรายละเอียดเส้นทาง" : "ย่อเพื่อดูแผนที่"}">${state.routeCollapsed ? "ขยาย ▲" : "ย่อ ▼"}</button>
+      <button type="button" class="route-collapse" data-action="route-collapse" aria-label="${nav.state.lang === "en" ? (state.routeCollapsed ? "Show route details" : "Hide to see the map") : state.routeCollapsed ? "ขยายรายละเอียดเส้นทาง" : "ย่อเพื่อดูแผนที่"}">${nav.state.lang === "en" ? (state.routeCollapsed ? "More ▲" : "Less ▼") : state.routeCollapsed ? "ขยาย ▲" : "ย่อ ▼"}</button>
       <div class="route-panel-wrap">${raw(routePanelHtml(nav))}</div></article>`;
   const depts = departmentsOf(b);
   // Built-in data repeats the same names in the description, departments and rooms — show each once.
@@ -955,16 +955,17 @@ function enableGps() {
 
 /** Phone: GPS on, plan, then live turn-by-turn as soon as the route is ready. Kiosk: just show the route. */
 let pendingLive = false;
-function startNavigation(id) {
+/** lang "en": the route was asked for in English → English route panel and spoken directions. */
+function startNavigation(id, lang = "th") {
   state.selectedId = id;
   if (state.view !== "map") go("map");
   if (KIOSK) {
-    void nav.routeTo(id);
+    void nav.routeTo(id, lang);
     return;
   }
   enableGps();
   pendingLive = true;
-  void nav.routeTo(id);
+  void nav.routeTo(id, lang);
 }
 
 // Keep the screen on while navigating (Android Chrome / recent Safari).
@@ -1043,7 +1044,7 @@ const actions = {
     state.routeCollapsed = !state.routeCollapsed;
     updateMap();
   },
-  "nav-retry": () => nav.state.targetId && void nav.routeTo(nav.state.targetId),
+  "nav-retry": () => nav.state.targetId && void nav.routeTo(nav.state.targetId, nav.state.lang),
   "nav-from-gate": () => nav.state.targetId && void nav.routeFromGate(nav.state.targetId),
   "nav-start": () => nav.startLive(),
   "nav-stop": () => nav.stopLive(),
@@ -1247,7 +1248,7 @@ async function reloadData() {
 async function start() {
   render();
   // The chat panel lives outside #app, so re-drawing the screens never resets the conversation.
-  createChat({ atKiosk: KIOSK, onShowRoute: (id) => startNavigation(id), onOpenMap: () => go("map"), onAction: runChatAction });
+  createChat({ atKiosk: KIOSK, onShowRoute: (id, lang) => startNavigation(id, lang), onOpenMap: () => go("map"), onAction: runChatAction });
   armIdle();
   startGpsWatch();
   if (params.get("voice") === "1") setTimeout(() => openChat(true), 600);
@@ -1260,7 +1261,8 @@ async function start() {
   render();
 
   // Deep link from the kiosk QR: /app?place=<id>&go=1 → straight into navigation.
-  if (!KIOSK && params.get("go") === "1" && params.get("place")) startNavigation(params.get("place"));
+  // &lang=en: the route was asked for in English at the kiosk → English directions on the phone too.
+  if (!KIOSK && params.get("go") === "1" && params.get("place")) startNavigation(params.get("place"), params.get("lang") === "en" ? "en" : "th");
 }
 
 void start();

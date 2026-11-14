@@ -257,7 +257,7 @@ export class PlatooChat {
         // Say it, then hand over to the map (the panel closes so the route is visible).
         void this.speakReply(reply, session);
         this.set({ open: false });
-        this.onShowRoute(routeToBuildingId);
+        this.onShowRoute(routeToBuildingId, isEnglishText(reply) ? "en" : "th");
         return;
       }
       await this.speakReply(reply, session);

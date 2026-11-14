@@ -11,6 +11,7 @@
 
 import { OFF_CAMPUS_M, currentStepIndex, distanceM, locateOnPath, planCampusRoute, snapToNetwork } from "/shared/walkNetwork.js";
 import { apiPost } from "./api.js";
+import { englishDeviceVoice } from "./voice.js";
 import { buildingLatLng, getBestPosition } from "./directions.js";
 
 /** Farther than this from the route while navigating → plan again from here. */
@@ -19,11 +20,13 @@ const REPLAN_EVERY_MS = 5000;
 /** Within this of the destination = arrived. */
 const ARRIVED_M = 12;
 
-function speak(text) {
+function speak(text, lang = "th") {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
-  u.lang = "th-TH";
+  u.lang = lang === "en" ? "en-US" : "th-TH";
+  const en = lang === "en" ? englishDeviceVoice() : null;
+  if (en) u.voice = en;
   u.rate = 0.95;
   window.speechSynthesis.speak(u);
 }
@@ -37,6 +40,7 @@ const IDLE = {
   approachDistance: 0,
   live: false,
   progress: null, // { stepIndex, along, remaining, arrived }
+  lang: "th", // "en" = the route was asked for in English: English steps and voice
 };
 
 export class CampusNavigation {
@@ -129,10 +133,10 @@ export class CampusNavigation {
     return planned;
   }
 
-  async routeTo(buildingId) {
+  async routeTo(buildingId, lang = "th") {
     const requestId = ++this.request;
     this.stopWatch();
-    this.set({ ...IDLE, targetId: buildingId });
+    this.set({ ...IDLE, targetId: buildingId, lang: lang === "en" ? "en" : "th" });
     let here;
     if (this.fixedStart) {
       here = { lat: this.fixedStart.lat, lng: this.fixedStart.lng, accuracy: 3 };
@@ -158,7 +162,7 @@ export class CampusNavigation {
     if (!gate) return;
     const requestId = ++this.request;
     this.stopWatch();
-    this.set({ ...IDLE, targetId: buildingId, startName: gate.name || "ประตูวิทยาลัย", status: "routing", message: "กำลังคำนวณเส้นทาง…" });
+    this.set({ ...IDLE, lang: this.state.lang, targetId: buildingId, startName: gate.name || "ประตูวิทยาลัย", status: "routing", message: "กำลังคำนวณเส้นทาง…" });
     await this.plan({ lat: gate.lat, lng: gate.lng, accuracy: 3 }, buildingId, requestId);
   }
 
@@ -198,7 +202,9 @@ export class CampusNavigation {
     if (this.voice && stepIndex !== this.spokenStep) {
       this.spokenStep = stepIndex;
       const step = route.steps[stepIndex];
-      speak(step.maneuver === "arrive" ? step.instruction : `${step.instruction} แล้วเดินต่อ ${Math.round(step.distance)} เมตร`);
+      if (this.state.lang === "en")
+        speak(step.maneuver === "arrive" ? step.instructionEn : `${step.instructionEn}, then continue for ${Math.round(step.distance)} metres`, "en");
+      else speak(step.maneuver === "arrive" ? step.instruction : `${step.instruction} แล้วเดินต่อ ${Math.round(step.distance)} เมตร`);
     }
     if (arrived) {
       this.stopWatch();

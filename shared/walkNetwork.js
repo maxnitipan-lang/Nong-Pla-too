@@ -6,6 +6,8 @@
 // the way a street router (ORS/OSM) or a straight line would. It runs entirely
 // in the browser — works offline on the kiosk and needs no API key.
 
+import { COMPASS_EN, MANEUVER_EN, placeEn } from "./placeNamesEn.js";
+
 /** Average walking pace (m/s), ~4.5 km/h. */
 export const WALK_SPEED_MPS = 1.25;
 /** Farther than this from any walkway = the user is not on campus. */
@@ -311,16 +313,23 @@ function buildSteps(points, nodeNames, edgeNames, target) {
   for (let i = 1; i < pts.length; i++) cumulative.push(cumulative[i - 1] + distanceM(pts[i - 1], pts[i]));
   const total = cumulative[cumulative.length - 1] ?? 0;
 
+  // English version of each step (for visitors who asked in English).
+  const targetEn = placeEn(target.name) ?? "your destination";
+  const at = name => (placeEn(name) ? ` at ${placeEn(name)}` : "");
+  const along = name => (placeEn(name) ? ` along ${placeEn(name)}` : "");
+  const arriveEn = side => `You have arrived at ${targetEn}${side === "right" ? " (on your right)" : side === "left" ? " (on your left)" : ""}`;
+
   const steps = [];
   if (pts.length < 2) {
     return [
-      { maneuver: "arrive", instruction: `ถึง${target.name}แล้ว`, distance: 0, at: toTuple(target), startAlong: 0 },
+      { maneuver: "arrive", instruction: `ถึง${target.name}แล้ว`, instructionEn: arriveEn(""), distance: 0, at: toTuple(target), startAlong: 0 },
     ];
   }
 
   const firstBearing = bearingDeg(pts[0], pts[1]);
   steps.push({
     maneuver: "depart",
+    instructionEn: `Start walking ${COMPASS_EN[Math.round(firstBearing / 45) % 8]}${along(leaving[0])}`,
     instruction: `เริ่มเดินไปทาง${compassName(firstBearing)}${leaving[0] ? ` ตาม${leaving[0]}` : ""}`,
     distance: 0,
     at: toTuple(pts[0]),
@@ -364,12 +373,14 @@ function buildSteps(points, nodeNames, edgeNames, target) {
         const prev = steps[lastTurn.stepIndex];
         prev.maneuver = merged;
         prev.instruction = `${MANEUVER_TEXT[merged]}${onto}${where || (names[lastTurn.vertex] ? ` ที่${names[lastTurn.vertex]}` : "")}`;
+        prev.instructionEn = `${MANEUVER_EN[merged]}${at(names[i]) || at(names[lastTurn.vertex])}`;
       }
       continue;
     }
     steps.push({
       maneuver,
       instruction: `${MANEUVER_TEXT[maneuver]}${onto}${where}`,
+      instructionEn: `${MANEUVER_EN[maneuver]}${at(names[i])}`,
       distance: 0,
       at: toTuple(pts[i]),
       startAlong: cumulative[i],
@@ -380,16 +391,20 @@ function buildSteps(points, nodeNames, edgeNames, target) {
   // Which side the building is on, relative to the last walking direction.
   const n = pts.length;
   let side = "";
+  let sideEn = "";
   if (n >= 2) {
     const heading = bearingDeg(pts[n - 2], pts[n - 1]);
     const toBuilding = bearingDeg(pts[n - 2], target);
     const rel = ((toBuilding - heading + 540) % 360) - 180;
-    if (distanceM(pts[n - 1], target) > 8 && Math.abs(rel) > 20)
+    if (distanceM(pts[n - 1], target) > 8 && Math.abs(rel) > 20) {
       side = rel > 0 ? " (อยู่ทางขวามือ)" : " (อยู่ทางซ้ายมือ)";
+      sideEn = rel > 0 ? "right" : "left";
+    }
   }
   steps.push({
     maneuver: "arrive",
     instruction: `ถึง${target.name}${side}`,
+    instructionEn: arriveEn(sideEn),
     distance: 0,
     at: toTuple(pts[n - 1]),
     startAlong: total,

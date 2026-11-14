@@ -87,8 +87,8 @@ export function buildingSearchText(building) {
 }
 
 /** Link the phone app opens straight into navigation to `buildingId`. */
-export function phoneRouteUrl(buildingId, startNavigation = true) {
+export function phoneRouteUrl(buildingId, startNavigation = true, lang = "th") {
   const origin = window.location.origin;
   if (!buildingId) return `${origin}/app?openExternalBrowser=1`;
-  return `${origin}/app?place=${encodeURIComponent(buildingId)}${startNavigation ? "&go=1" : ""}&openExternalBrowser=1`;
+  return `${origin}/app?place=${encodeURIComponent(buildingId)}${startNavigation ? "&go=1" : ""}${lang === "en" ? "&lang=en" : ""}&openExternalBrowser=1`;
 }
