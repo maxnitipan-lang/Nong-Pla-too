@@ -122,7 +122,7 @@ export const STUDENTS = {
 };
 
 /** Bachelor's programmes (เทคโนโลยีบัณฑิต) taught at the college — from the same student report. */
-export const BACHELOR_PROGRAMMES = ["เทคโนโลยีแม่พิมพ์โลหะ", "เทคโนโลยีแม่พิมพ์พลาสติก", "เทคโนโลยีธุรกิจดิจิทัล"];
+export const BACHELOR_PROGRAMMES = ["เทคโนโลยีแม่พิมพ์", "เทคโนโลยีธุรกิจดิจิทัล"];
 
 /** Executives, students and bachelor's programmes as lines for the chat assistant. */
 export function peopleLines() {
