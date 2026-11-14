@@ -338,7 +338,19 @@
         "ขอใบเกรด",
         "ขอทรานสคริปต์",
         "ขอใบจบ",
-        "ย้ายสถานศึกษา"
+        "ย้ายสถานศึกษา",
+        "ลาออกต้องทำยังไง",
+        "ลาออก",
+        "ย้ายสาขาได้ไหม",
+        "ขอย้ายสาขา",
+        "ย้ายมาเรียนที่นี่ได้ไหม",
+        "ขอย้ายสถานศึกษา",
+        "พักการเรียน",
+        "ขอพักการเรียน",
+        "เทียบโอนรายวิชา",
+        "ทำบัตรนักศึกษาใหม่",
+        "บัตรนักศึกษาหาย",
+        "ขอใบรับรองจบ"
       ],
       "answer": "เรื่องเอกสารการศึกษา ติดต่อได้ที่งานทะเบียนครับ ผมเปิดเส้นทางไปงานทะเบียนให้แล้วครับ",
       "routeTo": "personnel-registration"
@@ -451,7 +463,11 @@
         "จอดรถได้ไหม",
         "จอดรถตรงไหน",
         "จอดรถได้ที่ไหนบ้าง",
-        "ที่จอดรถอยู่ไหน"
+        "ที่จอดรถอยู่ไหน",
+        "จอดมอไซค์ตรงไหน",
+        "จอดรถยนต์ได้ไหม",
+        "รถเข้าได้ไหม",
+        "เอารถเข้าได้ไหม"
       ],
       "answer": "โรงจอดรถอยู่หลังป้อมยามและงานปกครองครับ ผมเปิดเส้นทางให้แล้วครับ",
       "routeTo": "parking-1"
@@ -626,7 +642,9 @@
         "กยศ",
         "กู้ยืมเพื่อการศึกษา",
         "สมัครทุน",
-        "อยากขอทุนการศึกษาต้องติดต่อใคร"
+        "อยากขอทุนการศึกษาต้องติดต่อใคร",
+        "กยศ ติดต่อที่ไหน",
+        "ทุนเรียนดี"
       ],
       "answer": "เรื่องทุนการศึกษาติดต่องานสวัสดิการนักเรียน นักศึกษา ครับ อยู่ที่อาคาร 3 ชั้น 1 (ฝั่งขวา ใกล้ห้องพยาบาล) ผมเปิดเส้นทางให้แล้วครับ",
       "routeTo": "general-subjects"
@@ -748,7 +766,15 @@
         "องค์การวิชาชีพ",
         "สมัครชมรม",
         "มีชมรมอะไรบ้าง",
-        "งานกิจกรรม"
+        "งานกิจกรรม",
+        "อยากเข้าชมรมดนตรี",
+        "ชมรมมีอะไรบ้าง",
+        "มีกีฬาอะไรบ้าง",
+        "แข่งกีฬา",
+        "แข่งทักษะวิชาชีพ",
+        "รด เรียนที่ไหน",
+        "สมัครเรียนรักษาดินแดน",
+        "สมัคร รด"
       ],
       "answer": "เรื่องกิจกรรมนักเรียนและ อวท. ติดต่องานกิจกรรมนักเรียน นักศึกษา อาคาร 85 ปี ชั้น 1 (ฝั่งขวา) ครับ ผมเปิดเส้นทางให้แล้วครับ",
       "routeTo": "building-85"
@@ -780,7 +806,11 @@
         "ติดต่องานทวิภาคี",
         "ฝึกงานที่ไหน",
         "ฝึกงานกับบริษัท",
-        "ไปฝึกงาน"
+        "ไปฝึกงาน",
+        "ฝึกงานต้องทำยังไง",
+        "หาที่ฝึกงาน",
+        "ฝึกงานกี่เดือน",
+        "ฝึกประสบการณ์วิชาชีพ"
       ],
       "answer": "เรื่องทวิภาคีและการฝึกงานในสถานประกอบการ ติดต่องานอาชีวศึกษาระบบทวิภาคี อาคาร 85 ปี ชั้น 2 ครับ ผมเปิดเส้นทางให้แล้วครับ",
       "routeTo": "building-85"
@@ -797,7 +827,14 @@
         "ติด 0",
         "ติดร",
         "ติดมส",
-        "แก้เกรด"
+        "แก้เกรด",
+        "แก้ 0",
+        "แก้ศูนย์",
+        "ติด มส ทำยังไง",
+        "ติด ร ทำยังไง",
+        "เรียนซ้ำ",
+        "สอบซ่อม",
+        "สอบแก้ตัว"
       ],
       "answer": "เรื่องผลการเรียน การสอบแก้ และติด 0 / ร / มส. ติดต่องานวัดผลและประเมินผล อาคาร 85 ปี ชั้น 1 ครับ (ขอใบเกรดหรือใบรับรองไปที่งานทะเบียน) ผมเปิดเส้นทางให้แล้วครับ",
       "routeTo": "building-85"
@@ -919,7 +956,11 @@
         "ชุดพละ",
         "ชุดฝึกงาน",
         "เสื้อช็อป",
-        "ซื้อชุดที่ไหน"
+        "ซื้อชุดที่ไหน",
+        "ซื้อชุดนักศึกษาที่ไหน",
+        "ชุดฝึกงานซื้อที่ไหน",
+        "ซื้อชุดช็อปที่ไหน",
+        "แต่งกายผิดระเบียบ"
       ],
       "answer": "น้องปลาทูยังไม่มีข้อมูลเรื่องชุดนักเรียนครับ สอบถามได้ที่งานปกครอง ใกล้ทางเข้า หรือโทร {phone} ครับ"
     },
@@ -1301,7 +1342,14 @@
         "ต้องสอบเข้าไหม",
         "ต้องใช้เกรดเท่าไหร่",
         "เกรดเฉลี่ยขั้นต่ำเท่าไหร่",
-        "สมัครต้องใช้อะไรบ้าง"
+        "สมัครต้องใช้อะไรบ้าง",
+        "มีสัมภาษณ์ไหม",
+        "รับกี่คน",
+        "ค่าสมัครเท่าไหร่",
+        "สมัครทางออนไลน์ได้ที่ไหน",
+        "มีโควตาไหม",
+        "ใช้เกรดเท่าไหร่",
+        "มีสอบเข้าไหม"
       ],
       "answer": "เงื่อนไขการรับสมัคร (เกรด การสอบ และเอกสาร) ประกาศเป็นรอบ ๆ ครับ น้องปลาทูยังไม่มีข้อมูลรอบล่าสุด ดูประกาศรับสมัครที่ www.sstc.ac.th หรือสอบถามงานทะเบียน โทร {phone} ครับ ผมเปิดเส้นทางไปงานทะเบียนให้แล้วครับ"
     },
@@ -1445,6 +1493,230 @@
       "answer": "หน้าจอเป็นภาษาไทยครับ แต่ถามน้องปลาทูเป็นภาษาอังกฤษได้เลย ผมจะตอบเป็นภาษาอังกฤษให้ทั้งหมดครับ"
     },
     {
+      "id": "visit-official",
+      "category": "บริการผู้มาติดต่อ",
+      "routeTo": "director-office",
+      "questions": [
+        "ติดต่อราชการต้องไปที่ไหน",
+        "มาส่งเอกสารต้องไปไหน",
+        "ส่งหนังสือราชการ",
+        "มาส่งของ",
+        "ส่งพัสดุที่ไหน",
+        "มาติดต่องาน",
+        "มาส่งเอกสาร",
+        "ส่งเอกสาร"
+      ],
+      "answer": "ติดต่อราชการหรือส่งหนังสือ ติดต่องานบริหารทั่วไป ที่สำนักงานผู้อำนวยการครับ ถ้าไม่แน่ใจ แวะถามงานประชาสัมพันธ์ใกล้ทางเข้าได้เลย ผมเปิดเส้นทางไปสำนักงานผู้อำนวยการให้แล้วครับ"
+    },
+    {
+      "id": "visit-teacher",
+      "category": "บริการผู้มาติดต่อ",
+      "questions": [
+        "มาหาครูต้องไปตรงไหน",
+        "อยากพบครู",
+        "ห้องพักครูอยู่ไหน",
+        "ครูประจำชั้นอยู่ไหน",
+        "ห้องพักครูช่างยนต์",
+        "หาครูที่ปรึกษา"
+      ],
+      "answer": "ห้องพักครูอยู่ในอาคารของแต่ละแผนกครับ บอกชื่อสาขาได้เลย เช่น \"ช่างยนต์อยู่ไหน\" ผมจะเปิดเส้นทางไปอาคารนั้นให้ ถ้าไม่ทราบว่าครูอยู่แผนกไหน ถามงานประชาสัมพันธ์ใกล้ทางเข้าได้ครับ"
+    },
+    {
+      "id": "visit-parent",
+      "category": "บริการผู้มาติดต่อ",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "มารับลูกรอตรงไหน",
+        "ผู้ปกครองนั่งรอที่ไหน",
+        "มีที่นั่งพักไหม",
+        "นั่งรอตรงไหนได้",
+        "ผู้ปกครองต้องไปที่ไหน"
+      ],
+      "answer": "ผู้ปกครองแจ้งที่งานประชาสัมพันธ์ใกล้ทางเข้าได้เลยครับ ถ้าต้องการนั่งรอ มีที่นั่งที่โรงอาหาร (ติดหอประชุม 1) และร้านเพลินแฟกลางวิทยาลัย ผมเปิดเส้นทางไปงานประชาสัมพันธ์ให้แล้วครับ"
+    },
+    {
+      "id": "visit-water",
+      "category": "บริการผู้มาติดต่อ",
+      "routeTo": "canteen",
+      "questions": [
+        "มีน้ำดื่มไหม",
+        "ตู้กดน้ำอยู่ไหน",
+        "หาน้ำดื่ม",
+        "มีร้านขายของไหม",
+        "ร้านสะดวกซื้อใกล้ๆ",
+        "อยากกินน้ำ",
+        "หิวน้ำ",
+        "แถวนี้มีเซเว่นไหม",
+        "มีเซเว่นไหม"
+      ],
+      "answer": "ซื้อน้ำดื่มและของกินได้ที่โรงอาหาร (ติดหอประชุม 1) หรือร้านเพลินแฟกลางวิทยาลัยครับ ผมเปิดเส้นทางไปโรงอาหารให้แล้วครับ"
+    },
+    {
+      "id": "visit-atm",
+      "category": "บริการผู้มาติดต่อ",
+      "routeTo": "school-bank",
+      "questions": [
+        "มี ATM ไหม",
+        "ตู้เอทีเอ็มอยู่ไหน",
+        "กดเงินที่ไหน",
+        "ตู้ ATM",
+        "จะกดเงิน",
+        "อยากกดเงิน"
+      ],
+      "answer": "น้องปลาทูยังไม่มีข้อมูลตู้ ATM ในวิทยาลัยครับ ในวิทยาลัยมีธนาคารโรงเรียน อยู่ระหว่างอาคาร 7 และอาคาร 8 ผมเปิดเส้นทางให้แล้วครับ"
+    },
+    {
+      "id": "visit-access",
+      "category": "บริการผู้มาติดต่อ",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "มีลิฟต์ไหม",
+        "มีทางลาดสำหรับรถเข็นไหม",
+        "ห้องน้ำคนพิการ",
+        "ใช้รถเข็นได้ไหม",
+        "ผู้พิการ"
+      ],
+      "answer": "น้องปลาทูยังไม่มีข้อมูลลิฟต์ ทางลาด หรือห้องน้ำสำหรับผู้พิการครับ แนะนำแจ้งงานประชาสัมพันธ์ใกล้ทางเข้า เจ้าหน้าที่จะช่วยพาไปจุดที่สะดวกที่สุดครับ"
+    },
+    {
+      "id": "visit-prayer",
+      "category": "บริการผู้มาติดต่อ",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "มีห้องละหมาดไหม",
+        "ห้องละหมาด",
+        "มีห้องให้นมลูกไหม",
+        "ห้องให้นม"
+      ],
+      "answer": "น้องปลาทูยังไม่มีข้อมูลห้องละหมาดหรือห้องให้นมครับ สอบถามงานประชาสัมพันธ์ใกล้ทางเข้าได้เลย เจ้าหน้าที่จะช่วยหาห้องที่เหมาะให้ครับ"
+    },
+    {
+      "id": "rule-smoking",
+      "category": "ระเบียบ",
+      "questions": [
+        "สูบบุหรี่ได้ที่ไหน",
+        "ที่สูบบุหรี่",
+        "สูบบุหรี่ได้ไหม",
+        "บุหรี่ไฟฟ้า"
+      ],
+      "answer": "สถานศึกษาเป็นเขตปลอดบุหรี่ตามกฎหมายครับ สูบบุหรี่ (รวมบุหรี่ไฟฟ้า) ในวิทยาลัยไม่ได้ ขอบคุณที่ช่วยกันนะครับ 🙏"
+    },
+    {
+      "id": "rule-trash",
+      "category": "ระเบียบ",
+      "questions": [
+        "ทิ้งขยะที่ไหน",
+        "ถังขยะอยู่ไหน",
+        "มีจุดคัดแยกขยะไหม"
+      ],
+      "answer": "ทิ้งขยะในถังขยะตามจุดต่าง ๆ ในวิทยาลัยได้เลยครับ แยกขวดและกระป๋องไว้ด้วยจะดีมาก ช่วยกันรักษาความสะอาดนะครับ 🌱"
+    },
+    {
+      "id": "student-timetable",
+      "category": "บริการนักเรียน",
+      "routeTo": "building-85",
+      "questions": [
+        "วันนี้เรียนห้องไหน",
+        "ตารางเรียนดูที่ไหน",
+        "ตารางสอบดูที่ไหน",
+        "สอบห้องไหน",
+        "ดูตารางเรียน"
+      ],
+      "answer": "ตารางเรียนดูได้จากครูที่ปรึกษาหรือแผนกของสาขาครับ ส่วนตารางสอบและเรื่องการสอบ สอบถามงานวัดผลและประเมินผล อาคาร 85 ปี ชั้น 1 ได้ครับ ผมเปิดเส้นทางให้แล้วครับ"
+    },
+    {
+      "id": "student-absent",
+      "category": "บริการนักเรียน",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "ขาดเรียนต้องทำอย่างไร",
+        "ลืมบัตรนักเรียน",
+        "เข้าแถวที่ไหน",
+        "ขาดเรียนสามวันทำไง",
+        "ขาดเรียนหลายวัน"
+      ],
+      "answer": "เรื่องมาสาย ขาดเรียน ลา หรือขอออกนอกวิทยาลัย แจ้งครูที่ปรึกษาก่อน แล้วติดต่องานปกครองใกล้ทางเข้าวิทยาลัยครับ ผมเปิดเส้นทางไปงานปกครองให้แล้วครับ"
+    },
+    {
+      "id": "student-insurance",
+      "category": "บริการนักเรียน",
+      "routeTo": "general-subjects",
+      "questions": [
+        "ประกันอุบัติเหตุ",
+        "เบิกค่ารักษา",
+        "เบิกประกัน",
+        "บาดเจ็บเบิกได้ไหม"
+      ],
+      "answer": "เรื่องประกันอุบัติเหตุและการเบิกค่ารักษา ติดต่องานสวัสดิการนักเรียน นักศึกษา อาคาร 3 ชั้น 1 (ฝั่งขวา ใกล้ห้องพยาบาล) ครับ ผมเปิดเส้นทางให้แล้วครับ"
+    },
+    {
+      "id": "student-standards",
+      "category": "บริการนักเรียน",
+      "routeTo": "building-85",
+      "questions": [
+        "สอบมาตรฐานวิชาชีพ",
+        "สอบมาตรฐาน",
+        "สอบวัดมาตรฐานวิชาชีพ"
+      ],
+      "answer": "การสอบมาตรฐานวิชาชีพจัดตามแต่ละสาขาครับ สอบถามรอบสอบและวิธีสมัครได้ที่แผนกของสาขา หรืองานวัดผลและประเมินผล อาคาร 85 ปี ชั้น 1 ครับ"
+    },
+    {
+      "id": "apply-adult",
+      "category": "การสมัครเรียน",
+      "routeTo": "personnel-registration",
+      "questions": [
+        "จบ กศน สมัครได้ไหม",
+        "อายุเยอะเรียนได้ไหม",
+        "ทำงานแล้วเรียนได้ไหม",
+        "เรียนเสาร์อาทิตย์ได้ไหม",
+        "ผู้ใหญ่เรียนได้ไหม",
+        "มีภาคพิเศษไหม",
+        "ลูกจบ กศน มาเรียนได้ไหม",
+        "จบ กศน เรียนได้ไหม"
+      ],
+      "answer": "ปวช. รับผู้จบ ม.3 หรือเทียบเท่า และ ปวส. รับผู้จบ ม.6 ปวช. หรือเทียบเท่าครับ ส่วนเรื่องอายุ รอบเรียนสำหรับคนทำงาน หรือเรียนวันเสาร์อาทิตย์ น้องปลาทูยังไม่มีข้อมูล สอบถามงานทะเบียน หรือโทร 034-711440 ได้ครับ"
+    },
+    {
+      "id": "apply-free",
+      "category": "การสมัครเรียน",
+      "routeTo": "building-85",
+      "questions": [
+        "เรียนฟรี 15 ปี",
+        "ได้เงินอุดหนุนไหม",
+        "ไม่มีเงินเรียนได้ไหม"
+      ],
+      "answer": "ระดับ ปวช. อยู่ในนโยบายเรียนฟรี 15 ปีของรัฐครับ แต่อาจมีค่าใช้จ่ายอื่นบางส่วน สอบถามรายละเอียดที่งานการเงิน อาคาร 85 ปี ชั้น 1 ถ้ามีปัญหาเรื่องเงิน ปรึกษาเรื่องทุนที่งานสวัสดิการนักเรียน อาคาร 3 ชั้น 1 ได้ครับ"
+    },
+    {
+      "id": "career-after",
+      "category": "สาขาวิชา",
+      "routeTo": "building-85",
+      "questions": [
+        "จบแล้วมีงานทำไหม",
+        "จบแล้วเงินเดือนเท่าไหร่",
+        "จบแล้วต่อมหาลัยได้ไหม",
+        "ต่อ ป.ตรี ที่ไหนได้บ้าง",
+        "ทำงานญี่ปุ่นได้ไหม",
+        "สอบเข้าทหารได้ไหม",
+        "จบแล้วทำอะไรได้",
+        "จบไปทำงานอะไรได้บ้าง",
+        "เรียนจบไปทำอะไร",
+        "จบไปทำงานอะไร"
+      ],
+      "answer": "จบแล้วทำงานตรงสายได้ หรือเรียนต่อ ปวส. และปริญญาตรีครับ ที่วิทยาลัยมีปริญญาตรีสายเทคโนโลยี 2 สาขา (เทคโนโลยีแม่พิมพ์ และเทคโนโลยีธุรกิจดิจิทัล) ส่วนเงินเดือนขึ้นกับสาขาและสถานประกอบการ เรื่องงาน ต่างประเทศ หรือสอบเข้ารับราชการ ปรึกษางานแนะแนว อาคาร 85 ปี ชั้น 2 ได้ครับ"
+    },
+    {
+      "id": "news-today",
+      "category": "ข่าวสาร",
+      "questions": [
+        "วันนี้มีประชุมอะไร",
+        "วันนี้มีงานอะไร",
+        "ประชุมวันนี้ที่ไหน"
+      ],
+      "answer": "น้องปลาทูยังไม่มีตารางประชุมรายวันครับ ดูกิจกรรมล่าสุดได้ที่หน้าข่าวสาร หรือถามงานประชาสัมพันธ์ใกล้ทางเข้าได้ครับ",
+      "action": "open-news"
+    },
+    {
       "id": "en-library",
       "category": "English",
       "routeTo": "general-subjects",
@@ -1515,7 +1787,10 @@
       "questions": [
         "where can i park",
         "parking",
-        "car park"
+        "car park",
+        "where can i park my motorbike",
+        "motorbike parking",
+        "can i drive in"
       ],
       "answer": "Parking is at Parking 1, behind the guard post near the main gate. I've opened the route."
     },
@@ -1654,7 +1929,11 @@
         "admission",
         "how can i enroll",
         "when is the application",
-        "i want to study here"
+        "i want to study here",
+        "when is the application period",
+        "what documents do i need to apply",
+        "is there an entrance exam",
+        "is there an interview"
       ],
       "answer": "To apply, please contact the **Registration office**, or see the admission news on www.sstc.ac.th. You can also call 034-711440. I've opened the route to Registration."
     },
@@ -2099,7 +2378,11 @@
         "what time does the college open",
         "opening hours",
         "when is the office open",
-        "what time do classes start"
+        "what time do classes start",
+        "when do classes end",
+        "is the college open on saturday",
+        "what time is lunch",
+        "is it open on sunday"
       ],
       "answer": "College offices are open 08:00–16:30, Monday to Friday. Class times follow each program's timetable; ask your advisor or department for yours."
     },
@@ -2180,7 +2463,10 @@
         "what is the dual system",
         "dual vocational education",
         "internship",
-        "work while studying"
+        "work while studying",
+        "how do i get an internship",
+        "internship placement",
+        "how long is the internship"
       ],
       "answer": "The dual system means you study at the college and train at a real company at the same time. Pay depends on the company. Ask the Dual Vocational Education office, Building 85, floor 2."
     },
@@ -2297,7 +2583,11 @@
         "guidance",
         "career advice",
         "i need advice about further study",
-        "counselor"
+        "counselor",
+        "can i get a job after graduating",
+        "how much will i earn after graduating",
+        "can i study at university after this",
+        "can i work in japan"
       ],
       "answer": "For study, further education or career advice, visit the Advisors and Guidance office, Building 85, floor 2. I've opened the route."
     },
@@ -2600,7 +2890,11 @@
         "เรียนกี่โมงถึงกี่โมง",
         "เข้าเรียนกี่โมง",
         "เลิกเรียนกี่โมง",
-        "เข้าแถวกี่โมง"
+        "เข้าแถวกี่โมง",
+        "พักเที่ยงกี่โมง",
+        "วันเสาร์เปิดไหม",
+        "เปิดวันอาทิตย์ไหม",
+        "เช็คชื่อเข้าแถวกี่โมง"
       ],
       "answer": "เวลาเรียนแต่ละห้องเป็นไปตามตารางเรียนของสาขาครับ ส่วนสำนักงานวิทยาลัยเปิด 08:00–16:30 น. วันจันทร์–ศุกร์ ถามตารางเรียนได้ที่ครูที่ปรึกษาหรือแผนกครับ"
     },
@@ -2665,6 +2959,132 @@
         "มหาลัยไหนดี"
       ],
       "answer": "น้องปลาทูช่วยได้เฉพาะเรื่องของวิทยาลัยเทคนิคสมุทรสงครามครับ เลยเปรียบเทียบกับที่อื่นให้ไม่ได้ แต่เล่าจุดเด่นของที่นี่ได้: เปิดสอน ปวช. ปวส. และปริญญาตรี มี 15 สาขา ทั้งช่างอุตสาหกรรม พาณิชยกรรม และคหกรรม เรียนเน้นปฏิบัติจริง และมีระบบทวิภาคีครับ"
+    },
+    {
+      "id": "en-official",
+      "category": "English",
+      "routeTo": "director-office",
+      "questions": [
+        "i have a delivery, where should i go",
+        "where do i send documents",
+        "official business",
+        "i have an appointment"
+      ],
+      "answer": "For official business, documents or deliveries, go to General Administration in the Director's Office. If you're not sure, ask Public Relations near the gate. I've opened the route."
+    },
+    {
+      "id": "en-parent",
+      "category": "English",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "i'm a parent, where should i go",
+        "where do i meet my child",
+        "where can i sit and wait",
+        "where can parents wait",
+        "i am a parent",
+        "parent"
+      ],
+      "answer": "Parents can check in at Public Relations near the gate. To sit and wait, try the canteen (next to Auditorium 1) or the Plernfae Cafe in the middle of campus. I've opened the route to Public Relations."
+    },
+    {
+      "id": "en-water",
+      "category": "English",
+      "routeTo": "canteen",
+      "questions": [
+        "is there drinking water",
+        "where can i buy water",
+        "is there a shop",
+        "where can i buy snacks",
+        "i am thirsty"
+      ],
+      "answer": "You can buy water and snacks at the canteen (next to Auditorium 1) or the Plernfae Cafe. I've opened the route to the canteen."
+    },
+    {
+      "id": "en-access",
+      "category": "English",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "is there an elevator",
+        "is there a wheelchair ramp",
+        "accessible toilet",
+        "wheelchair access"
+      ],
+      "answer": "I don't have information on elevators, ramps or accessible toilets yet. Please ask Public Relations near the gate; the staff will help you find the easiest way."
+    },
+    {
+      "id": "en-teachers-room",
+      "category": "English",
+      "questions": [
+        "where is the teachers' room",
+        "where can i find a teacher",
+        "i want to meet a teacher"
+      ],
+      "answer": "Teachers' rooms are in each program's building. Tell me the program, e.g. \"Where is Auto Mechanics?\", and I'll open the route. If you don't know the program, ask Public Relations near the gate."
+    },
+    {
+      "id": "en-smoking",
+      "category": "English",
+      "questions": [
+        "where can i smoke",
+        "can i smoke here",
+        "smoking area"
+      ],
+      "answer": "Schools are no-smoking areas by law, so smoking (including e-cigarettes) is not allowed on campus. Thank you! 🙏"
+    },
+    {
+      "id": "en-trash",
+      "category": "English",
+      "questions": [
+        "where is the trash bin",
+        "where can i throw rubbish",
+        "recycling"
+      ],
+      "answer": "Please use the trash bins around campus. Thanks for helping keep the college clean! 🌱"
+    },
+    {
+      "id": "en-prayer",
+      "category": "English",
+      "routeTo": "discipline-dept",
+      "questions": [
+        "where can i pray",
+        "prayer room",
+        "breastfeeding room"
+      ],
+      "answer": "I don't have information on a prayer room or a breastfeeding room yet. Please ask Public Relations near the gate; the staff will help."
+    },
+    {
+      "id": "en-free",
+      "category": "English",
+      "routeTo": "building-85",
+      "questions": [
+        "is it free to study here",
+        "is the course free",
+        "free education"
+      ],
+      "answer": "The Vocational Certificate level is part of the government's 15-year free education policy, though some other costs may apply. Ask the Finance office in Building 85, floor 1 for details."
+    },
+    {
+      "id": "en-adult",
+      "category": "English",
+      "routeTo": "personnel-registration",
+      "questions": [
+        "can adults study here",
+        "can i study on weekends",
+        "i work, can i still study",
+        "is there an age limit"
+      ],
+      "answer": "The Vocational Certificate accepts students who finished grade 9 (or equivalent), and the Higher Vocational Diploma accepts grade 12 or Vocational Certificate graduates. For age limits, evening or weekend classes, please ask the Registration office or call 034-711440."
+    },
+    {
+      "id": "en-meeting-today",
+      "category": "English",
+      "questions": [
+        "where is the meeting today",
+        "what's happening today",
+        "any events today"
+      ],
+      "answer": "I don't have today's meeting schedule. Check the News page for the latest events, or ask Public Relations near the gate.",
+      "action": "open-news"
     }
   ]
 }
