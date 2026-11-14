@@ -622,6 +622,8 @@
 .platoo-ui[data-theme='dark'] :is(.dept-filters, .filters, .map-filter-row) button.active * { color: #062033; }
 /* ปวช. / ปวส. badges: a deeper orange so the white text stays readable. */
 .platoo-ui .dept-levels > span { background: #c4621d; }
+/* ป.ตรี badge: a darker colour so the bachelor level stands out. */
+.platoo-ui .dept-levels > span.level-bachelor { background: #6b3fa0; }
 /* Place numbers in the list: white on orange/grey — a soft shadow keeps the digits readable. */
 .platoo-ui .place-number { text-shadow: 0 1px 2px rgba(0, 0, 0, .45); font-weight: 800; }
 /* Phones: room at the end of each page so the last card can scroll above the "ถามน้องปลาทู" button. */

@@ -1398,7 +1398,7 @@
         "มีสาขาทั้งหมดกี่สาขา",
         "เปิดสอนกี่สาขา"
       ],
-      "answer": "หน้าสาขาวิชามี 15 สาขาครับ แบ่งเป็น 3 กลุ่ม: ช่างอุตสาหกรรม พาณิชยกรรม / ธุรกิจ และคหกรรม / อาหาร เปิดสอนทั้ง ปวช. และ ปวส. ส่วนปริญญาตรีมีอีก 2 สาขาครับ (เทคโนโลยีแม่พิมพ์ และเทคโนโลยีธุรกิจดิจิทัล)"
+      "answer": "หน้าสาขาวิชามี 16 สาขาครับ แบ่งเป็น 3 กลุ่ม: ช่างอุตสาหกรรม พาณิชยกรรม / ธุรกิจ และคหกรรม / อาหาร เปิดสอนทั้ง ปวช. และ ปวส. ส่วนปริญญาตรีมีอีก 2 สาขาครับ (เทคโนโลยีแม่พิมพ์ และเทคโนโลยีธุรกิจดิจิทัล)"
     },
     {
       "id": "need-computer",
@@ -1715,6 +1715,20 @@
       ],
       "answer": "น้องปลาทูยังไม่มีตารางประชุมรายวันครับ ดูกิจกรรมล่าสุดได้ที่หน้าข่าวสาร หรือถามงานประชาสัมพันธ์ใกล้ทางเข้าได้ครับ",
       "action": "open-news"
+    },
+    {
+      "id": "mold-where",
+      "category": "สาขาวิชา",
+      "routeTo": "building-10",
+      "questions": [
+        "แม่พิมพ์อยู่ไหน",
+        "สาขาแม่พิมพ์อยู่ตึกไหน",
+        "เทคโนโลยีแม่พิมพ์อยู่ไหน",
+        "สาขาแม่พิมพ์มีระดับไหน",
+        "แม่พิมพ์มีปวชไหม",
+        "ไปสาขาแม่พิมพ์ยังไง"
+      ],
+      "answer": "สาขาเทคโนโลยีแม่พิมพ์เปิดสอนเฉพาะปริญญาตรีสายเทคโนโลยี (ทล.บ.) รับผู้จบ ปวส. ครับ อยู่ที่อาคาร 10 ผมเปิดเส้นทางให้แล้วครับ"
     },
     {
       "id": "en-library",
@@ -2451,7 +2465,9 @@
         "do you have a bachelor degree",
         "bachelor's degree",
         "can i get a degree here",
-        "university degree"
+        "university degree",
+        "where is mold technology",
+        "mold technology"
       ],
       "answer": "Yes. The college offers a Bachelor of Technology in 2 programs: Mold Technology and Digital Business Technology. Ask the Registration office about applying."
     },
@@ -2478,7 +2494,7 @@
         "how many departments",
         "number of programs"
       ],
-      "answer": "There are 15 programs in 3 groups: industrial trades, business, and home economics and food, at both Vocational Certificate and Higher Vocational Diploma levels, plus 2 bachelor's programs (Mold Technology and Digital Business Technology).",
+      "answer": "There are 16 programs in 3 groups: industrial trades, business, and home economics and food, at both Vocational Certificate and Higher Vocational Diploma levels, plus 2 bachelor's programs (Mold Technology and Digital Business Technology).",
       "action": "open-departments"
     },
     {
@@ -2879,7 +2895,7 @@
         "compare with other colleges",
         "recommend another school"
       ],
-      "answer": "I can only help with Samutsongkhram Technical College, so I can't compare. Here's what we offer: Vocational Certificate, Higher Vocational Diploma and bachelor's programs, 15 programs, hands-on learning in real workshops.",
+      "answer": "I can only help with Samutsongkhram Technical College, so I can't compare. Here's what we offer: Vocational Certificate, Higher Vocational Diploma and bachelor's programs, 16 programs, hands-on learning in real workshops.",
       "action": "open-departments"
     },
     {
@@ -2958,7 +2974,7 @@
         "วิทยาลัยอื่นมีสาขาอะไร",
         "มหาลัยไหนดี"
       ],
-      "answer": "น้องปลาทูช่วยได้เฉพาะเรื่องของวิทยาลัยเทคนิคสมุทรสงครามครับ เลยเปรียบเทียบกับที่อื่นให้ไม่ได้ แต่เล่าจุดเด่นของที่นี่ได้: เปิดสอน ปวช. ปวส. และปริญญาตรี มี 15 สาขา ทั้งช่างอุตสาหกรรม พาณิชยกรรม และคหกรรม เรียนเน้นปฏิบัติจริง และมีระบบทวิภาคีครับ"
+      "answer": "น้องปลาทูช่วยได้เฉพาะเรื่องของวิทยาลัยเทคนิคสมุทรสงครามครับ เลยเปรียบเทียบกับที่อื่นให้ไม่ได้ แต่เล่าจุดเด่นของที่นี่ได้: เปิดสอน ปวช. ปวส. และปริญญาตรี มี 16 สาขา ทั้งช่างอุตสาหกรรม พาณิชยกรรม และคหกรรม เรียนเน้นปฏิบัติจริง และมีระบบทวิภาคีครับ"
     },
     {
       "id": "en-official",

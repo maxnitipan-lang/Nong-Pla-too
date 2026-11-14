@@ -20,6 +20,8 @@ import {
 } from "../shared/data/campusMap2569.js";
 
 const APPLY = process.argv.includes("--apply");
+// --only=building-10,canteen → touch just these buildings (leaves admin edits elsewhere alone).
+const ONLY = process.argv.find(a => a.startsWith("--only="))?.slice(7).split(",").filter(Boolean) ?? null;
 
 function fitter(rows, key) {
   const S = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
@@ -118,6 +120,8 @@ NEW_PLACES.forEach((p, i) => {
     },
   });
 });
+
+if (ONLY) writes.splice(0, writes.length, ...writes.filter(w => ONLY.includes(w.row.id)));
 
 for (const w of writes) {
   const b = w.row;

@@ -30,6 +30,7 @@ const DEPARTMENTS = [
   { id: "marketing", say: ["การตลาด", "ธุรกิจค้าปลีก"], info: "การตลาด", teachers: ["การตลาด", "ธุรกิจค้าปลีก"], building: "commerce" },
   { id: "office", say: ["การจัดการสำนักงาน", "จัดการสำนักงาน"], info: "จัดการสำนักงาน", teachers: ["การจัดการสำนักงาน"], building: "commerce" },
   { id: "digital-business", say: ["ธุรกิจดิจิทัล", "คอมพิวเตอร์ธุรกิจ"], info: "ธุรกิจดิจิทัล", teachers: ["เทคโนโลยีธุรกิจดิจิทัล", "คอมพิวเตอร์ธุรกิจ"], building: "building-10" },
+  { id: "mold", say: ["เทคโนโลยีแม่พิมพ์", "แม่พิมพ์"], info: "แม่พิมพ์", teachers: ["ภาควิชาเทคโนโลยีแม่พิมพ์ (ปริญญาตรี)"], building: "building-10" },
   { id: "home-ec", say: ["คหกรรม", "คหกรรมศาสตร์"], info: "คหกรรม", teachers: ["คหกรรมทั่วไป"], building: "home-economics" },
   { id: "food", say: ["อาหารและโภชนาการ", "โภชนาการ"], info: "อาหารและโภชนาการ", teachers: ["อาหารและโภชนาการ"], building: "food-nutrition" },
 ];
@@ -74,8 +75,10 @@ const levelText = programmes => {
   const parts = [];
   if (programmes?.["ปวช."]?.length) parts.push(`ปวช. 3 ปี (รับผู้จบ ม.3) หลักสูตร ${programmes["ปวช."].join(" / ")}`);
   if (programmes?.["ปวส."]?.length) parts.push(`ปวส. 2 ปี (รับผู้จบ ม.6 หรือ ปวช.) หลักสูตร ${programmes["ปวส."].join(" / ")}`);
-  if (parts.length && !programmes?.["ปวส."]?.length) parts.push("(สาขานี้ไม่มี ปวส. เปิดสอนเฉพาะ ปวช.)");
-  if (parts.length && !programmes?.["ปวช."]?.length) parts.push("(สาขานี้ไม่มี ปวช. เปิดสอนเฉพาะ ปวส.)");
+  if (programmes?.["ป.ตรี"]?.length) parts.push(`ปริญญาตรี (ทล.บ.) รับผู้จบ ปวส. หลักสูตร ${programmes["ป.ตรี"].join(" / ")}`);
+  if (programmes?.["ปวช."]?.length && !programmes?.["ปวส."]?.length) parts.push("(สาขานี้ไม่มี ปวส. เปิดสอนเฉพาะ ปวช.)");
+  if (programmes?.["ปวส."]?.length && !programmes?.["ปวช."]?.length) parts.push("(สาขานี้ไม่มี ปวช. เปิดสอนเฉพาะ ปวส.)");
+  if (programmes?.["ป.ตรี"]?.length && !programmes?.["ปวช."]?.length && !programmes?.["ปวส."]?.length) parts.push("(สาขานี้เปิดสอนเฉพาะปริญญาตรี)");
   return parts.join(" และ ").replace(/ และ \(/g, " (");
 };
 

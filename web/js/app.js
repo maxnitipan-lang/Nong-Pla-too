@@ -5,7 +5,7 @@
 // Same screens for both: home, map, news, departments (the Figma design).
 
 import { CAMPUS_BUILDINGS, CAMPUS_CATEGORIES, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS } from "/shared/campus.js";
-import { PROGRAMMES, PROGRAMMES_AS_OF } from "/shared/collegeFacts.js";
+import { BACHELOR_PROGRAMMES, PROGRAMMES, PROGRAMMES_AS_OF } from "/shared/collegeFacts.js";
 import { DEPARTMENT_GROUPS, DEPARTMENT_QUIZ, suggestDepartments, withDepartmentInfo } from "/shared/departmentInfo.js";
 import { englishKeysToThai } from "/shared/thaiKeyboard.js";
 import { distanceM, planCampusRoute } from "/shared/walkNetwork.js";
@@ -736,17 +736,25 @@ function quizHtml(entries, logoBox) {
 /** "ปวช." / "ปวส." badges: which levels the college offers for this department. */
 function levelBadges(d) {
   const levels = Object.entries(d.programmes ?? {}).filter(([, names]) => names.length).map(([level]) => level);
-  return levels.length ? html`<span class="dept-levels">${levels.map((l) => raw(html`<span>${l}</span>`))}</span>` : "";
+  return levels.length ? html`<span class="dept-levels">${levels.map((l) => raw(html`<span class="${l === "ป.ตรี" ? "level-bachelor" : ""}">${l}</span>`))}</span>` : "";
 }
 
 /** The official programme names for this department, per level, and its career group. */
 function programmeBlock(d) {
   const rows = Object.entries(d.programmes ?? {}).filter(([, names]) => names.length);
   if (!rows.length) return "";
-  const who = { "ปวช.": "จบ ม.3", "ปวส.": "จบ ม.6 / ปวช." };
+  const who = { "ปวช.": "จบ ม.3", "ปวส.": "จบ ม.6 / ปวช.", "ป.ตรี": "จบ ปวส." };
   return html`<h3 class="dept-section"><span aria-hidden="true">📜</span>เปิดสอนระดับไหน</h3>
     <dl class="dept-programmes">${rows.map(([level, names]) => raw(html`<dt>${level}<small>${who[level] ?? ""}</small></dt><dd>${names.join(", ")}</dd>`))}</dl>
     ${d.careerGroup ? raw(html`<p class="dept-career-group">กลุ่มอาชีพ: ${d.careerGroup}</p>`) : ""}`;
+}
+
+/** Bachelor of Technology (ทล.บ.) programmes, for students who finished ปวส. */
+function bachelorTable() {
+  return html`<div class="programme-table">
+      <h3>ระดับปริญญาตรี ทล.บ. (จบ ปวส.) · ${BACHELOR_PROGRAMMES.length} สาขา</h3>
+      <ul>${BACHELOR_PROGRAMMES.map((name) => raw(html`<li><strong>${name}</strong><small>ปริญญาตรีสายเทคโนโลยี</small></li>`))}</ul>
+    </div>`;
 }
 
 /** The college's full official programme list (some programmes have no building on the map). */
@@ -758,7 +766,7 @@ function officialProgrammesHtml() {
   return html`<section class="official-programmes">
       <h2>หลักสูตรที่เปิดสอนทั้งหมด</h2>
       <p>จากรายงานหลักสูตรที่เปิดสอนของวิทยาลัย (ข้อมูล ณ ${PROGRAMMES_AS_OF})</p>
-      <div class="programme-tables">${Object.entries(PROGRAMMES).map(([level, rows]) => raw(table(level, rows)))}</div>
+      <div class="programme-tables">${Object.entries(PROGRAMMES).map(([level, rows]) => raw(table(level, rows)))}${raw(bachelorTable())}</div>
     </section>`;
 }
 
