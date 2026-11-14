@@ -122,9 +122,13 @@ function collectDepartments() {
   }
   // Offices (ฝ่ายวิชาการ, งานทะเบียน…) are rooms too; show only real departments when there are any.
   const real = [...seen.values()].filter(({ department }) => /^สาขา/.test(String(department.name).trim()));
-  if (real.length) return real;
-  return seen.size ? [...seen.values()] : DEFAULT_DEPARTMENTS.map((department) => ({ department }));
+  const list = real.length ? real : seen.size ? [...seen.values()] : DEFAULT_DEPARTMENTS.map((department) => ({ department: withDepartmentInfo(department) }));
+  return bachelorFirst(list);
 }
+
+/** Programs with a bachelor's degree (ป.ตรี) come first; the rest keep their order. */
+const hasBachelor = ({ department }) => (department.programmes?.["ป.ตรี"]?.length ?? 0) > 0;
+const bachelorFirst = (list) => [...list.filter(hasBachelor), ...list.filter((e) => !hasBachelor(e))];
 
 /** Where the walker is (phone only). */
 function here() {
