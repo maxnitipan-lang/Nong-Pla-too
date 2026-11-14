@@ -196,8 +196,13 @@ export function speakableEnglish(raw) {
     .replace(/\s*\([^()]*[฀-๿][^()]*\)/g, "") // "(อาคาร 85 ปี)"
     .replace(/[฀-๿]+/g, "")
     .replace(/\p{Extended_Pictographic}/gu, "")
-    .replace(/[*#_`>]/g, "")
+    .replace(/[*#_`>⋮]/g, "")
     .replace(/\s*\n\s*[-•]\s*/g, ". ")
+    .replace(/\s*[·•]\s*/g, ", ") // "Phone … · Website …" → a pause
+    .replace(/\s+\/\s+/g, " or ") // "2D / 3D" → "2D or 3D"
+    .replace(/(\d)\s*%/g, "$1 percent")
+    // Phone numbers digit by digit ("034-711440" is not "34 minus 711440").
+    .replace(/\b0\d{1,2}-\d{3}-?\d{3,4}\b/g, (n) => n.split("-").map((p) => p.split("").join(" ")).join(", "))
     .replace(/\s+([,.!?])/g, "$1")
     .replace(/\s+/g, " ")
     .trim();

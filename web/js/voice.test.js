@@ -23,3 +23,12 @@ describe("speakableEnglish", () => {
     );
   });
 });
+
+describe("speakableEnglish (phone, separators)", () => {
+  it("reads phone numbers digit by digit and turns · and / into pauses", async () => {
+    const { speakableEnglish } = await import("./voice.js");
+    expect(speakableEnglish("Phone 034-711440 · Website www.sstc.ac.th · 2D / 3D")).toBe(
+      "Phone 0 3 4, 7 1 1 4 4 0, Website www.sstc.ac.th, 2D or 3D"
+    );
+  });
+});

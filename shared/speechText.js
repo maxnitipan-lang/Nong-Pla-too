@@ -34,13 +34,39 @@ const THAI_ABBR = [
   ["ผอ.", "ผู้อำนวยการ"],
   ["ดร.", "ดอกเตอร์"],
   ["มส.", "มอ สอ"],
+  ["กศน.", "กอ สอ นอ"],
+  ["กศน", "กอ สอ นอ"],
+  ["ร.ด.", "รอ ดอ"],
+  ["ม.ต้น", "มัธยมต้น"],
+  ["ม.ปลาย", "มัธยมปลาย"],
   ["ฯลฯ", "และอื่น ๆ"],
+];
+
+/** English names inside Thai answers, as Thai speakers say them (a Thai voice mangles the spelling). */
+const ENGLISH_WORDS = [
+  ["Fix it Center", "ฟิกซ์อิทเซ็นเตอร์"],
+  ["Google Maps", "กูเกิลแมปส์"],
+  ["Google", "กูเกิล"],
+  ["Android", "แอนดรอยด์"],
+  ["iPhone", "ไอโฟน"],
+  ["iPad", "ไอแพด"],
+  ["Chrome", "โครม"],
+  ["Safari", "ซาฟารี"],
+  ["Edge", "เอดจ์"],
+  ["Facebook", "เฟซบุ๊ก"],
+  ["YouTube", "ยูทูบ"],
+  ["LINE", "ไลน์"],
+  ["Zoom", "ซูม"],
+  ["code", "โค้ด"],
+  ["online", "ออนไลน์"],
+  ["Ontour", "ออนทัวร์"],
 ];
 
 /** English letters as Thai speakers say them (voices often read "ICT" as a word). */
 const ENGLISH_ABBR = {
   ICT: "ไอซีที", IT: "ไอที", AI: "เอไอ", CVM: "ซีวีเอ็ม", MC3: "เอ็มซีสาม", CNC: "ซีเอ็นซี", CAD: "แคด",
   PLC: "พีแอลซี", OVEC: "โอเว็ค", SSTC: "เอสเอสทีซี", GPS: "จีพีเอส", QR: "คิวอาร์", PDF: "พีดีเอฟ", WIFI: "ไวไฟ",
+  ATM: "เอทีเอ็ม", USB: "ยูเอสบี", ID: "ไอดี", EV: "อีวี", CEO: "ซีอีโอ", DBT: "ดีบีที", PR: "พีอาร์",
 };
 
 const LETTERS = {
@@ -68,6 +94,21 @@ export function pronounce(text) {
       y ? `${month} ${y.length === 2 ? `25${y}` : y}` : `${month}${sp}`);
   // ม.3 / ม.6 = "มอ สาม" (a school year), not "metre".
   t = t.replace(/ม\.\s*(\d)/g, "มอ $1");
+  // "13.30 น." → "13 นาฬิกา 30 นาที".
+  t = t.replace(/(?<![\d.])(\d{1,2})\.(\d{2})\s*น\./g, (_, h, m) => `${Number(h)} นาฬิกา${m === "00" ? "" : ` ${Number(m)} นาที`}`);
+  // "ภาคเรียนที่ 1/2568" → "ภาคเรียนที่ 1 ปีการศึกษา 2568".
+  t = t.replace(/(ภาคเรียนที่|เทอม)\s*(\d)\s*\/\s*(\d{4})/g, "$1 $2 ปีการศึกษา $3");
+  // Address and title short forms: อ.เมือง = อำเภอ, จ. = จังหวัด, ต. = ตำบล, อ.สมชาย = อาจารย์, ร.2 = รัชกาลที่ 2.
+  t = t.replace(/(?<![ก-๙])อ\.\s*(?=เมือง|อัมพวา|บางคนที)/g, "อำเภอ")
+    .replace(/(?<![ก-๙])จ\.\s*(?=[ก-๙])/g, "จังหวัด")
+    .replace(/(?<![ก-๙])ต\.\s*(?=[ก-๙])/g, "ตำบล")
+    .replace(/(?<![ก-๙])อ\.\s*(?=[ก-๙])/g, "อาจารย์")
+    .replace(/(?<![ก-๙])ร\.\s*(\d)/g, "รัชกาลที่ $1");
+  // The shop "7-11" is a name, not a range.
+  t = t.replace(/(?<!\d)7-?(?:11|Eleven)(?!\d)/gi, "เซเว่นอีเลฟเว่น");
+  // "89%" → "89 เปอร์เซ็นต์"; "2D / 3D" → "ทูดี / ทรีดี".
+  t = t.replace(/(\d)\s*%/g, "$1 เปอร์เซ็นต์").replace(/\b2D\b/g, "ทูดี").replace(/\b3D\b/g, "ทรีดี");
+  for (const [word, spoken] of ENGLISH_WORDS) t = t.replace(new RegExp(`\\b${escapeRe(word)}\\b`, "g"), spoken);
   // Grades: "ติด 0 / ร / มส." → read the letters.
   t = t.replace(/(?<![ก-๙])ร(?=\s*\/)/g, "รอ");
   for (const [abbr, spoken] of THAI_ABBR) t = t.replace(new RegExp(`${escapeRe(abbr)}(?![ก-๙])`, "g"), ` ${spoken} `);
@@ -88,8 +129,11 @@ export function cleanForSpeech(text) {
     .replace(/```[\s\S]*?```/g, " ")
     .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1") // [label](url) → label
     .replace(/https?:\/\/\S+/g, " ") // bare URLs
-    .replace(/[*_#>`~|]/g, " ")
+    .replace(/[*_#>`~|⋮…]/g, " ")
     .replace(/^\s*[-•]\s+/gm, "") // bullets
+    .replace(/\s+-\s+/g, ", ") // "ปวช. - ปวส." in one line: a pause, not "ลบ"
+    .replace(/\(\s+/g, "(")
+    .replace(/\s+\)/g, ")")
     .replace(/(\d)\s*ม\.(?!\S)/g, "$1 เมตร")
     .replace(/(\d)\s*กม\./g, "$1 กิโลเมตร")
     .replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{FE0F}]/gu, " ")

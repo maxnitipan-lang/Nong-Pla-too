@@ -11,7 +11,8 @@
 
 import { OFF_CAMPUS_M, currentStepIndex, distanceM, locateOnPath, planCampusRoute, snapToNetwork } from "/shared/walkNetwork.js";
 import { apiPost } from "./api.js";
-import { englishDeviceVoice } from "./voice.js";
+import { englishDeviceVoice, thaiDeviceVoices } from "./voice.js";
+import { cleanForSpeech } from "/shared/speechText.js";
 import { buildingLatLng, getBestPosition } from "./directions.js";
 
 /** Farther than this from the route while navigating → plan again from here. */
@@ -23,10 +24,12 @@ const ARRIVED_M = 12;
 function speak(text, lang = "th") {
   if (!("speechSynthesis" in window)) return;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  u.lang = lang === "en" ? "en-US" : "th-TH";
-  const en = lang === "en" ? englishDeviceVoice() : null;
-  if (en) u.voice = en;
+  // Same voice as Nong Platoo's answers (the browser's default Thai voice can be a different one),
+  // and the same reading rules ("200 ม." = "200 เมตร").
+  const u = new SpeechSynthesisUtterance(lang === "en" ? text : cleanForSpeech(text));
+  const voice = lang === "en" ? englishDeviceVoice() : thaiDeviceVoices()[0];
+  u.lang = voice?.lang ?? (lang === "en" ? "en-US" : "th-TH");
+  if (voice) u.voice = voice;
   u.rate = 0.95;
   window.speechSynthesis.speak(u);
 }
