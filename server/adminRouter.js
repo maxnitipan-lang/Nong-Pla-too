@@ -32,6 +32,7 @@ import {
 } from "./db.js";
 import { saveImage } from "./images.js";
 import { clearAiAnswerCache } from "./chat.js";
+import { deleteLearned, listLearned, updateLearned } from "./chatLearning.js";
 import { syncCollegeNews } from "./newsScraper.js";
 import { adminProcedure, editorProcedure, router, staffProcedure } from "./_core/trpc.js";
 
@@ -154,5 +155,20 @@ export const adminRouter = router({
   settings: router({
     get: staffProcedure.query(() => getCampusSettings()),
     update: editorProcedure.input(settingsInputSchema).mutation(({ input }) => run(() => updateCampusSettings(input))),
+  }),
+
+  // What Nong Platoo learned from real questions (server/chatLearning.js).
+  learned: router({
+    list: staffProcedure.query(() => listLearned()),
+    update: editorProcedure
+      .input(
+        z.object({
+          id: z.string().trim().min(1).max(40),
+          answer: z.string().trim().min(1).max(4000).optional(),
+          status: z.enum(["new", "approved", "hidden"]).optional(),
+        })
+      )
+      .mutation(({ input }) => run(() => updateLearned(input))),
+    delete: editorProcedure.input(z.object({ id: z.string().trim().min(1).max(40) })).mutation(({ input }) => run(() => deleteLearned(input.id))),
   }),
 });

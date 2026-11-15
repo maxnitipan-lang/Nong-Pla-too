@@ -12,6 +12,7 @@
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
 import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, peopleLines, programmeLines } from "../shared/collegeFacts.js";
 import { answerFromFaq, faqCategory, normalizeQuestion, similarity } from "./chatFaq.js";
+import { learnedAnswer, rememberQuestion } from "./chatLearning.js";
 import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
 import { cleanForSpeech } from "../shared/speechText.js";
 import { prepareSpeech } from "./voice.js";
@@ -311,6 +312,8 @@ export async function askCampusChat(history, options = {}) {
     const slot = cacheSlot(history, options);
     const remembered = cachedAnswer(slot);
     if (remembered) {
+      // Asked again: counts toward learning it for good (the memory cache is gone after a restart).
+      void rememberQuestion(history.filter(m => m.role === "user").at(-1)?.content, { ...remembered, source: "ai" }, options.lang === "en" ? "en" : "th");
       if (options.aiVoice) prepareSpeech(cleanForSpeech(remembered.reply));
       return remembered;
     }
@@ -321,6 +324,12 @@ export async function askCampusChat(history, options = {}) {
     if (!answer.action && !answer.routeToBuildingId && isUndecided(history.filter(m => m.role === "user").at(-1)?.content))
       answer = { ...answer, action: "dept-quiz" };
     rememberAnswer(slot, answer);
+    // Learn it for the next person (only single, general questions — see chatLearning.js).
+    // Answers that talk about "this kiosk" depend on where it stands, so they are not learned.
+    const asked = history.filter(m => m.role === "user");
+    if (asked.length === 1 || !FOLLOW_UP.test(asked.at(-1)?.content ?? ""))
+      if (!(options.atKiosk && /ตู้|kiosk|from here/i.test(answer.reply)))
+        void rememberQuestion(asked.at(-1)?.content, answer, options.lang === "en" ? "en" : "th");
     // The browser will read this aloud with the AI voice: start making that voice now.
     if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
     return answer;
@@ -366,6 +375,15 @@ ${answer.reply}` };
   }
   const latestNews = options.lang === "en" ? null : newsAnswer(lastUser, news);
   if (latestNews) return { reply: latestNews, routeToBuildingId: null, action: "open-news", source: "news" };
+
+  // Asked before by other people: the answer Nong Platoo learned (no AI tokens).
+  const learned = await learnedAnswer(lastUser, options.lang === "en" ? "en" : "th").catch(() => null);
+  if (learned) {
+    const reply = options.spoken
+      ? learned.reply.replace(/\*\*/g, "").replace(/\n\s*[-•]\s+/g, " · ").replace(/\n+/g, " ").trim()
+      : learned.reply;
+    return { ...learned, reply };
+  }
 
   if (!CHAT_API_KEY) {
     throw new Error("ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในไฟล์ .env — ขอ key ฟรีที่ https://aistudio.google.com/apikey");

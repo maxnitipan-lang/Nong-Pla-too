@@ -2,6 +2,7 @@
 // Pages live in their own files and load when opened:
 //   /admin → overview.js   /admin/buildings → buildings.js   /admin/walkways → walkways.js
 //   /admin/news → news.js  /admin/users → users.js           /admin/settings → settings.js
+//   /admin/learned → learned.js (what Nong Platoo learned from real questions)
 // The server checks every permission again; hiding buttons here is only for clarity.
 
 import { ROLE_LABELS, canEdit, canManageUsers, isStaff } from "/shared/roles.js";
@@ -13,6 +14,7 @@ const NAV = [
   { section: "buildings", label: "อาคาร", path: "/admin/buildings", icon: "building", title: "จัดการอาคาร" },
   { section: "walkways", label: "ทางเดิน (นำทาง)", path: "/admin/walkways", icon: "footprints", title: "ทางเดินสำหรับนำทาง" },
   { section: "news", label: "ข่าวสาร", path: "/admin/news", icon: "news", title: "จัดการข่าวสาร" },
+  { section: "learned", label: "น้องปลาทูเรียนรู้", path: "/admin/learned", icon: "wand", title: "คำถามที่น้องปลาทูเรียนรู้" },
   { section: "users", label: "ผู้ใช้และสิทธิ์", path: "/admin/users", icon: "users", title: "ผู้ใช้และสิทธิ์", adminOnly: true },
   { section: "settings", label: "ตั้งค่าเว็บ", path: "/admin/settings", icon: "settings", title: "ตั้งค่าเว็บ" },
 ];
@@ -116,6 +118,7 @@ const PAGES = {
   buildings: () => import("./buildings.js"),
   walkways: () => import("./walkways.js"),
   news: () => import("./news.js"),
+  learned: () => import("./learned.js"),
   users: () => import("./users.js"),
   settings: () => import("./settings.js"),
 };
