@@ -32,3 +32,13 @@ describe("speakableEnglish (phone, separators)", () => {
     );
   });
 });
+
+describe("isFemaleVoice", () => {
+  it("tells female Thai voices from male ones", async () => {
+    const { isFemaleVoice } = await import("./voice.js");
+    for (const name of ["Microsoft Premwadee Online (Natural) - Thai", "Microsoft Pattara - Thai (Thailand)", "Kanya", "Narisa (Enhanced)", "Google ไทย"])
+      expect(isFemaleVoice({ name })).toBe(true);
+    for (const name of ["Microsoft Niwat Online (Natural) - Thai", "Some Thai voice"]) expect(isFemaleVoice({ name })).toBe(false);
+    expect(isFemaleVoice(null)).toBe(false);
+  });
+});

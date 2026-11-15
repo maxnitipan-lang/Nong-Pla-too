@@ -11,6 +11,7 @@
 //   "nongplatoo:reset" kiosk idle: forget the conversation and close
 
 import { apiPost } from "./api.js";
+import { forVoice } from "/shared/politeness.js";
 import { icon } from "./icons.js";
 import { renderMarkdown } from "./markdown.js";
 import { $, html, raw, readStore, writeStore } from "./util.js";
@@ -23,6 +24,7 @@ import {
   hasBrowserRecognition,
   hasMicrophone,
   inAppBrowser,
+  isFemaleVoice,
   isEnglishText,
   isSecureForMic,
   listen,
@@ -170,6 +172,15 @@ export class PlatooChat {
     this.update(before);
   }
 
+  /** A female voice is speaking: Nong Platoo says ค่ะ / คะ / หนู (on screen and aloud). */
+  get female() {
+    return this.engine === "device" && isFemaleVoice(thaiDeviceVoices()[0]);
+  }
+  /** A reply in the words of the voice that speaks it. */
+  say(text) {
+    return forVoice(text, this.female);
+  }
+
   get engine() {
     const chosen = this.s.settings.engine;
     if (chosen === "device") return "device";
@@ -216,6 +227,7 @@ export class PlatooChat {
   /* ---------------- talking */
 
   async speakReply(text, session) {
+    text = this.say(text);
     const s = this.s.settings;
     if (!s.speakReplies) return;
     // The AI voice takes a few seconds to arrive — stay on "กำลังคิด…" until sound actually plays.
@@ -413,7 +425,7 @@ export class PlatooChat {
         break;
       case "try-voice":
         unlockAudio();
-        speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", { engine: this.engine, rate: s.settings.rate });
+        speak(this.say("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ"), { engine: this.engine, rate: s.settings.rate });
         break;
       case "mic":
         this.onMic();
@@ -438,7 +450,7 @@ export class PlatooChat {
         const session = this.session;
         unlockAudio();
         this.set({ phase: "speaking" });
-        void speak(message.content, { engine: this.engine, rate: s.settings.rate }).done.then(() => session === this.session && this.set({ phase: "idle" }));
+        void speak(this.say(message.content), { engine: this.engine, rate: s.settings.rate }).done.then(() => session === this.session && this.set({ phase: "idle" }));
         break;
       }
       case "open-map":
@@ -480,7 +492,7 @@ export class PlatooChat {
     }
     if (changed("showSettings")) part("settings-button").classList.toggle("is-on", s.showSettings);
     if (changed("showSettings", "settings", "aiVoice", "deviceVoiceName")) part("settings").innerHTML = s.showSettings ? this.settingsHtml() : "";
-    if (changed("messages", "interim", "phase", "aiVoice", "deviceVoiceName")) {
+    if (changed("messages", "interim", "phase", "aiVoice", "deviceVoiceName", "settings")) { // settings: the voice (and so ค่ะ/ครับ) may change
       const box = part("messages");
       box.innerHTML = this.messagesHtml();
       box.scrollTo({ top: box.scrollHeight, behavior: "smooth" });
@@ -524,7 +536,7 @@ export class PlatooChat {
       const en = isEnglishText(m.content);
       const again = index > 0 && this.canSpeakOut ? raw(html`<button type="button" class="listen-again" data-chat="listen-again" data-index="${index}">${raw(icon("volume-on"))} ${en ? "Play again" : "ฟังอีกครั้ง"}</button>`) : "";
       return html`<div class="message-row bot"><img class="message-mascot" src="/mascots/greeting.webp" alt="" aria-hidden="true" />
-        <div class="message bot" lang="${en ? "en" : "th"}">${raw(renderMarkdown(m.content))}${m.action ? raw(html`<button type="button" class="chat-action" data-chat="action" data-name="${m.action}">${(en ? CHAT_ACTIONS_EN : CHAT_ACTIONS)[m.action]} ${raw(icon("arrow"))}</button>`) : ""}${again}</div></div>`;
+        <div class="message bot" lang="${en ? "en" : "th"}">${raw(renderMarkdown(this.say(m.content)))}${m.action ? raw(html`<button type="button" class="chat-action" data-chat="action" data-name="${m.action}">${(en ? CHAT_ACTIONS_EN : CHAT_ACTIONS)[m.action]} ${raw(icon("arrow"))}</button>`) : ""}${again}</div></div>`;
     });
     const interim = s.phase === "listening" && s.interim ? html`<div class="message-row user"><div class="message user interim">${s.interim}…</div></div>` : "";
     return `<p class="chat-date">วันนี้</p>${rows.join("")}${interim}`;
