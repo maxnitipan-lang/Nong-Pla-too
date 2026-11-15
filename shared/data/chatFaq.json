@@ -388,7 +388,10 @@
         "รองผอมีใครบ้าง",
         "ใครเป็นรองผอ",
         "ผู้บริหารวิทยาลัย",
-        "ทีมผู้บริหาร"
+        "ทีมผู้บริหาร",
+        "รองผู้อำนวยการมีกี่คน",
+        "รองผอมีกี่คน",
+        "ผู้บริหารมีกี่คน"
       ],
       "answer": "ผู้บริหารของ{collegeName}ครับ\n- ผู้อำนวยการ: นายอรุณ เกลื่อนพันธ์\n- รองผู้อำนวยการ: นายธนวัฒน์ สีเมฆ, นายสรยุทธ อุ่นใจ, นายอภิชัย คล้ำปลอด\n\nอยากรู้ว่าดูแลฝ่ายไหน ถามต่อได้เลยครับ"
     },
@@ -1516,7 +1519,10 @@
         "ห้องพักครูอยู่ไหน",
         "ครูประจำชั้นอยู่ไหน",
         "ห้องพักครูช่างยนต์",
-        "หาครูที่ปรึกษา"
+        "หาครูที่ปรึกษา",
+        "ห้องพักครูคอมพิวเตอร์อยู่ไหน",
+        "ห้องพักครูช่างไฟฟ้าอยู่ไหน",
+        "ห้องพักครูบัญชีอยู่ไหน"
       ],
       "answer": "ห้องพักครูอยู่ในอาคารของแต่ละแผนกครับ บอกชื่อสาขาได้เลย เช่น \"ช่างยนต์อยู่ไหน\" ผมจะเปิดเส้นทางไปอาคารนั้นให้ ถ้าไม่ทราบว่าครูอยู่แผนกไหน ถามงานประชาสัมพันธ์ใกล้ทางเข้าได้ครับ"
     },
@@ -1753,6 +1759,44 @@
         "แนะนำสาขาให้หน่อย"
       ],
       "answer": "ยังไม่รู้จะเรียนสาขาไหนไม่เป็นไรเลยครับ 😊 มาเล่นเกมทายสาขากับน้องปลาทู ตอบ 5 ข้อ ไม่ถึง 1 นาที แล้วผมจะบอกว่าสาขาไหนเข้ากับคุณที่สุด กดปุ่มด้านล่างเริ่มเล่นได้เลยครับ 🎯"
+    },
+    {
+      "id": "food-bakery",
+      "category": "สาขาวิชา",
+      "routeTo": "food-nutrition",
+      "questions": [
+        "อาหารและโภชนาการได้ทำขนมไหม",
+        "เรียนทำขนมสาขาไหน",
+        "มีเรียนเบเกอรี่ไหม",
+        "อยากทำเบเกอรี่เรียนอะไร",
+        "อยากเปิดร้านขนม"
+      ],
+      "answer": "ได้ครับ สาขาอาหารและโภชนาการเรียนทั้งการประกอบอาหารไทยและนานาชาติ และ**เบเกอรี่** รวมถึงโภชนาการและสุขาภิบาลอาหาร ส่วนสาขาคหกรรมก็มีงานขนมและงานประดิษฐ์ด้วยครับ"
+    },
+    {
+      "id": "bank-hours",
+      "category": "บริการนักเรียน",
+      "routeTo": "school-bank",
+      "questions": [
+        "ธนาคารโรงเรียนเปิดกี่โมง",
+        "ธนาคารโรงเรียนเปิดวันไหน",
+        "ฝากเงินได้กี่โมง"
+      ],
+      "answer": "น้องปลาทูยังไม่มีข้อมูลเวลาเปิดของธนาคารโรงเรียนครับ ธนาคารโรงเรียนอยู่ระหว่างอาคาร 7 และอาคาร 8 แวะไปสอบถามได้เลย ผมเปิดเส้นทางให้แล้วครับ"
+    },
+    {
+      "id": "sport-courts",
+      "category": "บริการนักเรียน",
+      "routeTo": "football-field",
+      "questions": [
+        "มีสนามบาสไหม",
+        "สนามบาสอยู่ไหน",
+        "มีสนามวอลเลย์ไหม",
+        "มีโรงยิมไหม",
+        "โรงยิมอยู่ไหน",
+        "มีสนามกีฬาอะไรบ้าง"
+      ],
+      "answer": "ในแผนที่วิทยาลัยมี**สนามฟุตบอล**อยู่กลางวิทยาลัย ใกล้อาคารกิจกรรมครับ ส่วนสนามกีฬาอื่น ๆ น้องปลาทูยังไม่มีข้อมูล สอบถามงานกิจกรรมนักเรียน นักศึกษา อาคาร 85 ปี ชั้น 1 ได้ครับ ผมเปิดเส้นทางไปสนามฟุตบอลให้แล้วครับ"
     },
     {
       "id": "en-library",
@@ -3138,6 +3182,29 @@
         "what should i study here"
       ],
       "answer": "Not sure which program to choose? No problem 😊 Play the program quiz with Nong Platoo: 5 quick questions, under a minute, and I'll show the programs that suit you best. Tap the button below to start! 🎯"
+    },
+    {
+      "id": "en-mechatronics",
+      "category": "English",
+      "routeTo": "ict-building",
+      "questions": [
+        "what is mechatronics",
+        "what do you learn in mechatronics",
+        "tell me about mechatronics"
+      ],
+      "answer": "Mechatronics and Robotics combines mechanics, electrical, electronics and computing. You learn automation, PLCs, sensors and industrial robots. It is on floor 3 of Building 11 (ICT Building)."
+    },
+    {
+      "id": "en-electronics-study",
+      "category": "English",
+      "routeTo": "electronics-it",
+      "questions": [
+        "can i study electronics here",
+        "what is electronics",
+        "what do you learn in electronics",
+        "what do you learn in it"
+      ],
+      "answer": "Yes. Electronics covers circuits, microcontrollers, and building and repairing electronic devices. Information Technology covers programming, networks, databases and websites. Both are in Building 7."
     }
   ]
 }

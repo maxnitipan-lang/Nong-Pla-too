@@ -17,6 +17,7 @@ import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
 import { cleanForSpeech } from "../shared/speechText.js";
 import { prepareSpeech } from "./voice.js";
 import { withDepartmentInfo } from "../shared/departmentInfo.js";
+import { placeEn } from "../shared/placeNamesEn.js";
 import { staffLines } from "../shared/staffDirectory.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
@@ -526,7 +527,7 @@ ${answer.reply}` };
             reply:
               message?.content?.trim() ||
               (options.lang === "en"
-                ? `I've opened the walking route to "${target.name}" on the map 👇`
+                ? `I've opened the walking route to ${placeEn(target.name) ?? "your destination"} on the map 👇`
                 : `เปิดแผนที่เส้นทางเดินไป "${target.name}" ให้แล้วครับ 👇`),
             routeToBuildingId: target.id,
             source: "ai",
