@@ -69,3 +69,18 @@ describe("grouping, unsure answers and corrections", async () => {
     expect(isRecordable("ห้องสมุดอยู่ไหน")).toBe(true);
   });
 });
+
+describe("grouping fixes from the live test", async () => {
+  const { classifyQuestion, isUnsure } = await import("./chatLearning.js");
+  it("puts program questions in the program group even when a route is opened", () => {
+    expect(classifyQuestion("ช่างกลโรงงานมีระดับไหน", { source: "faq" })).toBe("program");
+    expect(classifyQuestion("ปริญญาตรีมีสาขาอะไร", { source: "faq", routeToBuildingId: "machine-shop" })).toBe("program");
+    expect(classifyQuestion("Do you have a bachelor degree?", { source: "faq" })).toBe("program");
+    expect(classifyQuestion("ช่างยนต์อยู่ไหน", { source: "faq", routeToBuildingId: "mech-auto" })).toBe("building");
+  });
+  it("does not mistake advice to the reader for 'I don't know'", () => {
+    expect(isUnsure({ source: "ai", reply: "If you're not sure which one, try the quiz" })).toBe(false);
+    expect(isUnsure({ source: "ai", reply: "ถ้ายังไม่แน่ใจ ลองเล่นเกมเลือกสาขา" })).toBe(false);
+    expect(isUnsure({ source: "ai", reply: "ผมยังไม่แน่ใจเรื่องนี้ครับ" })).toBe(true);
+  });
+});

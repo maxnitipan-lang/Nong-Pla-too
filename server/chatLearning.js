@@ -60,7 +60,9 @@ export function isLearnable(question, answer) {
 
 const NEWS = /ข่าว|ประกาศ|กิจกรรม|งานวัน|เปิดบ้าน|ปฏิทิน|วันหยุด|สอบ.*วันไหน|news|event|announcement|calendar/i;
 const BUILDING = /อยู่ไหน|อยู่ที่ไหน|ที่ไหน|ตรงไหน|ทางไป|ไปยังไง|ไปทางไหน|ตึก|อาคาร|ห้อง|ชั้น|โรงอาหาร|ห้องน้ำ|สุขา|ประตู|ที่จอด|แผนที่|นำทาง|where|building|room|floor|toilet|canteen|gate|parking|map|directions/i;
-const PROGRAM = /สาขา|เรียน|หลักสูตร|ปวช|ปวส|ปริญญา|สมัคร|ค่าเทอม|ทุน|กยศ|ฝึกงาน|ทวิภาคี|จบแล้ว|อาชีพ|ครู|อาจารย์|เกรด|program|study|course|apply|admission|tuition|scholarship|teacher|career|internship/i;
+const PROGRAM = /สาขา|เรียน|หลักสูตร|ปวช|ปวส|ปริญญา|ป\.ตรี|ทล\.บ|สมัคร|ค่าเทอม|ทุน|กยศ|ฝึกงาน|ทวิภาคี|จบแล้ว|อาชีพ|ครู|อาจารย์|เกรด|ช่าง|ระดับ|ต่างกัน|program|study|course|apply|admission|tuition|scholarship|teacher|career|internship|degree|bachelor|diploma|certificate/i;
+/** "Where / how to get there" words: a question with these is about a place even if it names a program. */
+const WHERE = /อยู่ไหน|อยู่ที่ไหน|ที่ไหน|ตรงไหน|ทางไป|ไปยังไง|ไปทางไหน|อยู่ตึก|อยู่อาคาร|ชั้นไหน|where|how do i get|directions/i;
 const CAMPUS = /วิทยาลัย|น้องปลาทู|ผอ|ผู้อำนวยการ|นักเรียน|นักศึกษา|เทคนิค|college|campus|student|director/i;
 const OFFTOPIC_FAQ = /^(off-|chat-|local-|greeting|thanks|bye|who-are-you|what-can-you-do|are-you-ai|en-(hello|thanks|bye|how-are-you|ai|who|joke|sing|weather|time|homework|politics|personal|compliment|sorry|ok|confused|bored|stress|travel|souvenir|province))/;
 
@@ -69,13 +71,16 @@ export function classifyQuestion(question, answer = {}) {
   const q = String(question ?? "");
   if (answer.faqId && OFFTOPIC_FAQ.test(answer.faqId)) return "offtopic";
   if (answer.source === "news" || NEWS.test(q)) return "news";
+  // "ช่างกลโรงงานมีระดับไหน" is about the program; "ช่างกลโรงงานอยู่ตึกไหน" is about the place.
+  if (PROGRAM.test(q) && !WHERE.test(q)) return "program";
   if (answer.routeToBuildingId || BUILDING.test(q)) return "building";
   if (PROGRAM.test(q)) return "program";
   if (!CAMPUS.test(q) && answer.source !== "faq") return "offtopic";
   return "other";
 }
 
-const UNSURE = /ไม่มีข้อมูล|ยังไม่มีข้อมูล|ไม่แน่ใจ|ยังไม่ทราบ|ไม่ทราบ|ตอบไม่ได้|ไม่สามารถ|ช่วยไม่ได้|ไม่พบข้อมูล|don't have (any )?information|not sure|can't answer|cannot answer|i don't know|no information/i;
+// Only Nong Platoo saying it doesn't know — not advice to the reader ("ถ้ายังไม่แน่ใจ…", "If you're not sure…").
+const UNSURE = /ไม่มีข้อมูล|ยังไม่มีข้อมูล|(ผม|น้องปลาทู)(ยัง)?ไม่แน่ใจ|(ผม|น้องปลาทู)(ยัง)?ไม่ทราบ|ตอบไม่ได้|(ผม|น้องปลาทู)ช่วยไม่ได้|ไม่พบข้อมูล|don't have (any )?information|i'?m not sure|i am not sure|can't answer|cannot answer|i don't know|no information/i;
 
 /** Did Nong Platoo fail to answer, or say it doesn't know? */
 export function isUnsure(answer = {}) {
