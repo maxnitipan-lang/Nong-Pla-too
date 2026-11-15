@@ -223,3 +223,17 @@ svg { flex: 0 0 auto; }
 .lq-tools .btn { margin: 6px 8px 0 0; }
 @media (max-width: 560px) { .lq-bar { grid-template-columns: 120px 1fr 56px; } }
 .lq-q strong, .lq-answer, .lq-dispute, .lq-meta { overflow-wrap: anywhere; }
+/* Filter bar on /admin/learned (search + dropdowns in labelled groups). */
+.lq-filters { margin: 4px 0 12px; padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+.lq-search { display: flex; align-items: center; gap: 8px; max-width: 520px; padding: 0 12px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; }
+.lq-search input { flex: 1; min-height: 42px; color: var(--ink); font: inherit; background: none; border: 0; outline: 0; }
+.lq-fgroups { display: flex; flex-wrap: wrap; gap: 6px 28px; margin-top: 12px; }
+.lq-fgroups fieldset { display: flex; flex-wrap: wrap; gap: 8px; margin: 0; padding: 0; border: 0; }
+.lq-fgroups legend { display: flex; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--muted); font-size: 13px; }
+.lq-tip { display: inline-grid; place-items: center; width: 16px; height: 16px; font-size: 11px; color: var(--muted); border: 1px solid var(--line); border-radius: 50%; cursor: help; }
+.lq-select { min-width: 180px; min-height: 42px; padding: 0 34px 0 12px; color: var(--ink); font: inherit; font-size: 14px; background: var(--card) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235b6d72' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") no-repeat right 12px center; border: 1px solid var(--line); border-radius: 12px; appearance: none; cursor: pointer; }
+.lq-select:focus, .lq-search:focus-within { border-color: var(--accent); outline: 2px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+.lq-count { margin: 12px 0 0; color: var(--muted); font-size: 13px; }
+.lq-reset { padding: 0; color: var(--accent); font: inherit; font-weight: 700; background: none; border: 0; cursor: pointer; text-decoration: underline; }
+.lq-answer b { color: var(--ink); }
+@media (max-width: 560px) { .lq-select { min-width: 0; flex: 1 1 140px; } .lq-fgroups fieldset { width: 100%; } }

@@ -45,34 +45,84 @@ function stateOf(r) {
   return { key: "fine", badge: "👍 ตอบได้แล้ว", tone: "grey", hint: "ตอบด้วยคำตอบที่มีอยู่ ไม่ต้องทำอะไร" };
 }
 
-const TABS = [
-  ["todo", "ต้องจัดการ", (s) => ["disputed", "unanswered", "check"].includes(s.key)],
-  ["inuse", "ใช้ตอบอยู่", (s) => s.key === "inuse"],
-  ["all", "ทั้งหมด", (s) => s.key !== "hidden"],
-  ["hidden", "ซ่อน", (s) => s.key === "hidden"],
+/** Status filter: [value, label, test on the state]. */
+const STATUSES = [
+  ["all", "สถานะทั้งหมด", (s) => s.key !== "hidden"],
+  ["todo", "ต้องจัดการ (ทุกอย่างที่ค้าง)", (s) => ["disputed", "unanswered", "check"].includes(s.key)],
+  ["unanswered", "❓ ยังตอบไม่ได้", (s) => s.key === "unanswered"],
+  ["disputed", "⚠️ มีคนแย้งว่าผิด", (s) => s.key === "disputed"],
+  ["check", "⏳ รอตรวจ", (s) => s.key === "check"],
+  ["inuse", "✅ ใช้ตอบอยู่", (s) => s.key === "inuse"],
+  ["fine", "👍 ตอบได้แล้ว (คำตอบที่มีอยู่)", (s) => s.key === "fine"],
+  ["hidden", "🙈 ซ่อนไว้", (s) => s.key === "hidden"],
 ];
+const SOURCES = [
+  ["all", "ตอบด้วยทั้งหมด"],
+  ["faq", "คำตอบสำเร็จรูป"],
+  ["ai", "AI คิดเอง"],
+  ["learned", "คำตอบที่บันทึกไว้"],
+  ["news", "รายการข่าว"],
+  ["fallback", "ตอบไม่ได้ (AI ไม่ว่าง)"],
+];
+const SORTS = [
+  ["count", "ถามบ่อยที่สุดก่อน"],
+  ["recent", "ล่าสุดก่อน"],
+  ["az", "เรียงตามตัวอักษร"],
+];
+/** Questions typed while testing the app ("ทดสอบ", "test"): hidden by default. */
+const TEST = /ทดสอบ|เทส|\btest/i;
+const FILTER_KEY = "nongplatoo.learnedFilters";
+const DEFAULT_FILTERS = { q: "", group: "all", lang: "all", status: "all", source: "all", hideTest: true, sort: "count" };
+
+/** Bold (**x**) shown as bold, like in the chat — other marks as plain text. */
+const answerHtml = (text) =>
+  html`${text}`.replace(/\*\*(.+?)\*\*/g, "<b>$1</b>").replace(/\n+/g, "<br>");
 
 export async function render(page, { canEdit }) {
   let list = [];
-  let tab = "todo";
-  let group = null; // null = every group
   let showHelp = false;
+  let f = { ...DEFAULT_FILTERS };
+  try {
+    f = { ...f, ...JSON.parse(localStorage.getItem(FILTER_KEY) || "{}") };
+  } catch {
+    /* no saved filters */
+  }
+  const keepFilters = () => {
+    try {
+      localStorage.setItem(FILTER_KEY, JSON.stringify({ ...f, q: "" }));
+    } catch {
+      /* private mode */
+    }
+  };
+  const matches = (r) => {
+    const test = TEST.test(r.question);
+    if (f.hideTest && test) return false;
+    if (!STATUSES.find(([id]) => id === f.status)[2](r.state)) return false;
+    if (f.group !== "all" && r.category !== f.group) return false;
+    if (f.lang !== "all" && r.lang !== f.lang) return false;
+    if (f.source !== "all" && (r.lastSource === "ai-kiosk" ? "ai" : r.lastSource === "faq-close" ? "fallback" : r.lastSource) !== f.source) return false;
+    const q = f.q.trim().toLowerCase();
+    return !q || r.question.toLowerCase().includes(q) || r.answer.toLowerCase().includes(q);
+  };
+  const sorter = { count: (a, b) => b.askCount - a.askCount, recent: (a, b) => b.updatedAt - a.updatedAt, az: (a, b) => a.question.localeCompare(b.question, "th") };
 
   const draw = async () => {
     list = (await apiGet("admin/learned/list")).map((r) => ({ ...r, state: stateOf(r) }));
-    const count = (key) => list.filter((r) => r.state.key === key).length;
-    const todo = list.filter((r) => TABS[0][2](r.state)).length;
-    if (tab === "todo" && !todo && list.length) tab = "all";
-    const tabFn = TABS.find(([id]) => id === tab)[2];
-    const shown = list.filter((r) => tabFn(r.state) && (!group || r.category === group)).sort((a, b) => b.askCount - a.askCount);
-    const asks = list.reduce((n, r) => n + r.askCount, 0);
-    const agreed = list.filter((r) => r.state.key === "check" && r.verified === "agree").length;
+    // The summary follows "ไม่รวมรายการทดสอบ" too.
+    const base = f.hideTest ? list.filter((r) => !TEST.test(r.question)) : list;
+    const count = (key) => base.filter((r) => r.state.key === key).length;
+    const shown = list.filter(matches).sort(sorter[f.sort] ?? sorter.count);
+    const select = (name, options, label) => html`<select class="lq-select" data-filter="${name}" aria-label="${label}">${options.map(([v, text]) => raw(html`<option value="${v}" ${String(f[name]) === String(v) ? "selected" : ""}>${text}</option>`))}</select>`;
+    const tip = (text) => html`<span class="lq-tip" title="${text}" aria-label="${text}">ⓘ</span>`;
+    const changed = Object.entries(DEFAULT_FILTERS).some(([k, v]) => f[k] !== v);
+    const asks = base.reduce((n, r) => n + r.askCount, 0);
+    const agreed = base.filter((r) => r.state.key === "check" && r.verified === "agree").length;
 
     const card = (key, emoji, title, n, hint) => html`<button type="button" class="lq-card ${n ? `lq-${key}` : ""}" data-card="${key}">
         <span>${emoji} ${title}</span><strong>${n}</strong><small>${n ? hint : "เรียบร้อย ไม่มีงานค้าง"}</small></button>`;
 
     const groups = GROUPS.map(([id, label, emoji]) => {
-      const rows = list.filter((r) => r.category === id && r.state.key !== "hidden");
+      const rows = base.filter((r) => r.category === id && r.state.key !== "hidden");
       return { id, label: `${emoji} ${label}`, asks: rows.reduce((n, r) => n + r.askCount, 0) };
     });
     const maxAsks = Math.max(1, ...groups.map((g) => g.asks));
@@ -86,7 +136,7 @@ export async function render(page, { canEdit }) {
         </div>
         <p class="lq-meta">ถาม ${r.askCount} ครั้ง · ${GROUP_NAME[r.category] ?? r.category} · ตอบด้วย${SOURCE[r.lastSource] ?? r.lastSource}${r.lang === "en" ? " · ภาษาอังกฤษ" : ""}</p>
         ${r.disputeNote ? raw(html`<p class="lq-dispute">ผู้ใช้แย้งว่า: “${r.disputeNote}”</p>`) : ""}
-        <p class="lq-answer"><span>น้องปลาทูตอบว่า:</span> ${r.answer.length > 240 ? `${r.answer.slice(0, 240)}…` : r.answer}</p>
+        <p class="lq-answer"><span>น้องปลาทูตอบว่า:</span> ${raw(answerHtml(r.answer.length > 240 ? `${r.answer.slice(0, 240)}…` : r.answer))}</p>
         <p class="lq-hint">👉 ${s.hint}</p>
         ${canEdit
           ? raw(html`<div class="lq-actions">
@@ -101,7 +151,7 @@ export async function render(page, { canEdit }) {
 
     page.innerHTML = html`
       <div class="lq-intro">
-        <p>ดูว่าคนถามน้องปลาทูเรื่องอะไรบ้าง แล้วช่วยสอนคำตอบที่ถูกต้อง · ถามทั้งหมด <strong>${asks}</strong> ครั้ง (${list.length} คำถาม)</p>
+        <p>ดูว่าคนถามน้องปลาทูเรื่องอะไรบ้าง แล้วช่วยสอนคำตอบที่ถูกต้อง · ถามทั้งหมด <strong>${asks}</strong> ครั้ง (${base.length} คำถาม)</p>
         <button type="button" class="btn small outline" data-help>${showHelp ? "ซ่อนวิธีใช้" : "❔ วิธีใช้"}</button>
       </div>
       ${showHelp
@@ -120,19 +170,33 @@ export async function render(page, { canEdit }) {
       </div>
 
       <div class="card lq-groups">
-        <div class="lq-groups-head"><strong>คนถามเรื่องอะไรบ้าง</strong>${group ? raw(html`<button type="button" class="btn small outline" data-group="">ดูทุกกลุ่ม</button>`) : raw('<small class="muted">กดที่กลุ่มเพื่อดูเฉพาะกลุ่มนั้น</small>')}</div>
-        ${groups.map((g) => raw(html`<button type="button" class="lq-bar ${group === g.id ? "on" : ""}" data-group="${g.id}">
+        <div class="lq-groups-head"><strong>คนถามเรื่องอะไรบ้าง</strong>${f.group !== "all" ? raw(html`<button type="button" class="btn small outline" data-group="all">ดูทุกกลุ่ม</button>`) : raw('<small class="muted">กดที่กลุ่มเพื่อดูเฉพาะกลุ่มนั้น</small>')}</div>
+        ${groups.map((g) => raw(html`<button type="button" class="lq-bar ${f.group === g.id ? "on" : ""}" data-group="${g.id}">
             <span>${g.label}</span><i><b style="width:${(100 * g.asks) / maxAsks}%"></b></i><small>${g.asks} ครั้ง</small></button>`))}
       </div>
 
-      <div class="lq-tabs" role="tablist">
-        ${TABS.map(([id, label, fn]) => raw(html`<button type="button" role="tab" class="${tab === id ? "on" : ""}" data-tab="${id}">${label} <span>${list.filter((r) => fn(r.state)).length}</span></button>`))}
+      <div class="lq-filters">
+        <label class="lq-search">🔍<input type="search" data-filter="q" value="${f.q}" placeholder="ค้นหา: พิมพ์คำในคำถามหรือคำตอบ เช่น ห้องสมุด, ค่าเทอม" /></label>
+        <div class="lq-fgroups">
+          <fieldset><legend>เรื่องที่ถาม ${raw(tip("กลุ่มของคำถาม (ระบบจัดให้อัตโนมัติ) และภาษาที่ถาม"))}</legend>
+            ${raw(select("group", [["all", "ทุกกลุ่ม"], ...GROUPS.map(([id, label, emoji]) => [id, `${emoji} ${label}`])], "กลุ่มคำถาม"))}
+            ${raw(select("lang", [["all", "ทุกภาษา"], ["th", "ภาษาไทย"], ["en", "ภาษาอังกฤษ"]], "ภาษา"))}
+          </fieldset>
+          <fieldset><legend>สถานะ & ที่มา ${raw(tip("สถานะ = ต้องทำอะไรกับคำถามนี้ · ตอบด้วย = น้องปลาทูได้คำตอบมาจากไหน"))}</legend>
+            ${raw(select("status", STATUSES.map(([id, label, fn]) => [id, `${label} (${list.filter((r) => fn(r.state) && (!f.hideTest || !TEST.test(r.question))).length})`]), "สถานะ"))}
+            ${raw(select("source", SOURCES, "ตอบด้วย"))}
+          </fieldset>
+          <fieldset><legend>อื่น ๆ ${raw(tip("ซ่อนคำถามที่พิมพ์ตอนทดสอบระบบ (มีคำว่า ทดสอบ / test) และเลือกวิธีเรียง"))}</legend>
+            ${raw(select("hideTest", [["true", "ไม่รวมรายการทดสอบ"], ["false", "รวมรายการทดสอบ"]], "รายการทดสอบ"))}
+            ${raw(select("sort", SORTS, "เรียงตาม"))}
+          </fieldset>
+        </div>
+        <p class="lq-count">พบ <strong>${shown.length}</strong> คำถาม${changed ? raw(' · <button type="button" class="lq-reset" data-reset>ล้างตัวกรอง</button>') : ""}</p>
       </div>
-      ${group ? raw(html`<p class="muted">แสดงเฉพาะ ${GROUP_NAME[group]}</p>`) : ""}
 
       ${shown.length
         ? raw(html`<div class="lq-list">${shown.map((r) => raw(row(r)))}</div>`)
-        : raw(html`<p class="empty">${tab === "todo" ? "🎉 ไม่มีงานค้าง น้องปลาทูตอบได้ทุกคำถามแล้ว" : "ยังไม่มีคำถามในหมวดนี้ — เมื่อมีคนถามน้องปลาทู จะขึ้นที่นี่"}</p>`)}
+        : raw(html`<p class="empty">${f.status === "todo" && !f.q && f.group === "all" ? "🎉 ไม่มีงานค้าง น้องปลาทูตอบได้ทุกคำถามแล้ว — เลือกสถานะ “สถานะทั้งหมด” เพื่อดูทุกคำถาม" : "ไม่พบคำถามตามตัวกรองนี้ — ลองล้างตัวกรอง"}</p>`)}
 
       ${canEdit
         ? raw(html`<details class="lq-tools"><summary>เครื่องมือเพิ่มเติม</summary>
@@ -191,23 +255,24 @@ export async function render(page, { canEdit }) {
       showHelp = !showHelp;
       return draw();
     }
+    if (e.target.closest("[data-reset]")) {
+      f = { ...DEFAULT_FILTERS };
+      keepFilters();
+      return draw();
+    }
     const c = e.target.closest("[data-card]");
     if (c) {
-      tab = "todo";
-      group = null;
+      f = { ...f, status: c.dataset.card, group: "all", q: "" };
+      keepFilters();
       await draw();
       page.querySelector(".lq-list")?.scrollIntoView({ behavior: "smooth", block: "start" });
       return;
     }
     const g = e.target.closest("[data-group]");
     if (g) {
-      group = g.dataset.group && g.dataset.group !== group ? g.dataset.group : null;
-      if (group) tab = "all";
-      return draw();
-    }
-    const t = e.target.closest("[data-tab]");
-    if (t) {
-      tab = t.dataset.tab;
+      f.group = g.dataset.group === f.group ? "all" : g.dataset.group;
+      if (f.group !== "all" && f.status === "todo") f.status = "all";
+      keepFilters();
       return draw();
     }
     const all = e.target.closest("[data-act-all]");
@@ -254,6 +319,29 @@ export async function render(page, { canEdit }) {
         toastError(error);
       }
     }
+  });
+
+  page.addEventListener("change", (e) => {
+    const el = e.target.closest("select[data-filter]");
+    if (!el) return;
+    const name = el.dataset.filter;
+    f[name] = name === "hideTest" ? el.value === "true" : el.value;
+    keepFilters();
+    draw();
+  });
+  let typing = null;
+  page.addEventListener("input", (e) => {
+    const el = e.target.closest("input[data-filter=q]");
+    if (!el) return;
+    f.q = el.value;
+    clearTimeout(typing);
+    typing = setTimeout(async () => {
+      const at = el.selectionStart;
+      await draw();
+      const again = page.querySelector("input[data-filter=q]");
+      again?.focus();
+      again?.setSelectionRange(at, at);
+    }, 250);
   });
 
   await draw();
