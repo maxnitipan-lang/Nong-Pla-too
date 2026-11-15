@@ -37,3 +37,23 @@ describe("pronunciation", () => {
     for (const e of faq.entries) expect(cleanForSpeech(e.answer), e.id).not.toMatch(/ปว[ชส]\.|รองฯ|พ\.ศ\./);
   });
 });
+
+describe("chunk: where the voice pauses", async () => {
+  const { chunk, voiceSummary } = await import("./speechText.js");
+  it("never splits a phone number read digit by digit", () => {
+    const en = "Dual vocational education means studying at the college while also doing practical training in real companies, which helps you gain hands-on work experience before graduation. If you want to know more about which programs offer this or how to apply, you can check with the Registration office or call 0 3 4, 7 1 1 4 4 0.";
+    expect(chunk(en).every((p) => !/^\d[.,]?$/.test(p) && !/\d$/.test(p.trim()) || p === chunk(en).at(-1))).toBe(true);
+    expect(chunk(en).at(-1)).toMatch(/0 3 4, 7 1 1 4 4 0\.$/);
+  });
+  it("breaks Thai without spaces at a word, not in the middle of one", () => {
+    const parts = chunk("ลูกชอบซ่อมรถมอเตอร์ไซค์สามารถเรียนสาขาวิชาช่างยนต์".repeat(6), 60);
+    for (const p of parts.slice(0, -1)) expect(p.length).toBeLessThanOrEqual(60);
+    expect(parts.join("")).toBe("ลูกชอบซ่อมรถมอเตอร์ไซค์สามารถเรียนสาขาวิชาช่างยนต์".repeat(6));
+  });
+  it("reads only the start of a long reply, ending at a sentence", () => {
+    const long = "ข้อหนึ่งยาวมากครับ ".repeat(40);
+    const v = voiceSummary(long, 120);
+    expect(v.length).toBeLessThan(170);
+    expect(v).toMatch(/ครับ รายละเอียดเพิ่มเติมดูบนจอได้เลยครับ$/);
+  });
+});

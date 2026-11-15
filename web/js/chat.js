@@ -12,6 +12,7 @@
 
 import { apiPost } from "./api.js";
 import { forVoice } from "/shared/politeness.js";
+import { voiceSummary } from "/shared/speechText.js";
 import { icon } from "./icons.js";
 import { renderMarkdown } from "./markdown.js";
 import { $, html, raw, readStore, writeStore } from "./util.js";
@@ -227,7 +228,8 @@ export class PlatooChat {
   /* ---------------- talking */
 
   async speakReply(text, session) {
-    text = this.say(text);
+    // Long replies: read the first sentences, the rest stays on the screen.
+    text = this.say(voiceSummary(text, 450, isEnglishText(text)));
     const s = this.s.settings;
     if (!s.speakReplies) return;
     // The AI voice takes a few seconds to arrive — stay on "กำลังคิด…" until sound actually plays.
@@ -450,7 +452,7 @@ export class PlatooChat {
         const session = this.session;
         unlockAudio();
         this.set({ phase: "speaking" });
-        void speak(this.say(message.content), { engine: this.engine, rate: s.settings.rate }).done.then(() => session === this.session && this.set({ phase: "idle" }));
+        void speak(this.say(voiceSummary(message.content, 450, isEnglishText(message.content))), { engine: this.engine, rate: s.settings.rate }).done.then(() => session === this.session && this.set({ phase: "idle" }));
         break;
       }
       case "open-map":

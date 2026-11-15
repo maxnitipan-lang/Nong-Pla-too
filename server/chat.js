@@ -306,6 +306,18 @@ export function englishOnly(reply) {
 }
 
 /** Someone who wants to study but can't pick a program ("ไม่รู้จะเรียนสาขาไหน", "what should I study"). */
+/**
+ * A Thai answer ends politely ("…ครับ"), so it sounds finished when read aloud and becomes
+ * "ค่ะ" for a female voice. Answers built from department texts sometimes stop without it.
+ */
+export function politeEnding(reply) {
+  const t = String(reply ?? "");
+  if (!/[฀-๿]/.test(t)) return t;
+  const end = t.trimEnd().replace(/[\s\p{Extended_Pictographic}️]+$/u, "");
+  if (/(ครับ|ค่ะ|คะ|นะ|จ้า|[?!)"”])$/.test(end)) return t;
+  return t.trimEnd().replace(/[.。]$/, "") + " ครับ";
+}
+
 export function isUndecided(text) {
   const t = String(text ?? "").replace(/\s+/g, "").toLowerCase();
   return (
@@ -404,7 +416,7 @@ ${answer.reply}` };
     const reply = options.spoken
       ? ready.reply.replace(/\*\*/g, "").replace(/\n\s*[-•]\s+/g, " · ").replace(/\n+/g, " ").trim()
       : ready.reply;
-    return { reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, faqId: ready.faqId, source: "faq" };
+    return { reply: politeEnding(reply), routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, faqId: ready.faqId, source: "faq" };
   }
   const latestNews = options.lang === "en" || options.correcting ? null : newsAnswer(lastUser, news);
   if (latestNews) return { reply: latestNews, routeToBuildingId: null, action: "open-news", source: "news" };

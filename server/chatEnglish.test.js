@@ -17,3 +17,13 @@ describe("isUndecided", () => {
     for (const q of ["ห้องสมุดอยู่ไหน", "ช่างยนต์เรียนอะไร", "where is the library"]) expect(isUndecided(q)).toBe(false);
   });
 });
+
+describe("politeEnding", () => {
+  it("adds ครับ only to Thai answers that stop without one", async () => {
+    const { politeEnding } = await import("./chat.js");
+    expect(politeEnding("เน้นความปลอดภัยในการทำงานกับไฟฟ้า")).toBe("เน้นความปลอดภัยในการทำงานกับไฟฟ้า ครับ");
+    expect(politeEnding("ห้องสมุดอยู่อาคาร 3 ครับ 📚")).toBe("ห้องสมุดอยู่อาคาร 3 ครับ 📚");
+    expect(politeEnding("สนใจไหม?")).toBe("สนใจไหม?");
+    expect(politeEnding("The library is in Building 3.")).toBe("The library is in Building 3.");
+  });
+});

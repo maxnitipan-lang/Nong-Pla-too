@@ -145,15 +145,64 @@ export function cleanForSpeech(text) {
 /** Chrome cuts utterances off after ~15 s, so speak long text in pieces split at spaces. */
 export function chunk(text, max = 160) {
   const parts = [];
-  let rest = text;
+  let rest = String(text);
   while (rest.length > max) {
-    let cut = rest.lastIndexOf(" ", max);
-    if (cut < max * 0.5) cut = max;
+    const cut = cutPoint(rest, max);
     parts.push(rest.slice(0, cut).trim());
     rest = rest.slice(cut).trim();
   }
   if (rest) parts.push(rest);
   return parts;
+}
+
+/** Thai has no spaces between words: the browser's word splitter finds where a word ends. */
+const THAI_WORDS = typeof Intl !== "undefined" && Intl.Segmenter ? new Intl.Segmenter("th", { granularity: "word" }) : null;
+
+/**
+ * Where to break a long text for the voice, best first: after a sentence ("ครับ", "ค่ะ", ".");
+ * at a space or comma; at the end of a Thai word. Never in the middle of a word (that makes
+ * the voice stumble). Falls back to `max` only when there is no word boundary at all.
+ */
+function cutPoint(text, max) {
+  const head = text.slice(0, max + 1);
+  let sentence = -1;
+  // "…ครับ, " (a list turned into one line) is a sentence end too.
+  for (const m of head.matchAll(/(ครับ|ค่ะ|คะ|นะ|[.!?。;]),?(?=\s)/g)) sentence = m.index + m[0].length;
+  if (sentence >= max * 0.4) return sentence;
+  // A space, but never inside a number read digit by digit ("0 3 4", "ศูนย์ สาม สี่"):
+  // a pause there sounds like a stutter.
+  const DIGIT = /^(\d|ศูนย์|หนึ่ง|สอง|สาม|สี่|ห้า|หก|เจ็ด|แปด|เก้า)[,.!?)]?$/;
+  let space = -1;
+  for (let i = head.length - 1; i >= max * 0.5; i--) {
+    if (head[i] !== " " && head[i] !== "\n") continue;
+    const before = head.slice(0, i).split(/\s/).pop();
+    const after = text.slice(i + 1).split(/\s/)[0];
+    if (DIGIT.test(before) && DIGIT.test(after)) continue;
+    space = i;
+    break;
+  }
+  if (space >= max * 0.5) return space + 1;
+  if (THAI_WORDS) {
+    let last = -1;
+    for (const s of THAI_WORDS.segment(text.slice(0, max + 40))) if (s.index > 0 && s.index <= max) last = s.index;
+    if (last >= max * 0.3) return last;
+  }
+  return space > 0 ? space + 1 : max;
+}
+
+/**
+ * What the voice reads of a long reply: the first sentences up to about `max` characters,
+ * then "the rest is on the screen". The full reply stays on the screen.
+ */
+export function voiceSummary(text, max = 450, english = false) {
+  const t = String(text ?? "").trim();
+  if (t.length <= max) return t;
+  const head = t.slice(0, max);
+  let end = -1;
+  for (const m of head.matchAll(/(ครับ|ค่ะ|[.!?。])(?=\s|$)/g)) end = m.index + m[0].length;
+  const cut = end >= max * 0.35 ? end : cutPoint(t, max);
+  const more = english ? " You can see more details on the screen." : " รายละเอียดเพิ่มเติมดูบนจอได้เลยครับ";
+  return t.slice(0, cut).trim() + more;
 }
 
 /**
