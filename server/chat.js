@@ -12,7 +12,7 @@
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
 import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, peopleLines, programmeLines } from "../shared/collegeFacts.js";
 import { answerFromFaq, faqCategory, normalizeQuestion, similarity } from "./chatFaq.js";
-import { learnedAnswer, rememberQuestion } from "./chatLearning.js";
+import { CORRECTION, adminNotes, learnedAnswer, markDisputed, recordQuestion } from "./chatLearning.js";
 import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
 import { cleanForSpeech } from "../shared/speechText.js";
 import { prepareSpeech } from "./voice.js";
@@ -197,6 +197,15 @@ const EN_DOWN_REPLY = `Sorry, Nong Platoo can't answer right now. Please try aga
 const ENGLISH_RULE = `
 
 LANGUAGE: The visitor asked in English. Always reply in clear, simple English, even though the data above is in Thai. Never reply in Thai and never write any Thai letters: translate every building, department, office and person name into English (e.g. "Building 85", "Accounting", "Registration office"), with no Thai name in brackets. Write Thai levels in English too: ปวช. = Vocational Certificate, ปวส. = Higher Vocational Diploma. Use "Nong Platoo" for yourself. Do not add "sir" or "madam" (that is not how the Thai ครับ translates).`;
+/** The visitor says the last answer was wrong: check the data, don't just agree. */
+const CORRECTION_RULE = `
+
+ผู้ใช้กำลังแย้งว่าคำตอบก่อนหน้าผิด ("ไม่ใช่", "ผิด"): ห้ามเชื่อตามทันที ให้ตรวจกับข้อมูลวิทยาลัยด้านบนก่อน (ข้อมูลอาคารและแผนผังปี 2569 ข้อมูลสาขา บุคลากร ข่าว และความรู้ที่แอดมินตรวจแล้ว) แล้วตอบตามแหล่งข้อมูล:
+- ถ้าข้อมูลยืนยันคำตอบเดิม ให้ยืนยันอย่างสุภาพ และบอกว่ามาจากข้อมูลไหน
+- ถ้าข้อมูลแสดงว่าคำตอบเดิมผิด ให้ขอโทษสั้น ๆ แล้วแก้ให้ถูกตามข้อมูล
+- ถ้าข้อมูลไม่มีเรื่องนี้ ให้บอกตรง ๆ ว่ายังไม่แน่ใจ ขอบคุณที่แจ้ง และแนะนำให้สอบถามงานประชาสัมพันธ์หรือหน่วยงานที่เกี่ยวข้อง
+ห้ามแต่งข้อมูลใหม่ตามที่ผู้ใช้บอก ถ้าข้อมูลด้านบนไม่ยืนยัน`;
+
 /** In English, only the English ready answers fit (the rest are Thai). */
 const englishReady = (ready, options) => !ready || options.lang !== "en" || /^en-/.test(ready.faqId ?? "") ? ready : null;
 const DOWN_REPLY = `ขออภัยครับ ตอนนี้น้องปลาทูตอบคำถามนี้ไม่ได้ชั่วคราว ลองถามใหม่อีกครั้ง หรือโทรสอบถามวิทยาลัย ${COLLEGE_FACTS.phone} ได้เลยครับ`;
@@ -308,12 +317,20 @@ export function isUndecided(text) {
 export async function askCampusChat(history, options = {}) {
   // Asked in English → answered in English (ready English answers first, then the AI).
   if (!options.lang && isEnglishQuestion(history.filter(m => m.role === "user").at(-1)?.content)) options = { ...options, lang: "en" };
+  const lang = options.lang === "en" ? "en" : "th";
+  const asked = history.filter(m => m.role === "user");
+  const lastQuestion = asked.at(-1)?.content ?? "";
+  // "ไม่ใช่ / ผิด" after an answer: flag that answer for the admin, and make the AI check the data.
+  if (asked.length > 1 && history.some(m => m.role === "assistant") && CORRECTION.test(lastQuestion.trim())) {
+    options = { ...options, correcting: true };
+    void markDisputed(asked.at(-2)?.content, lang, lastQuestion);
+  }
   try {
-    const slot = cacheSlot(history, options);
+    const slot = options.correcting ? null : cacheSlot(history, options);
     const remembered = cachedAnswer(slot);
     if (remembered) {
-      // Asked again: counts toward learning it for good (the memory cache is gone after a restart).
-      void rememberQuestion(history.filter(m => m.role === "user").at(-1)?.content, { ...remembered, source: "ai" }, options.lang === "en" ? "en" : "th");
+      // Asked again: count it (the memory cache is gone after a restart; the database is not).
+      void recordQuestion(lastQuestion, { ...remembered, source: "ai" }, lang);
       if (options.aiVoice) prepareSpeech(cleanForSpeech(remembered.reply));
       return remembered;
     }
@@ -323,16 +340,17 @@ export async function askCampusChat(history, options = {}) {
     // "ไม่รู้จะเรียนสาขาไหน": whatever the answer, offer the program quiz button.
     if (!answer.action && !answer.routeToBuildingId && isUndecided(history.filter(m => m.role === "user").at(-1)?.content))
       answer = { ...answer, action: "dept-quiz" };
-    rememberAnswer(slot, answer);
-    // Learn it for the next person (only single, general questions — see chatLearning.js).
-    // Answers that talk about "this kiosk" depend on where it stands, so they are not learned.
-    const asked = history.filter(m => m.role === "user");
-    if (asked.length === 1 || !FOLLOW_UP.test(asked.at(-1)?.content ?? ""))
-      if (!(options.atKiosk && /ตู้|kiosk|from here/i.test(answer.reply)))
-        void rememberQuestion(asked.at(-1)?.content, answer, options.lang === "en" ? "en" : "th", () =>
-          // Ask once more, on its own, to check the first answer before an admin sees it.
-          answerChat([{ role: "user", content: asked.at(-1)?.content }], { lang: options.lang, atKiosk: options.atKiosk })
-        );
+    if (!options.correcting) rememberAnswer(slot, answer);
+    // Record the question for /admin/learned (see chatLearning.js). Follow-ups and corrections
+    // only make sense with the conversation, so they are not recorded on their own.
+    // Answers that talk about "this kiosk" depend on where it stands, so they are not reused.
+    if (!options.correcting && (asked.length === 1 || !FOLLOW_UP.test(lastQuestion))) {
+      const kioskOnly = options.atKiosk && /ตู้|kiosk|from here/i.test(answer.reply);
+      void recordQuestion(lastQuestion, kioskOnly ? { ...answer, source: "ai-kiosk" } : answer, lang, answer.source === "ai" && !kioskOnly
+        // A new AI answer: ask once more, on its own, to check it before an admin sees it.
+        ? () => answerChat([{ role: "user", content: lastQuestion }], { lang: options.lang, atKiosk: options.atKiosk })
+        : null);
+    }
     // The browser will read this aloud with the AI voice: start making that voice now.
     if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
     return answer;
@@ -345,9 +363,11 @@ export async function askCampusChat(history, options = {}) {
     // The AI is busy or down: a ready answer that is only roughly the same question beats
     // "ask again later" ("พาไปกินข้าวกันหน่อย" → the canteen answer).
     const close = await closeReadyAnswer(history, options).catch(() => null);
-    if (close) return close;
     const en = options.lang === "en";
-    return { reply: /429|ถามบ่อย|หนาแน่น|โควตา/.test(message) ? (en ? EN_BUSY_REPLY : BUSY_REPLY) : en ? EN_DOWN_REPLY : DOWN_REPLY, routeToBuildingId: null, source: "fallback" };
+    const failed = close ?? { reply: /429|ถามบ่อย|หนาแน่น|โควตา/.test(message) ? (en ? EN_BUSY_REPLY : BUSY_REPLY) : en ? EN_DOWN_REPLY : DOWN_REPLY, routeToBuildingId: null, source: "fallback" };
+    // Questions Nong Platoo could not answer show up for the admin as "ตอบไม่ได้".
+    if (!options.correcting) void recordQuestion(lastQuestion, failed, lang);
+    return failed;
   }
 }
 
@@ -368,7 +388,17 @@ ${answer.reply}` };
   // ready-made set — instant, and no AI tokens spent.
   const lastUser = history.filter(m => m.role === "user").at(-1)?.content ?? "";
   const kiosk = options.atKiosk ? settings.kiosk : null;
-  const ready = englishReady(answerFromFaq(lastUser, buildings, settings, kiosk), options);
+  // An answer an admin approved for this question comes first, even before the ready answers
+  // (the admin may have written a better one). No AI tokens.
+  const learned = options.correcting ? null : await learnedAnswer(lastUser, options.lang === "en" ? "en" : "th").catch(() => null);
+  if (learned) {
+    const reply = options.spoken
+      ? learned.reply.replace(/\*\*/g, "").replace(/\n\s*[-•]\s+/g, " · ").replace(/\n+/g, " ").trim()
+      : learned.reply;
+    return { ...learned, reply };
+  }
+  // A correction ("ไม่ใช่นะ") goes straight to the AI, which checks it against the data.
+  const ready = options.correcting ? null : englishReady(answerFromFaq(lastUser, buildings, settings, kiosk), options);
   if (ready) {
     // Spoken: no bold or bullet marks (they're read out or sound odd) — list lines become one sentence.
     const reply = options.spoken
@@ -376,17 +406,9 @@ ${answer.reply}` };
       : ready.reply;
     return { reply, routeToBuildingId: ready.routeToBuildingId, action: ready.action ?? null, faqId: ready.faqId, source: "faq" };
   }
-  const latestNews = options.lang === "en" ? null : newsAnswer(lastUser, news);
+  const latestNews = options.lang === "en" || options.correcting ? null : newsAnswer(lastUser, news);
   if (latestNews) return { reply: latestNews, routeToBuildingId: null, action: "open-news", source: "news" };
 
-  // Asked before by other people: the answer Nong Platoo learned (no AI tokens).
-  const learned = await learnedAnswer(lastUser, options.lang === "en" ? "en" : "th").catch(() => null);
-  if (learned) {
-    const reply = options.spoken
-      ? learned.reply.replace(/\*\*/g, "").replace(/\n\s*[-•]\s+/g, " · ").replace(/\n+/g, " ").trim()
-      : learned.reply;
-    return { ...learned, reply };
-  }
 
   if (!CHAT_API_KEY) {
     throw new Error("ยังไม่ได้ตั้งค่า GEMINI_API_KEY ในไฟล์ .env — ขอ key ฟรีที่ https://aistudio.google.com/apikey");
@@ -397,10 +419,13 @@ ${answer.reply}` };
   // Keep only the last few user/assistant turns; the system prompt is rebuilt
   // fresh so the model always has current building/news data.
   const turns = history.filter(m => m.role === "user" || m.role === "assistant").slice(-10);
+  // Answers an admin checked and approved: trusted knowledge for similar questions.
+  const notes = await adminNotes(options.lang === "en" ? "en" : "th").catch(() => "");
+  const notesText = notes ? `\n\nความรู้ที่แอดมินวิทยาลัยตรวจและยืนยันแล้ว (เชื่อถือได้ ใช้ตอบคำถามที่คล้ายกัน):\n${notes}` : "";
 
   const payload = {
     messages: [
-      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk, turns.some(m => m.role === "user" && ABOUT_PEOPLE.test(m.content))) + (options.lang === "en" ? ENGLISH_RULE : "") },
+      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk, turns.some(m => m.role === "user" && ABOUT_PEOPLE.test(m.content))) + notesText + (options.correcting && !options.drafting ? CORRECTION_RULE : "") + (options.lang === "en" ? ENGLISH_RULE : "") },
       ...turns,
     ],
     temperature: 0.3,
@@ -532,4 +557,13 @@ ${answer.reply}` };
     throw new Error(`บริการ AI มีผู้ใช้งานหนาแน่น (${lastStatus}) — กรุณาลองใหม่อีกครั้งในอีกสักครู่`);
   }
   throw new Error(`เชื่อมต่อบริการ AI ไม่ได้ (${lastNetworkError}) — กรุณาลองใหม่อีกครั้ง`);
+}
+
+/**
+ * A suggested answer for /admin/learned ("ให้ AI ช่วยร่าง"): the AI answers the question on its
+ * own, from the college data, without ready or learned answers. The admin edits it before saving.
+ */
+export async function draftAnswer(question, lang = "th") {
+  const answer = await answerChat([{ role: "user", content: String(question) }], { lang, correcting: true, drafting: true });
+  return { reply: lang === "en" ? englishOnly(answer.reply) : answer.reply, routeToBuildingId: answer.routeToBuildingId ?? null };
 }

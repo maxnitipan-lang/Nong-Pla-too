@@ -44,3 +44,28 @@ describe("without a database", () => {
     await expect(learnedAnswer("ช่างยนต์กับช่างกลต่างกันยังไง")).resolves.toBeNull();
   });
 });
+
+describe("grouping, unsure answers and corrections", async () => {
+  const { classifyQuestion, isUnsure, CORRECTION, isRecordable } = await import("./chatLearning.js");
+
+  it("groups questions by topic", () => {
+    expect(classifyQuestion("ห้องสมุดอยู่ไหน", { source: "faq", routeToBuildingId: "general-subjects" })).toBe("building");
+    expect(classifyQuestion("มีข่าวรับสมัครไหม", { source: "ai" })).toBe("news");
+    expect(classifyQuestion("ช่างยนต์เรียนกี่ปี", { source: "ai" })).toBe("program");
+    expect(classifyQuestion("เล่ามุกตลกหน่อย", { source: "faq", faqId: "off-joke" })).toBe("offtopic");
+    expect(classifyQuestion("ฟุตบอลโลกใครชนะ", { source: "ai" })).toBe("offtopic");
+  });
+
+  it("spots answers Nong Platoo could not give", () => {
+    expect(isUnsure({ source: "fallback", reply: "ตอนนี้มีคนถามเยอะ" })).toBe(true);
+    expect(isUnsure({ source: "ai", reply: "น้องปลาทูยังไม่มีข้อมูลหอพักครับ" })).toBe(true);
+    expect(isUnsure({ source: "ai", reply: "ห้องสมุดอยู่อาคาร 3 ชั้น 1 ครับ" })).toBe(false);
+  });
+
+  it("recognises 'that's wrong' and never stores personal data", () => {
+    for (const t of ["ไม่ใช่นะ ห้องสมุดอยู่อาคาร 4", "ผิดแล้ว", "ไม่ใช่อันนี้", "That's wrong"]) expect(CORRECTION.test(t)).toBe(true);
+    for (const t of ["ห้องสมุดอยู่ไหน", "ไม่ใช้เงินได้ไหม"]) expect(CORRECTION.test(t)).toBe(false);
+    expect(isRecordable("โทร 081-234-5678 หน่อย")).toBe(false);
+    expect(isRecordable("ห้องสมุดอยู่ไหน")).toBe(true);
+  });
+});

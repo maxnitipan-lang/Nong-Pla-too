@@ -31,8 +31,8 @@ import {
   upsertCampusNews,
 } from "./db.js";
 import { saveImage } from "./images.js";
-import { clearAiAnswerCache } from "./chat.js";
-import { approveAgreed, deleteLearned, listLearned, updateLearned } from "./chatLearning.js";
+import { clearAiAnswerCache, draftAnswer } from "./chat.js";
+import { approveAgreed, deleteLearned, getLearned, listLearned, updateLearned } from "./chatLearning.js";
 import { syncCollegeNews } from "./newsScraper.js";
 import { adminProcedure, editorProcedure, router, staffProcedure } from "./_core/trpc.js";
 
@@ -166,10 +166,21 @@ export const adminRouter = router({
           id: z.string().trim().min(1).max(40),
           answer: z.string().trim().min(1).max(4000).optional(),
           status: z.enum(["new", "approved", "hidden"]).optional(),
+          category: z.enum(["building", "news", "program", "offtopic", "other"]).optional(),
         })
       )
       .mutation(({ input }) => run(() => updateLearned(input))),
     delete: editorProcedure.input(z.object({ id: z.string().trim().min(1).max(40) })).mutation(({ input }) => run(() => deleteLearned(input.id))),
     approveAgreed: editorProcedure.mutation(() => run(() => approveAgreed())),
+    // A suggested answer from the AI, for the admin to edit before saving (nothing is saved here).
+    draft: editorProcedure.input(z.object({ id: z.string().trim().min(1).max(40) })).mutation(async ({ input }) => {
+      const row = await getLearned(input.id);
+      if (!row) throw new TRPCError({ code: "NOT_FOUND", message: "ไม่พบคำถามนี้" });
+      try {
+        return await draftAnswer(row.question, row.lang === "en" ? "en" : "th");
+      } catch (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "AI ร่างคำตอบไม่สำเร็จ" });
+      }
+    }),
   }),
 });
