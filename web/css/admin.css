@@ -176,3 +176,50 @@ svg { flex: 0 0 auto; }
 .img-grid img { width: 96px; height: 72px; object-fit: cover; border-radius: 10px; }
 .img-grid button { position: absolute; top: 4px; right: 4px; width: 24px; height: 24px; display: grid; place-items: center; color: #fff; background: rgba(0,0,0,.6); border: 0; border-radius: 50%; }
 .img-grid button svg { width: 12px; height: 12px; }
+
+/* ---------------- /admin/learned ("คำถามจาก AI") */
+.lq-intro { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 12px; color: var(--muted); }
+.lq-intro p { margin: 0; }
+.lq-help { margin: 0 0 10px; padding: 14px 18px 14px 34px; background: var(--soft); border-radius: 14px; line-height: 1.8; }
+.lq-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 6px 0 14px; }
+.lq-card { display: flex; flex-direction: column; gap: 4px; padding: 16px 18px; text-align: left; color: var(--ink); font: inherit; background: var(--card); border: 1px solid var(--line); border-radius: 16px; cursor: pointer; }
+.lq-card span { font-weight: 700; }
+.lq-card strong { font-size: 30px; line-height: 1.1; }
+.lq-card small { color: var(--muted); }
+.lq-card.lq-unanswered, .lq-card.lq-disputed { border-color: #e7a19a; background: #fff4f2; }
+.lq-card.lq-check { border-color: #e9c46a; background: #fffaeb; }
+:root[data-theme="dark"] .lq-card.lq-unanswered, :root[data-theme="dark"] .lq-card.lq-disputed { background: #3a2422; }
+:root[data-theme="dark"] .lq-card.lq-check { background: #3a3220; }
+.lq-groups { margin-bottom: 14px; }
+.lq-groups-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.lq-bar { display: grid; grid-template-columns: 160px 1fr 70px; gap: 10px; align-items: center; width: 100%; padding: 6px 8px; color: var(--ink); font: inherit; text-align: left; background: none; border: 0; border-radius: 10px; cursor: pointer; }
+.lq-bar:hover, .lq-bar.on { background: var(--soft); }
+.lq-bar i { height: 10px; background: var(--soft); border-radius: 99px; overflow: hidden; }
+.lq-bar.on i, .lq-bar:hover i { background: var(--card); }
+.lq-bar b { display: block; height: 100%; background: var(--accent); border-radius: inherit; }
+.lq-bar small { color: var(--muted); text-align: right; }
+.lq-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin: 4px 0 12px; border-bottom: 1px solid var(--line); }
+.lq-tabs button { padding: 10px 14px; color: var(--muted); font: inherit; font-weight: 700; background: none; border: 0; border-bottom: 3px solid transparent; cursor: pointer; }
+.lq-tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+.lq-tabs span { margin-left: 4px; padding: 1px 8px; font-size: 12px; background: var(--soft); border-radius: 99px; }
+.lq-list { display: grid; gap: 10px; }
+.lq-row { padding: 14px 16px; background: var(--card); border: 1px solid var(--line); border-radius: 16px; }
+.lq-q { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.lq-q strong { font-size: 16px; color: var(--ink); }
+.lq-badge { padding: 3px 10px; font-size: 12px; font-weight: 700; border-radius: 99px; }
+.lq-ok { color: #1d6b3a; background: #e3f5e9; }
+.lq-warn { color: #8a5a00; background: #fff1cc; }
+.lq-danger { color: #b3261e; background: #fde7e4; }
+.lq-grey { color: var(--muted); background: var(--soft); }
+.lq-meta { margin: 6px 0 0; color: var(--muted); font-size: 13px; }
+.lq-answer { margin: 8px 0 0; padding: 10px 12px; font-size: 14px; background: var(--soft); border-radius: 12px; }
+.lq-answer span { color: var(--muted); font-weight: 700; }
+.lq-dispute { margin: 8px 0 0; padding: 8px 12px; color: #b3261e; font-size: 13px; background: #fde7e4; border-radius: 10px; }
+.lq-hint { margin: 8px 0 0; font-size: 13px; color: var(--ink); }
+.lq-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.lq-actions .lq-del { color: #b3261e; }
+.lq-tools { margin-top: 18px; padding: 12px 16px; border: 1px dashed var(--line); border-radius: 14px; }
+.lq-tools summary { font-weight: 700; cursor: pointer; }
+.lq-tools .btn { margin: 6px 8px 0 0; }
+@media (max-width: 560px) { .lq-bar { grid-template-columns: 120px 1fr 56px; } }
+.lq-q strong, .lq-answer, .lq-dispute, .lq-meta { overflow-wrap: anywhere; }
