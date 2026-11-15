@@ -329,7 +329,10 @@ export async function askCampusChat(history, options = {}) {
     const asked = history.filter(m => m.role === "user");
     if (asked.length === 1 || !FOLLOW_UP.test(asked.at(-1)?.content ?? ""))
       if (!(options.atKiosk && /ตู้|kiosk|from here/i.test(answer.reply)))
-        void rememberQuestion(asked.at(-1)?.content, answer, options.lang === "en" ? "en" : "th");
+        void rememberQuestion(asked.at(-1)?.content, answer, options.lang === "en" ? "en" : "th", () =>
+          // Ask once more, on its own, to check the first answer before an admin sees it.
+          answerChat([{ role: "user", content: asked.at(-1)?.content }], { lang: options.lang, atKiosk: options.atKiosk })
+        );
     // The browser will read this aloud with the AI voice: start making that voice now.
     if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
     return answer;

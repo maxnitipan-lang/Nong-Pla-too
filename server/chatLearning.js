@@ -1,26 +1,22 @@
 // Nong Platoo learns from real questions.
 //
 // Every question the AI had to answer itself is kept in the database (table chat_learned)
-// with its answer. When someone asks the same thing again, the answer comes from there:
-// instantly, and without spending AI tokens. Admins review what was learned in
-// /admin/learned and can approve, edit, hide or delete each answer.
+// with its answer. Once an admin approves it in /admin/learned, the next person who asks
+// gets that answer instantly, without spending AI tokens.
 //
 // Safety rules (so a wrong or personal answer does not spread):
+//   - nothing is reused until an admin approves it (approve, edit, hide or delete),
+//   - each new answer is checked by asking the AI a second time: if the two answers name
+//     different buildings, floors, numbers or routes, it is marked "ไม่ตรงกัน" (don't trust),
 //   - only single questions that make sense on their own (no "แล้วอันนั้นล่ะ" follow-ups),
 //   - nothing time-sensitive (วันนี้ / ล่าสุด / ข่าว / weather), nothing about where the kiosk is
-//     ("ใกล้ไหม", "near here"), nothing with phone numbers, emails or ID numbers, no crisis talk,
-//   - a new answer is used again only after 2 people asked it (or an admin approved it),
-//   - unapproved answers are forgotten after 30 days without use.
+//     ("ใกล้ไหม", "near here"), nothing with phone numbers, emails or ID numbers, no crisis talk.
 
 import { sql } from "drizzle-orm";
 import { createHash } from "node:crypto";
 import { getDb } from "./db.js";
 import { normalizeQuestion, similarity } from "./chatFaq.js";
 
-/** Asked this many times before an unapproved answer is reused. */
-export const MIN_ASKS = 2;
-/** Unapproved answers not asked again for this long are no longer used. */
-const STALE_MS = 30 * 24 * 60 * 60 * 1000;
 /** How close a new question must be to a learned one. */
 const MATCH = 0.9;
 /** Reload the learned answers from the database at most this often. */
@@ -53,10 +49,13 @@ async function ensureTable() {
         "CREATE TABLE IF NOT EXISTS `chat_learned` (" +
           "`id` varchar(40) NOT NULL, `lang` varchar(4) NOT NULL DEFAULT 'th', `question` text NOT NULL, `normalized` varchar(255) NOT NULL, " +
           "`answer` text NOT NULL, `routeTo` varchar(64) NULL, `action` varchar(32) NULL, `askCount` int NOT NULL DEFAULT 1, " +
-          "`status` varchar(12) NOT NULL DEFAULT 'new', `createdAt` timestamp NOT NULL DEFAULT (now()), " +
+          "`status` varchar(12) NOT NULL DEFAULT 'new', `verified` varchar(12) NOT NULL DEFAULT 'pending', " +
+          "`createdAt` timestamp NOT NULL DEFAULT (now()), " +
           "`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE now(), CONSTRAINT `chat_learned_id` PRIMARY KEY(`id`))"
       )
     )
+    // Tables made before the check existed get the column now (an error = it is already there).
+    .then(() => db.execute(sql.raw("ALTER TABLE `chat_learned` ADD COLUMN `verified` varchar(12) NOT NULL DEFAULT 'pending'")).catch(() => undefined))
     .then(() => undefined)
     .catch((error) => {
       tableReady = null;
@@ -68,7 +67,7 @@ async function ensureTable() {
 
 const rowsOf = (result) => (Array.isArray(result) ? (Array.isArray(result[0]) ? result[0] : result) : result?.rows ?? []);
 
-// ---------------------------------------------------------------- in-memory copy
+// ---------------------------------------------------------------- in-memory copy (approved only)
 
 let memory = [];
 let loadedAt = 0;
@@ -80,8 +79,8 @@ async function load(force = false) {
     try {
       const db = await ensureTable();
       if (!db) return memory;
-      const rows = rowsOf(await db.execute(sql`SELECT * FROM chat_learned WHERE status <> 'hidden'`));
-      memory = rows.map((r) => ({ ...r, askCount: Number(r.askCount), updatedAt: new Date(r.updatedAt).getTime(), digits: digitsOf(r.normalized) }));
+      const rows = rowsOf(await db.execute(sql`SELECT * FROM chat_learned WHERE status = 'approved'`));
+      memory = rows.map((r) => ({ ...r, askCount: Number(r.askCount), digits: digitsOf(r.normalized) }));
       loadedAt = Date.now();
     } catch (error) {
       console.warn("[Learn] load failed:", error instanceof Error ? error.message : error);
@@ -99,10 +98,10 @@ export function forgetLearnedCache() {
   loadedAt = 0;
 }
 
-const usable = (r, now = Date.now()) =>
-  r.status === "approved" || (r.status === "new" && r.askCount >= MIN_ASKS && now - r.updatedAt < STALE_MS);
+/** Only answers an admin approved are given to visitors. */
+const usable = (r) => r.status === "approved";
 
-/** A learned answer for this question, or null. */
+/** An approved learned answer for this question, or null. */
 export async function learnedAnswer(question, lang = "th") {
   const key = normalizeQuestion(question);
   if (!key) return null;
@@ -116,7 +115,7 @@ export async function learnedAnswer(question, lang = "th") {
     if (score >= MATCH && score > bestScore) [best, bestScore] = [r, score];
   }
   if (!best) return null;
-  void bump(best.id); // count the reuse (keeps it fresh)
+  void bump(best.id); // count the reuse
   return { reply: best.answer, routeToBuildingId: best.routeTo || null, action: best.action || null, source: "learned", learnedId: best.id };
 }
 
@@ -126,14 +125,18 @@ async function bump(id) {
     if (!db) return;
     await db.execute(sql`UPDATE chat_learned SET askCount = askCount + 1 WHERE id = ${id}`);
     const r = memory.find((x) => x.id === id);
-    if (r) [r.askCount, r.updatedAt] = [r.askCount + 1, Date.now()];
+    if (r) r.askCount += 1;
   } catch {
     /* counting is best effort */
   }
 }
 
-/** Remember a question the AI answered (or count it again). Never throws. */
-export async function rememberQuestion(question, answer, lang = "th") {
+/**
+ * Remember a question the AI answered (or count it again). Never throws.
+ * `askAgain` (optional) asks the AI the same question once more; used only for a new
+ * question, to check the first answer (see factsAgree).
+ */
+export async function rememberQuestion(question, answer, lang = "th", askAgain = null) {
   try {
     if (!isLearnable(question, answer)) return;
     const key = normalizeQuestion(question).slice(0, 250);
@@ -141,20 +144,59 @@ export async function rememberQuestion(question, answer, lang = "th") {
     const db = await ensureTable();
     if (!db) return;
     const id = idOf(lang, key);
-    // A newer AI answer replaces an unapproved one; an approved (maybe edited) answer is kept.
-    await db.execute(sql`
+    // The first answer is kept (it is the one being checked); asking again only counts.
+    const result = await db.execute(sql`
       INSERT INTO chat_learned (id, lang, question, normalized, answer, routeTo, action)
       VALUES (${id}, ${lang}, ${String(question).trim().slice(0, 500)}, ${key}, ${answer.reply}, ${answer.routeToBuildingId ?? null}, ${answer.action ?? null})
-      ON DUPLICATE KEY UPDATE
-        askCount = askCount + 1,
-        answer = IF(status = 'new', VALUES(answer), answer),
-        routeTo = IF(status = 'new', VALUES(routeTo), routeTo),
-        action = IF(status = 'new', VALUES(action), action)`);
-    const r = memory.find((x) => x.id === id);
-    if (r) [r.askCount, r.updatedAt] = [r.askCount + 1, Date.now()];
-    else loadedAt = 0; // a new one: pick it up on the next load
+      ON DUPLICATE KEY UPDATE askCount = askCount + 1`);
+    const header = Array.isArray(result) ? result[0] : result;
+    const isNew = Number(header?.affectedRows ?? 0) === 1;
+    if (isNew && askAgain) await verify(id, answer, askAgain);
   } catch (error) {
     console.warn("[Learn] save failed:", error instanceof Error ? error.message : error);
+  }
+}
+
+/** The facts in an answer that must not change between two answers to the same question. */
+export function answerFacts(reply, routeTo = null) {
+  const t = String(reply ?? "");
+  const facts = new Set();
+  for (const m of t.matchAll(/(?:อาคาร|ตึก|building)\s*(\d+)/gi)) facts.add(`b${m[1]}`);
+  for (const m of t.matchAll(/(?:ชั้น|floor)\s*(\d+)|(\d+)(?:st|nd|rd|th)\s*floor/gi)) facts.add(`f${m[1] ?? m[2]}`);
+  for (const m of t.matchAll(/\d[\d,.-]*\d|\d/g)) facts.add(`n${m[0].replace(/,/g, "")}`);
+  if (routeTo) facts.add(`r${routeTo}`);
+  return facts;
+}
+
+/**
+ * Do two AI answers say the same thing? Same route, same buildings and floors, and most of
+ * the same numbers. (The wording may differ; the facts may not.)
+ */
+export function factsAgree(a, b) {
+  const fa = answerFacts(a.reply, a.routeToBuildingId);
+  const fb = answerFacts(b.reply, b.routeToBuildingId);
+  const pick = (set, p) => [...set].filter((x) => x.startsWith(p)).sort().join("|");
+  for (const p of ["r", "b", "f"]) if (pick(fa, p) !== pick(fb, p)) return false;
+  const na = [...fa].filter((x) => x.startsWith("n"));
+  const nb = new Set([...fb].filter((x) => x.startsWith("n")));
+  if (!na.length && !nb.size) return true;
+  const shared = na.filter((x) => nb.has(x)).length;
+  return shared / Math.max(na.length, nb.size) >= 0.6;
+}
+
+async function verify(id, first, askAgain) {
+  let verdict = "pending";
+  try {
+    const second = await askAgain();
+    if (second?.source === "ai" && second.reply) verdict = factsAgree(first, second) ? "agree" : "mismatch";
+  } catch {
+    /* the AI is busy: stays "pending" (the admin can still judge it) */
+  }
+  try {
+    const db = await ensureTable();
+    await db?.execute(sql`UPDATE chat_learned SET verified = ${verdict} WHERE id = ${id}`);
+  } catch {
+    /* best effort */
   }
 }
 
@@ -164,10 +206,9 @@ export async function listLearned() {
   const db = await ensureTable();
   if (!db) return [];
   const rows = rowsOf(await db.execute(sql`SELECT * FROM chat_learned ORDER BY askCount DESC, updatedAt DESC LIMIT 500`));
-  const now = Date.now();
   return rows.map((r) => {
-    const row = { ...r, askCount: Number(r.askCount), updatedAt: new Date(r.updatedAt).getTime() };
-    return { ...row, inUse: usable(row, now) };
+    const row = { ...r, askCount: Number(r.askCount), updatedAt: new Date(r.updatedAt).getTime(), verified: r.verified ?? "pending" };
+    return { ...row, inUse: usable(row) };
   });
 }
 
@@ -176,6 +217,15 @@ export async function updateLearned({ id, answer, status }) {
   if (!db) throw new Error("ยังไม่ได้เชื่อมต่อฐานข้อมูล");
   if (answer !== undefined) await db.execute(sql`UPDATE chat_learned SET answer = ${answer}, status = 'approved' WHERE id = ${id}`);
   if (status !== undefined) await db.execute(sql`UPDATE chat_learned SET status = ${status} WHERE id = ${id}`);
+  forgetLearnedCache();
+  return { ok: true };
+}
+
+/** Approve every waiting answer the AI gave the same way twice. */
+export async function approveAgreed() {
+  const db = await ensureTable();
+  if (!db) throw new Error("ยังไม่ได้เชื่อมต่อฐานข้อมูล");
+  await db.execute(sql`UPDATE chat_learned SET status = 'approved' WHERE status = 'new' AND verified = 'agree'`);
   forgetLearnedCache();
   return { ok: true };
 }

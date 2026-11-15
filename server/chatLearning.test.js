@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 
 vi.stubEnv("DATABASE_URL", ""); // never touch a real database in tests
-const { isLearnable, learnedAnswer, rememberQuestion } = await import("./chatLearning.js");
+const { factsAgree, isLearnable, learnedAnswer, rememberQuestion } = await import("./chatLearning.js");
 
-const ai = (reply = "คำตอบจาก AI ครับ") => ({ reply, source: "ai", routeToBuildingId: null });
+const ai = (reply = "คำตอบจาก AI ครับ", routeToBuildingId = null) => ({ reply, source: "ai", routeToBuildingId });
 
 describe("isLearnable", () => {
   it("keeps general questions the AI answered", () => {
@@ -20,6 +20,21 @@ describe("isLearnable", () => {
     expect(isLearnable("โทรหาผมที่ 081-234-5678", ai())).toBe(false);
     expect(isLearnable("อยากตาย", ai())).toBe(false);
     expect(isLearnable("ok", ai())).toBe(false);
+  });
+});
+
+describe("factsAgree (the second AI answer must say the same thing)", () => {
+  it("accepts different wording with the same building, floor and route", () => {
+    expect(
+      factsAgree(ai("งานการเงินอยู่ **อาคาร 85 ปี** ชั้น 1 ครับ", "building-85"), ai("ไปจ่ายเงินได้ที่อาคาร 85 ปี ชั้น 1 ฝั่งซ้ายครับ", "building-85"))
+    ).toBe(true);
+    expect(factsAgree(ai("ช่างเชื่อมใช้เครื่องเชื่อม ส่วนช่างกลใช้เครื่องกลึง"), ai("ช่างกลโรงงานใช้เครื่องกลึง ช่างเชื่อมใช้ตู้เชื่อมครับ"))).toBe(true);
+  });
+
+  it("rejects answers that name a different building, floor or route", () => {
+    expect(factsAgree(ai("อยู่อาคาร 4 ชั้น 3 ครับ"), ai("อยู่อาคาร 4 ชั้น 2 ครับ"))).toBe(false);
+    expect(factsAgree(ai("อยู่อาคาร 9 ครับ"), ai("อยู่อาคาร 10 ครับ"))).toBe(false);
+    expect(factsAgree(ai("ไปทางนี้", "canteen"), ai("ไปทางนี้", "auditorium"))).toBe(false);
   });
 });
 
