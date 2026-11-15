@@ -565,5 +565,5 @@ ${answer.reply}` };
  */
 export async function draftAnswer(question, lang = "th") {
   const answer = await answerChat([{ role: "user", content: String(question) }], { lang, correcting: true, drafting: true });
-  return { reply: lang === "en" ? englishOnly(answer.reply) : answer.reply, routeToBuildingId: answer.routeToBuildingId ?? null };
+  return { reply: lang === "en" ? englishOnly(answer.reply) : answer.reply, routeToBuildingId: answer.routeToBuildingId ?? null, action: answer.action ?? null, source: answer.source };
 }

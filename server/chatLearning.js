@@ -10,8 +10,15 @@
 //   - the same question again → the approved answer, instantly, with no AI tokens,
 //   - similar questions → the AI gets the approved answers as checked knowledge (adminNotes).
 //
+// The AI also writes answers into the knowledge base itself (marked "🤖 AI เขียนเอง"):
+//   - a new AI answer that was given the same way twice (same buildings, floors, numbers,
+//     route) and is not "I don't know" is approved by the AI right away,
+//   - every 30 minutes, questions that could not be answered because the AI was busy get
+//     an answer written twice; if both agree, it is saved and used (writeMissingAnswers).
+//   Admins can still edit, hide or delete anything the AI wrote.
+//
 // Safety rules (so a wrong or personal answer does not spread):
-//   - nothing is reused until an admin approves it,
+//   - nothing is reused unless an admin approved it or the AI double-checked it,
 //   - each new AI answer is checked by asking the AI a second time: if the two answers name
 //     different buildings, floors, numbers or routes, it is marked "ไม่ตรงกัน" (don't trust),
 //   - questions with phone numbers, emails, ID numbers or crisis talk are never stored,
@@ -87,6 +94,8 @@ const COLUMNS = [
   "`reusable` tinyint NOT NULL DEFAULT 1",
   "`disputes` int NOT NULL DEFAULT 0",
   "`disputeNote` text NULL",
+  "`approvedBy` varchar(8) NOT NULL DEFAULT ''",
+  "`aiTried` tinyint NOT NULL DEFAULT 0",
 ];
 
 let tableReady = null;
@@ -233,7 +242,11 @@ export async function markDisputed(question, lang = "th", note = "") {
     const db = await ensureTable();
     if (!db || !key) return;
     const text = isRecordable(note) ? String(note).trim().slice(0, 300) : "";
-    await db.execute(sql`UPDATE chat_learned SET disputes = disputes + 1, unsure = 1, disputeNote = ${text} WHERE id = ${idOf(lang, key)}`);
+    // An answer the AI approved itself goes back to "waiting" when someone disputes it;
+    // an answer an admin approved stays (the admin sees the dispute and decides).
+    await db.execute(sql`UPDATE chat_learned SET disputes = disputes + 1, unsure = 1, disputeNote = ${text},
+      status = IF(approvedBy = 'ai' AND status = 'approved', 'new', status) WHERE id = ${idOf(lang, key)}`);
+    forgetLearnedCache();
   } catch (error) {
     console.warn("[Learn] dispute failed:", error instanceof Error ? error.message : error);
   }
@@ -274,12 +287,55 @@ async function verify(id, first, askAgain) {
   } catch {
     /* the AI is busy: stays "pending" (the admin can still judge it) */
   }
+  // Same facts twice and a real answer (not "ไม่มีข้อมูล"): the AI approves it itself.
+  const selfApprove = verdict === "agree" && !isUnsure(first) ? 1 : 0;
   try {
     const db = await ensureTable();
     await db?.execute(sql`UPDATE chat_learned SET verified = ${verdict}, unsure = IF(${verdict} = 'mismatch', 1, unsure) WHERE id = ${id}`);
+    // Separate statements: databases differ on whether one SET sees another's new value.
+    if (selfApprove)
+      await db?.execute(sql`UPDATE chat_learned SET status = 'approved', approvedBy = 'ai' WHERE id = ${id} AND status = 'new' AND disputes = 0`);
+    if (selfApprove) forgetLearnedCache();
   } catch {
     /* best effort */
   }
+}
+
+/**
+ * Write answers for questions Nong Platoo could not answer (the AI was busy), like an admin
+ * would. `draft(question, lang)` asks the AI; each question is drafted twice and saved only
+ * when both drafts agree and neither says "I don't know". Each question is tried once.
+ * Returns how many were tried and written.
+ */
+export async function writeMissingAnswers(draft, limit = 5) {
+  const db = await ensureTable();
+  if (!db) return { tried: 0, written: 0 };
+  const rows = rowsOf(
+    await db.execute(sql`SELECT * FROM chat_learned WHERE status = 'new' AND aiTried = 0 AND disputes = 0
+      AND lastSource IN ('fallback', 'faq-close') ORDER BY askCount DESC LIMIT ${limit}`)
+  );
+  let written = 0;
+  for (const r of rows) {
+    await db.execute(sql`UPDATE chat_learned SET aiTried = 1 WHERE id = ${r.id}`);
+    try {
+      const lang = r.lang === "en" ? "en" : "th";
+      const a = await draft(r.question, lang);
+      if (!isLearnable(r.question, a) || isUnsure(a)) continue;
+      const b = await draft(r.question, lang);
+      if (b?.source !== "ai" || !factsAgree(a, b)) {
+        await db.execute(sql`UPDATE chat_learned SET verified = 'mismatch' WHERE id = ${r.id}`);
+        continue;
+      }
+      await db.execute(sql`UPDATE chat_learned SET answer = ${a.reply}, routeTo = ${a.routeToBuildingId ?? null}, action = ${a.action ?? null},
+        status = 'approved', approvedBy = 'ai', verified = 'agree', unsure = 0, reusable = 1, lastSource = 'ai' WHERE id = ${r.id} AND status = 'new'`);
+      written++;
+    } catch (error) {
+      console.warn("[Learn] AI writing failed:", error instanceof Error ? error.message : error);
+      break; // the AI is busy again: try the rest next time (they are still aiTried = 0)
+    }
+  }
+  if (written) forgetLearnedCache();
+  return { tried: rows.length, written };
 }
 
 // ---------------------------------------------------------------- admin
@@ -296,6 +352,7 @@ export async function listLearned() {
     reusable: Number(r.reusable ?? 1) === 1,
     updatedAt: new Date(r.updatedAt).getTime(),
     verified: r.verified ?? "pending",
+    approvedBy: r.approvedBy ?? "",
     category: r.category ?? "other",
     inUse: r.status === "approved",
   }));
@@ -306,8 +363,9 @@ export async function updateLearned({ id, answer, status, category }) {
   if (!db) throw new Error("ยังไม่ได้เชื่อมต่อฐานข้อมูล");
   // An answer written by the admin is approved and clears "unsure" and the disputes.
   if (answer !== undefined)
-    await db.execute(sql`UPDATE chat_learned SET answer = ${answer}, status = 'approved', unsure = 0, disputes = 0, disputeNote = NULL WHERE id = ${id}`);
-  if (status !== undefined) await db.execute(sql`UPDATE chat_learned SET status = ${status} WHERE id = ${id}`);
+    await db.execute(sql`UPDATE chat_learned SET answer = ${answer}, status = 'approved', approvedBy = 'admin', unsure = 0, disputes = 0, disputeNote = NULL WHERE id = ${id}`);
+  if (status !== undefined)
+    await db.execute(sql`UPDATE chat_learned SET status = ${status}, approvedBy = IF(${status} = 'approved', 'admin', approvedBy) WHERE id = ${id}`);
   if (category !== undefined) await db.execute(sql`UPDATE chat_learned SET category = ${category} WHERE id = ${id}`);
   forgetLearnedCache();
   return { ok: true };
@@ -317,7 +375,7 @@ export async function updateLearned({ id, answer, status, category }) {
 export async function approveAgreed() {
   const db = await ensureTable();
   if (!db) throw new Error("ยังไม่ได้เชื่อมต่อฐานข้อมูล");
-  await db.execute(sql`UPDATE chat_learned SET status = 'approved' WHERE status = 'new' AND verified = 'agree' AND reusable = 1 AND disputes = 0`);
+  await db.execute(sql`UPDATE chat_learned SET status = 'approved', approvedBy = 'admin' WHERE status = 'new' AND verified = 'agree' AND reusable = 1 AND disputes = 0`);
   forgetLearnedCache();
   return { ok: true };
 }

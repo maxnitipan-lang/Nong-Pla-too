@@ -32,7 +32,7 @@ import {
 } from "./db.js";
 import { saveImage } from "./images.js";
 import { clearAiAnswerCache, draftAnswer } from "./chat.js";
-import { approveAgreed, deleteLearned, getLearned, listLearned, updateLearned } from "./chatLearning.js";
+import { approveAgreed, deleteLearned, getLearned, listLearned, updateLearned, writeMissingAnswers } from "./chatLearning.js";
 import { syncCollegeNews } from "./newsScraper.js";
 import { adminProcedure, editorProcedure, router, staffProcedure } from "./_core/trpc.js";
 
@@ -172,6 +172,14 @@ export const adminRouter = router({
       .mutation(({ input }) => run(() => updateLearned(input))),
     delete: editorProcedure.input(z.object({ id: z.string().trim().min(1).max(40) })).mutation(({ input }) => run(() => deleteLearned(input.id))),
     approveAgreed: editorProcedure.mutation(() => run(() => approveAgreed())),
+    // Let the AI write answers now for questions that could not be answered (see writeMissingAnswers).
+    aiWrite: editorProcedure.mutation(async () => {
+      try {
+        return await writeMissingAnswers(draftAnswer, 10);
+      } catch (error) {
+        throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "AI เขียนคำตอบไม่สำเร็จ" });
+      }
+    }),
     // A suggested answer from the AI, for the admin to edit before saving (nothing is saved here).
     draft: editorProcedure.input(z.object({ id: z.string().trim().min(1).max(40) })).mutation(async ({ input }) => {
       const row = await getLearned(input.id);

@@ -5,6 +5,8 @@ import { createServer } from "http";
 import net from "net";
 import { appRouter } from "../routers.js";
 import { startNewsAutoSync } from "../newsScraper.js";
+import { draftAnswer } from "../chat.js";
+import { writeMissingAnswers } from "../chatLearning.js";
 import { registerImageRoutes } from "../images.js";
 import { registerVoiceRoutes } from "../voice.js";
 import { registerRestApi } from "../restApi.js";
@@ -81,6 +83,10 @@ async function startServer() {
   }
 
   startNewsAutoSync();
+  // Every 30 minutes the AI writes answers for questions it could not answer earlier (it was
+  // busy). AI_SELF_LEARN=0 turns this off.
+  if (process.env.AI_SELF_LEARN !== "0")
+    setInterval(() => void writeMissingAnswers(draftAnswer, 5).then(r => r.written && console.log(`[Learn] AI wrote ${r.written} answers`)).catch(() => undefined), 30 * 60 * 1000).unref();
 
   server.listen(port, "0.0.0.0", () => {
     console.log(`Server running on port ${port}`);

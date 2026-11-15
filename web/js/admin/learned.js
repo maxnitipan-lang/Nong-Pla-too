@@ -25,6 +25,7 @@ const VIEWS = [
   ["disputed", "⚠️ มีคนแย้ง", (r) => r.disputes > 0],
   ["waiting", "⏳ รออนุมัติ", (r) => r.status === "new" && r.reusable],
   ["approved", "✅ อนุมัติแล้ว", (r) => r.status === "approved"],
+  ["ai", "🤖 AI เขียนเอง", (r) => r.status === "approved" && r.approvedBy === "ai"],
   ["hidden", "🙈 ซ่อน", (r) => r.status === "hidden"],
 ];
 
@@ -72,7 +73,7 @@ export async function render(page, { canEdit }) {
           <span class="pill grey">${GROUP_NAME[r.category] ?? r.category}</span>
           ${r.lang === "en" ? raw('<span class="pill grey">English</span>') : ""}
           <span class="pill ${r.lastSource === "fallback" ? "danger" : "grey"}">ตอบโดย: ${SOURCE[r.lastSource] ?? r.lastSource}</span>
-          ${r.status === "approved" ? raw('<span class="pill">✅ อนุมัติแล้ว · ใช้ตอบอยู่</span>') : ""}
+          ${r.status === "approved" ? raw(r.approvedBy === "ai" ? '<span class="pill">🤖 AI เขียนเอง · ใช้ตอบอยู่</span>' : '<span class="pill">✅ แอดมินอนุมัติ · ใช้ตอบอยู่</span>') : ""}
           ${r.status === "hidden" ? raw('<span class="pill grey">ซ่อน</span>') : ""}
           ${r.unsure && r.status !== "approved" ? raw('<span class="pill danger">❓ ตอบไม่ได้ / ไม่มั่นใจ</span>') : ""}
           ${r.disputes ? raw(html`<span class="pill danger">⚠️ มีคนแย้ง ${r.disputes} ครั้ง</span>`) : ""}
@@ -90,6 +91,7 @@ export async function render(page, { canEdit }) {
 
     page.innerHTML = html`<p class="muted">ทุกคำถามที่คนถามน้องปลาทู จัดกลุ่มให้อัตโนมัติ ดูว่าเรื่องไหนถูกถามบ่อย เรื่องไหนตอบไม่ได้ หรือมีคนแย้งว่าผิด
         แล้วกด ✏️ เพื่อเขียนคำตอบที่ควรตอบ (ให้ AI ช่วยร่างก่อนได้) — คำตอบที่อนุมัติจะใช้ตอบคำถามนี้ทันที และ AI จะใช้เป็นความรู้ตอบคำถามที่คล้ายกัน
+        🤖 AI ก็เขียนคำตอบเข้าฐานข้อมูลเองได้ เมื่อถามซ้ำ 2 รอบแล้วได้ข้อเท็จจริงตรงกัน — ถ้ามีคนแย้ง คำตอบที่ AI เขียนจะหยุดใช้จนกว่าแอดมินตรวจ
         (ไม่เก็บคำถามที่มีเบอร์โทร อีเมล เลขบัตร หรือเรื่องวิกฤต)</p>
       <div class="grid3">
         ${raw(stat("ถามทั้งหมด", asks.toLocaleString("th-TH"), `${list.length} คำถามไม่ซ้ำกัน`))}
@@ -108,6 +110,7 @@ export async function render(page, { canEdit }) {
         return raw(html`<button type="button" class="btn ${group === id ? "" : "outline"}" data-group="${id}">${emoji} ${label} (${n})</button>`);
       })}</div>
       <div class="toolbar">${VIEWS.map(([id, label, fn]) => raw(html`<button type="button" class="btn ${view === id ? "" : "outline"}" data-view="${id}">${label} (${list.filter((r) => inGroup(r) && fn(r)).length})</button>`))}
+        ${canEdit ? raw(html`<button type="button" class="btn outline" data-act-all="ai-write">🤖 ให้ AI เขียนคำตอบให้คำถามที่ตอบไม่ได้</button>`) : ""}
         ${canEdit && agreed ? raw(html`<button type="button" class="btn" data-act-all="approve-agreed">${raw(icon("shieldok"))} อนุมัติทั้งหมดที่ AI ตอบตรงกัน (${agreed})</button>`) : ""}</div>
       ${rows.length ? raw(html`<div class="rows">${rows}</div>`) : raw('<p class="empty">ยังไม่มีคำถามในหมวดนี้</p>')}`;
   };
@@ -166,7 +169,21 @@ export async function render(page, { canEdit }) {
       view = v.dataset.view;
       return draw();
     }
-    if (e.target.closest("[data-act-all]")) {
+    const all = e.target.closest("[data-act-all]");
+    if (all?.dataset.actAll === "ai-write") {
+      all.disabled = true;
+      all.textContent = "🤖 AI กำลังเขียน…";
+      try {
+        const res = await apiPost("admin/learned/aiWrite");
+        toast(res.tried ? `AI ลองเขียน ${res.tried} คำถาม · บันทึกได้ ${res.written} คำตอบ (ที่เหลือ AI ตอบไม่ตรงกันหรือไม่มีข้อมูล)` : "ไม่มีคำถามที่ตอบไม่ได้เพราะ AI ไม่ว่าง");
+        await draw();
+      } catch (error) {
+        toastError(error);
+        await draw();
+      }
+      return;
+    }
+    if (all) {
       const n = list.filter((r) => r.status === "new" && r.reusable && r.verified === "agree" && !r.disputes).length;
       if (!(await confirmDialog(`อนุมัติ ${n} คำตอบที่ AI ตอบตรงกัน 2 ครั้ง?`, "ควรอ่านคร่าว ๆ ก่อน — คำตอบเหล่านี้จะใช้ตอบคนอื่นทันที"))) return;
       try {
