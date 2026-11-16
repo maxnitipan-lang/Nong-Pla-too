@@ -1,4 +1,5 @@
 import { chunk, cleanForSpeech, speechPieces } from "../../shared/speechText.js";
+import { forVoice } from "../../shared/politeness.js";
 // (Converted from client/src/lib/voice.ts — same behaviour.)
 // Voice in / voice out for the น้องปลาทู assistant.
 //
@@ -260,6 +261,9 @@ function speakOnDevice(text, rate, onStart) {
     // Thai answers: the Thai voice. English answers: a clear English voice.
     const english = isEnglishText(text);
     const voice = (english && englishDeviceVoice()) || thaiDeviceVoices()[0];
+    // ครับ or ค่ะ is decided here, once the voice that will actually speak is known
+    // (the voice list can load after the reply arrived). Answers are written with ครับ / ผม.
+    if (!english) text = forVoice(text, isFemaleVoice(voice));
     window.speechSynthesis.cancel();
     let first = true;
     for (const piece of chunk(text)) {

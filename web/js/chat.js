@@ -228,8 +228,9 @@ export class PlatooChat {
   /* ---------------- talking */
 
   async speakReply(text, session) {
-    // Long replies: read the first sentences, the rest stays on the screen.
-    text = this.say(voiceSummary(text, 450, isEnglishText(text)));
+    // Long replies: read the first sentences, the rest stays on the screen. The text goes to the
+    // voice as written (ครับ / ผม): the voice code turns it into ค่ะ / หนู once it knows the voice.
+    text = voiceSummary(text, 450, isEnglishText(text));
     const s = this.s.settings;
     if (!s.speakReplies) return;
     // The AI voice takes a few seconds to arrive — stay on "กำลังคิด…" until sound actually plays.
@@ -427,7 +428,7 @@ export class PlatooChat {
         break;
       case "try-voice":
         unlockAudio();
-        speak(this.say("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ"), { engine: this.engine, rate: s.settings.rate });
+        speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", { engine: this.engine, rate: s.settings.rate });
         break;
       case "mic":
         this.onMic();
@@ -452,7 +453,7 @@ export class PlatooChat {
         const session = this.session;
         unlockAudio();
         this.set({ phase: "speaking" });
-        void speak(this.say(voiceSummary(message.content, 450, isEnglishText(message.content))), { engine: this.engine, rate: s.settings.rate }).done.then(() => session === this.session && this.set({ phase: "idle" }));
+        void speak(voiceSummary(message.content, 450, isEnglishText(message.content)), { engine: this.engine, rate: s.settings.rate }).done.then(() => session === this.session && this.set({ phase: "idle" }));
         break;
       }
       case "open-map":
