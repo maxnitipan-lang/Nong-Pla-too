@@ -38,7 +38,9 @@ describe("isFemaleVoice", () => {
     const { isFemaleVoice } = await import("./voice.js");
     for (const name of ["Microsoft Premwadee Online (Natural) - Thai", "Microsoft Pattara - Thai (Thailand)", "Kanya", "Narisa (Enhanced)", "Google ไทย"])
       expect(isFemaleVoice({ name })).toBe(true);
-    for (const name of ["Microsoft Niwat Online (Natural) - Thai", "Some Thai voice"]) expect(isFemaleVoice({ name })).toBe(false);
-    expect(isFemaleVoice(null)).toBe(false);
+    for (const name of ["Microsoft Niwat Online (Natural) - Thai", "Thai Male voice"]) expect(isFemaleVoice({ name })).toBe(false);
+    // Phones often name the voice without a gender: Thai device voices are female.
+    for (const name of ["ภาษาไทย ประเทศไทย", "th-th-x-thd-network", "Thai Thailand"]) expect(isFemaleVoice({ name })).toBe(true);
+    expect(isFemaleVoice(null)).toBe(true);
   });
 });

@@ -172,15 +172,15 @@ export function thaiDeviceVoices() {
 }
 
 /**
- * Is this a woman's voice? Thai device voices: Niwat is male; Premwadee, Pattara, Kanya,
- * Narisa, Achara, Siri female and Google ไทย are female. Unknown names count as male
- * (Nong Platoo's own default).
+ * Is this a woman's voice? Almost every Thai device voice is female (Google, Android,
+ * Apple Kanya/Narisa, Microsoft Pattara/Premwadee); Niwat is the male one. Many phones name the
+ * voice without a gender ("ภาษาไทย ประเทศไทย", "th-th-x-thd-network"), so a voice counts as female
+ * unless its name says male. No voice object = the browser's default Thai voice, also female.
  */
 export function isFemaleVoice(voice) {
   const n = String(voice?.name ?? "").toLowerCase();
-  if (!n) return false;
-  if (/niwat|\bmale\b|ชาย|\bman\b/.test(n) && !/female/.test(n)) return false;
-  return /female|หญิง|premwadee|pattara|kanya|narisa|achara|kanokwan|siri.*(voice ?[24]|female)|google\s*(ไทย|thai)|samantha|zira|jenny|aria|ava\b|emma|susan|karen|moira|tessa/.test(n);
+  if (/female|หญิง/.test(n)) return true;
+  return !/niwat|\bmale\b|ชาย|\bman\b|\b(david|mark|guy|andrew|brian|daniel|thomas|alex|fred)\b/.test(n);
 }
 
 /**
