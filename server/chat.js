@@ -18,6 +18,7 @@ import { cleanForSpeech } from "../shared/speechText.js";
 import { prepareSpeech } from "./voice.js";
 import { withDepartmentInfo } from "../shared/departmentInfo.js";
 import { placeEn } from "../shared/placeNamesEn.js";
+import { admissionLines } from "../shared/data/admission2570.js";
 import { staffLines } from "../shared/staffDirectory.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
@@ -132,6 +133,9 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     "",
     `== หลักสูตรที่เปิดสอนอย่างเป็นทางการ (ข้อมูล ณ ${PROGRAMMES_AS_OF}) — ใช้ชื่อตามนี้เมื่อถามว่าเปิดสอนอะไร ==`,
     ...programmeLines(),
+    "",
+    ...admissionLines(),
+    `วันนี้คือ ${new Date().toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "long" })} — ใช้เทียบกับกำหนดการ (บอกว่าขั้นไหนผ่านไปแล้ว ขั้นไหนกำลังจะมา)`,
     "",
     "== ข่าวสารล่าสุด ==",
     newsLines || "(ยังไม่มีข่าว)",

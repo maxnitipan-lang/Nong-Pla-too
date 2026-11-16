@@ -351,7 +351,9 @@ function datedEntries(now = new Date()) {
   ];
 }
 
-export const GENERATED_ENTRIES = [...datedEntries(), ...departmentEntries(), ...applyEntries(), ...officeEntries(), ...executiveEntries(), ...buildingEntries(), ...comparisonEntries(), ...interestEntries()];
+// applyEntries() ("อยากเรียน X ต้องทำยังไง") is left out: admission questions are answered by the AI
+// from the real announcement (shared/data/admission2570.js), with dates and seats per program.
+export const GENERATED_ENTRIES = [...datedEntries(), ...departmentEntries(), ...officeEntries(), ...executiveEntries(), ...buildingEntries(), ...comparisonEntries(), ...interestEntries()];
 
 // ---------------------------------------------------------------- "ครู X คือใคร"
 

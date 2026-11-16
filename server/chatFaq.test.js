@@ -13,7 +13,6 @@ describe("ready-made answers (no AI call)", () => {
     ["น้องปลาทูคือใคร", "who-are-you"],
     ["วิทยาลัยอยู่ที่ไหนครับ", "college-address"],
     ["เปิดกี่โมงครับ", "office-hours"],
-    ["อยากสมัครเรียนต้องทำยังไง", "apply"],
     ["จอดรถตรงไหนได้บ้าง", "parking"],
     ["มีสาขาอะไรบ้างครับ", "majors"],
     ["วันนี้อากาศเป็นไง", "off-weather"],
@@ -84,7 +83,12 @@ describe("questions that once got the wrong answer", () => {
   });
 
   it("อยากเรียนช่างยนต์ต้องทำยังไง → how to apply, not where the building is", () => {
-    expect(ask("อยากเรียนช่างยนต์ต้องทำยังไง")).toMatchObject({ faqId: "dept-auto-apply", routeToBuildingId: "personnel-registration" });
+    // Admission questions go to the AI, which has the 2570 announcement (dates, seats, documents).
+    expect(ask("อยากเรียนช่างยนต์ต้องทำยังไง")?.routeToBuildingId).not.toBe("mech-auto");
+  });
+
+  it("admission questions are answered by the AI from the announcement, not a 'no data' ready answer", () => {
+    for (const q of ["อยากสมัครเรียนต้องทำยังไง", "รับสมัครเมื่อไหร่", "มีโควตาไหม", "ใช้เกรดเท่าไหร่", "สมัครเรียนต้องใช้เอกสารอะไร"]) expect(ask(q)).toBeNull();
   });
 
   it.each([

@@ -313,23 +313,6 @@
       "answer": "ดูข่าวและประกาศได้ที่เว็บไซต์วิทยาลัย www.sstc.ac.th หรือเมนูข่าวสารในแอปนี้ได้เลยครับ"
     },
     {
-      "id": "apply",
-      "category": "ข้อมูลวิทยาลัย",
-      "questions": [
-        "สมัครเรียนยังไง",
-        "รับสมัครเมื่อไหร่",
-        "อยากสมัครเรียน",
-        "สมัครเรียนที่ไหน",
-        "เปิดรับสมัครไหม",
-        "สมัครเข้าเรียน",
-        "อยากสมัครเรียนต้องทำยังไง",
-        "สมัครเรียนต้องทำอะไรบ้าง",
-        "ต้องใช้อะไรสมัครเรียน"
-      ],
-      "answer": "เรื่องการสมัครเรียน ติดต่อได้ที่งานทะเบียนครับ และดูประกาศรับสมัครล่าสุดได้ที่ www.sstc.ac.th ผมเปิดเส้นทางไปงานทะเบียนให้แล้วครับ",
-      "routeTo": "personnel-registration"
-    },
-    {
       "id": "documents",
       "category": "ข้อมูลวิทยาลัย",
       "questions": [
@@ -1336,26 +1319,6 @@
       "answer": "ระบบทวิภาคีคือเรียนที่วิทยาลัยควบคู่กับฝึกงานจริงในสถานประกอบการครับ ส่วนค่าตอบแทนขึ้นอยู่กับแต่ละสถานประกอบการ สอบถามรายละเอียดได้ที่งานอาชีวศึกษาระบบทวิภาคี อาคาร 85 ปี ชั้น 2 ครับ"
     },
     {
-      "id": "svc-admission-rules",
-      "category": "บริการนักเรียน",
-      "routeTo": "personnel-registration",
-      "questions": [
-        "เกรดไม่ดีสมัครได้ไหม",
-        "ต้องสอบเข้าไหม",
-        "ต้องใช้เกรดเท่าไหร่",
-        "เกรดเฉลี่ยขั้นต่ำเท่าไหร่",
-        "สมัครต้องใช้อะไรบ้าง",
-        "มีสัมภาษณ์ไหม",
-        "รับกี่คน",
-        "ค่าสมัครเท่าไหร่",
-        "สมัครทางออนไลน์ได้ที่ไหน",
-        "มีโควตาไหม",
-        "ใช้เกรดเท่าไหร่",
-        "มีสอบเข้าไหม"
-      ],
-      "answer": "เงื่อนไขการรับสมัคร (เกรด การสอบ และเอกสาร) ประกาศเป็นรอบ ๆ ครับ น้องปลาทูยังไม่มีข้อมูลรอบล่าสุด ดูประกาศรับสมัครที่ www.sstc.ac.th หรือสอบถามงานทะเบียน โทร {phone} ครับ ผมเปิดเส้นทางไปงานทะเบียนให้แล้วครับ"
-    },
-    {
       "id": "svc-visit",
       "category": "บริการนักเรียน",
       "routeTo": "discipline-dept",
@@ -2000,24 +1963,6 @@
         "how long is the course"
       ],
       "answer": "There are two main levels: the **Vocational Certificate** (3 years, after grade 9) and the **Higher Vocational Diploma** (2 years, after grade 12 or the Vocational Certificate). Some programs also continue to a Bachelor of Technology."
-    },
-    {
-      "id": "en-apply",
-      "category": "English",
-      "routeTo": "personnel-registration",
-      "questions": [
-        "how do i apply",
-        "how to apply",
-        "admission",
-        "how can i enroll",
-        "when is the application",
-        "i want to study here",
-        "when is the application period",
-        "what documents do i need to apply",
-        "is there an entrance exam",
-        "is there an interview"
-      ],
-      "answer": "To apply, please contact the **Registration office**, or see the admission news on www.sstc.ac.th. You can also call 034-711440. I've opened the route to Registration."
     },
     {
       "id": "en-contact",
