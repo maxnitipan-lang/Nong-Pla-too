@@ -320,7 +320,8 @@ export function politeEnding(reply) {
   if (!/[฀-๿]/.test(t)) return t;
   const end = t.trimEnd().replace(/[\s\p{Extended_Pictographic}️]+$/u, "");
   if (/(ครับ|ค่ะ|คะ|นะ|จ้า|[?!)"”])$/.test(end)) return t;
-  return t.trimEnd().replace(/[.。]$/, "") + " ครับ";
+  // Keep the dot of an abbreviation like "16:30 น." (otherwise it reads as a stray "น").
+  return t.trimEnd().replace(/(?<!(?:^|[\s\d])[ก-ฮ])[.。]$/, "") + " ครับ";
 }
 
 export function isUndecided(text) {

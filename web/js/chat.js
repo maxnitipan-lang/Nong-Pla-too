@@ -235,12 +235,17 @@ export class PlatooChat {
     if (!s.speakReplies) return;
     // The AI voice takes a few seconds to arrive — stay on "กำลังคิด…" until sound actually plays.
     this.set({ phase: "thinking" });
-    const speech = speak(text, {
-      engine: this.engine,
-      rate: s.rate,
-      onStart: () => session === this.session && this.set({ phase: "speaking" }),
-    });
-    await speech.done;
+    try {
+      const speech = speak(text, {
+        engine: this.engine,
+        rate: s.rate,
+        onStart: () => session === this.session && this.set({ phase: "speaking" }),
+      });
+      await speech.done;
+    } catch (error) {
+      // No sound on this device: the answer is already on the screen, so just stay quiet.
+      console.warn("[voice] could not speak", error);
+    }
     if (session === this.session) this.set({ phase: "idle" });
   }
 

@@ -271,7 +271,7 @@ function speakOnDevice(text, rate, onStart) {
       await new Promise(resolve => {
         const u = new SpeechSynthesisUtterance(piece);
         u.lang = voice?.lang ?? (english ? "en-US" : "th-TH");
-        if (voice) u.voice = voice;
+        if (voice) try { u.voice = voice; } catch { /* a voice the browser no longer has: use its default */ }
         u.rate = rate;
         // Some browsers (Chrome on Android, Safari) never fire onend for an utterance — without
         // this the assistant would stay "speaking" forever and hands-free would never listen again.

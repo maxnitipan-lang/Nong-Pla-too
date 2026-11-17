@@ -24,6 +24,8 @@ describe("politeEnding", () => {
     expect(politeEnding("เน้นความปลอดภัยในการทำงานกับไฟฟ้า")).toBe("เน้นความปลอดภัยในการทำงานกับไฟฟ้า ครับ");
     expect(politeEnding("ห้องสมุดอยู่อาคาร 3 ครับ 📚")).toBe("ห้องสมุดอยู่อาคาร 3 ครับ 📚");
     expect(politeEnding("สนใจไหม?")).toBe("สนใจไหม?");
+    expect(politeEnding("เปิด 08:00–16:30 น.")).toBe("เปิด 08:00–16:30 น. ครับ");
+    expect(politeEnding("อยู่ใกล้โรงอาหาร.")).toBe("อยู่ใกล้โรงอาหาร ครับ");
     expect(politeEnding("The library is in Building 3.")).toBe("The library is in Building 3.");
   });
 });

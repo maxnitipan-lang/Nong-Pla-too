@@ -15,6 +15,7 @@ describe("ready-made answers (no AI call)", () => {
     ["เปิดกี่โมงครับ", "office-hours"],
     ["จอดรถตรงไหนได้บ้าง", "parking"],
     ["มีสาขาอะไรบ้างครับ", "majors"],
+    ["วิทยาลัยมีสาขาอะไรบ้าง", "majors"],
     ["วันนี้อากาศเป็นไง", "off-weather"],
     ["ช่วยทำการบ้านคณิตหน่อย", "off-homework"],
     ["เลือกพรรคไหนดี", "off-politics"],
