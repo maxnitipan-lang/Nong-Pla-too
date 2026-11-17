@@ -61,7 +61,12 @@ export function registerRestApi(app) {
       if (err.code === "BAD_REQUEST" && err.cause && Array.isArray(err.cause.issues)) {
         message = err.cause.issues[0]?.message ?? message;
       }
-      if (err.code === "INTERNAL_SERVER_ERROR" && process.env.NODE_ENV === "production") message = "เกิดข้อผิดพลาดในเซิร์ฟเวอร์";
+      // Hide only crashes nobody planned for; errors our own code throws (e.g. "ดึงข่าวไม่สำเร็จ: …")
+      // tell the admin what went wrong, so keep their message.
+      if (err.code === "INTERNAL_SERVER_ERROR") {
+        if (error instanceof TRPCError) console.error(`[api] ${path}: ${message}`);
+        else if (process.env.NODE_ENV === "production") message = "เกิดข้อผิดพลาดในเซิร์ฟเวอร์";
+      }
       res.status(getHTTPStatusCodeFromError(err)).json({ ok: false, error: { code: err.code, message } });
     }
   });
