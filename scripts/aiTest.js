@@ -5,7 +5,10 @@
 //
 // Each case says what a good answer must contain (or must not), and/or which
 // ready-made answer or route it should hit. Voice cases time /api/voice/tts.
-// Writes a report to scripts/ai-test-report.md and prints a summary.
+// Writes a report to scripts/ai-test-report.md, prints the score (%) and compares it with the
+// previous run (scripts/ai-test-history.json). Run it before deploying a change to the AI.
+// Tip: test a server WITHOUT the database (DATABASE_URL=) so test questions are not recorded
+// in "คำถามจาก AI" — it then uses the built-in announcement instead of "ความรู้ของ AI".
 // Needs the server's AI key for the questions that go to the AI.
 
 import fs from "node:fs";
@@ -68,6 +71,15 @@ const CASES = [
   { group: "ข้อมูล", q: "ใครดูแลงานทะเบียน", any: ["ชวลิต"] },
   { group: "ข้อมูล", q: "อยากขอทุนการศึกษาต้องติดต่อใคร", any: ["เขมนัษฐ์ภรณ์", "สวัสดิการ"] },
   { group: "ข้อมูล", q: "หัวหน้าสาขาช่างยนต์คือใคร", not: ["หัวหน้าสาขาช่างยนต์คือ"] }, // not in the data: must not guess
+  // ---- รับสมัคร (จากหน้า "ความรู้ของ AI": ประกาศโควตา 2570)
+  { group: "รับสมัคร", q: "ช่างยนต์รอบโควตารับกี่คน", has: ["32"] },
+  { group: "รับสมัคร", q: "ปวส.ไฟฟ้ารับโควตากี่คน", has: ["20"] },
+  { group: "รับสมัคร", q: "สมัครโควตาใช้เกรดเท่าไหร่", any: ["2.00", "2.0", "สอง"] },
+  { group: "รับสมัคร", q: "สอบสัมภาษณ์โควตาวันไหน", any: ["23 พ", "23 พฤศจิกายน"] },
+  { group: "รับสมัคร", q: "สมัครโควตาต้องใช้เอกสารอะไรบ้าง", any: ["ใบรับรองผลการเรียน", "ทะเบียนบ้าน"] },
+  { group: "รับสมัคร", q: "โควตาความสามารถพิเศษต้องมีอะไร", any: ["เกียรติบัตร"] },
+  { group: "รับสมัคร", q: "รอบปกติรับสมัครวันไหน", not: ["รอบปกติรับสมัครวันที่"], any: ["ยังไม่", "ติดตาม", "ประกาศ"] }, // not in the data: must not invent a date
+  { group: "รับสมัคร", q: "When is the quota interview?", any: ["23", "November"] },
   // ---- ข่าว
   { group: "ข่าว", q: "ข่าวล่าสุดมีอะไรบ้าง", any: ["ข่าวล่าสุด"] },
   { group: "ข่าว", q: "มีประกาศอะไรบ้าง", any: ["ประกาศ"] },
@@ -179,7 +191,23 @@ async function main() {
   ];
   const out = path.join(path.dirname(fileURLToPath(import.meta.url)), "ai-test-report.md");
   fs.writeFileSync(out, lines.join("\n"));
-  console.log(`\nผ่าน ${total - failed}/${total} · AI ตอบเฉลี่ย ${avg.toFixed(1)}s · รายงาน: ${out}`);
+
+  // Score history: each run is compared with the one before, so a change that makes answers worse shows.
+  const historyFile = path.join(path.dirname(out), "ai-test-history.json");
+  let history = [];
+  try {
+    history = JSON.parse(fs.readFileSync(historyFile, "utf8"));
+  } catch {
+    history = [];
+  }
+  const score = total ? Math.round(((total - failed) / total) * 1000) / 10 : 0;
+  const before = [...history].reverse().find((h) => h.base === BASE);
+  history.push({ at: new Date().toISOString(), base: BASE, passed: total - failed, total, score, failed: rows.filter((x) => x.problems.length).map((x) => x.c.q) });
+  fs.writeFileSync(historyFile, JSON.stringify(history.slice(-50), null, 2));
+  const diff = before ? ` (รอบก่อน ${before.score}% → ${score >= before.score ? "+" : ""}${(score - before.score).toFixed(1)})` : "";
+  const newlyFailed = before ? rows.filter((x) => x.problems.length && !before.failed.includes(x.c.q)).map((x) => x.c.q) : [];
+  console.log(`\nคะแนน ${score}%${diff} · ผ่าน ${total - failed}/${total} · AI ตอบเฉลี่ย ${avg.toFixed(1)}s · รายงาน: ${out}`);
+  if (newlyFailed.length) console.log(`⚠ ข้อที่รอบก่อนผ่าน แต่รอบนี้ตก: ${newlyFailed.join(" · ")}`);
   process.exitCode = failed ? 1 : 0;
 }
 

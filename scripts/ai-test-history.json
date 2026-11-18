@@ -1,0 +1,10 @@
+[
+  {
+    "at": "2026-11-18T02:16:00.846Z",
+    "base": "http://localhost:3300",
+    "passed": 67,
+    "total": 67,
+    "score": 100,
+    "failed": []
+  }
+]

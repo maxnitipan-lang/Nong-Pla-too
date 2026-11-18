@@ -169,3 +169,10 @@
   .platoo-ui .kiosk-assistant { padding: 18px 24px 20px; }
   .platoo-ui .kiosk-menu-card { min-height: 150px; }
 }
+
+/* Under an answer: "ฟังอีกครั้ง" and 👍 / 👎 */
+.platoo-chat .message-tools { display: flex; align-items: center; gap: 6px; margin-top: 4px; flex-wrap: wrap; }
+.platoo-chat .message-tools .listen-again { margin-top: 0; margin-right: auto; }
+.platoo-chat .rate-btn { border: 1px solid var(--line, rgba(0,0,0,.12)); background: transparent; border-radius: 999px; padding: 2px 9px; font-size: 13px; line-height: 1.4; cursor: pointer; opacity: .75; transition: opacity .15s, transform .15s; }
+.platoo-chat .rate-btn:hover { opacity: 1; transform: translateY(-1px); }
+.platoo-chat .rate-thanks { font-size: 11px; font-weight: 700; color: var(--muted); }

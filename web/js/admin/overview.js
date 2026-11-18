@@ -28,15 +28,15 @@ function aiUsageCard(days) {
   const sum = (key) => days.reduce((n, d) => n + d[key], 0);
   const today = days[0];
   const rows = days
-    .map((d) => html`<tr><td>${d.day}</td><td>${d.calls}</td><td>${d.answered}</td><td>${d.busy}</td><td>${d.failed}</td><td>${d.cacheHits}</td><td>${d.avgMs ? (d.avgMs / 1000).toFixed(1) + " วิ" : "-"}</td></tr>`)
+    .map((d) => html`<tr><td>${d.day}</td><td>${d.calls}</td><td>${d.answered}</td><td>${d.busy}</td><td>${d.failed}</td><td>${d.cacheHits}</td><td>${d.liked ?? 0} / ${d.disliked ?? 0}</td><td>${d.avgMs ? (d.avgMs / 1000).toFixed(1) + " วิ" : "-"}</td></tr>`)
     .join("");
   return html`<section class="card" style="margin-top:16px">
     <h3 class="ai-usage-title">${raw(icon("wand"))} การใช้งาน AI (7 วันล่าสุด)</h3>
     ${days.length
-      ? raw(html`<p class="muted">วันนี้เรียก AI ${today.calls} ครั้ง · ไม่ว่าง/เกินโควตา ${today.busy} ครั้ง · ตอบจากคำตอบที่เก็บไว้ ${today.cacheHits} ครั้ง
+      ? raw(html`<p class="muted">วันนี้เรียก AI ${today.calls} ครั้ง · ไม่ว่าง/เกินโควตา ${today.busy} ครั้ง · ตอบจากคำตอบที่เก็บไว้ ${today.cacheHits} ครั้ง · 👍 ${today.liked ?? 0} · 👎 ${today.disliked ?? 0}
           — รวม 7 วัน: ไม่ว่าง ${sum("busy")} จาก ${sum("calls")} ครั้ง</p>
         <div style="overflow-x:auto"><table class="ai-usage">
-          <thead><tr><th>วันที่</th><th>เรียก AI</th><th>ตอบได้</th><th>ไม่ว่าง (429)</th><th>ผิดพลาด</th><th>ตอบจากที่เก็บไว้</th><th>เวลาเฉลี่ย</th></tr></thead>
+          <thead><tr><th>วันที่</th><th>เรียก AI</th><th>ตอบได้</th><th>ไม่ว่าง (429)</th><th>ผิดพลาด</th><th>ตอบจากที่เก็บไว้</th><th>👍 / 👎</th><th>เวลาเฉลี่ย</th></tr></thead>
           <tbody>${raw(rows)}</tbody></table></div>`)
       : "ยังไม่มีข้อมูล — จะเริ่มนับเมื่อมีคนถามคำถามที่ต้องใช้ AI"}
   </section>`;

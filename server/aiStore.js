@@ -33,6 +33,9 @@ async function db() {
           "`cacheHits` int NOT NULL DEFAULT 0, CONSTRAINT `ai_usage_daily_day` PRIMARY KEY(`day`))"
       )
     );
+    // 👍 / 👎 counts (added later: an error = the column is already there).
+    for (const column of ["`liked` int NOT NULL DEFAULT 0", "`disliked` int NOT NULL DEFAULT 0"])
+      await database.execute(sql.raw(`ALTER TABLE \`ai_usage_daily\` ADD COLUMN ${column}`)).catch(() => undefined);
   })().catch((error) => {
     ready = null;
     throw error;
@@ -105,7 +108,8 @@ export async function clearStoredAnswers() {
 
 /**
  * Count one AI attempt: "answered" (ok, with ms), "busy" (429 / 503), "failed" (anything else),
- * or "cache" (a repeat question answered from the stored answers, no AI call).
+ * "cache" (a repeat question answered from the stored answers, no AI call), or a visitor's
+ * "liked" / "disliked" (👍 / 👎 under an answer).
  */
 export async function countAiUse(kind, ms = 0) {
   try {
@@ -116,13 +120,16 @@ export async function countAiUse(kind, ms = 0) {
     const busy = kind === "busy" ? 1 : 0;
     const failed = kind === "failed" ? 1 : 0;
     const cacheHits = kind === "cache" ? 1 : 0;
-    const calls = kind === "cache" ? 0 : 1;
+    const liked = kind === "liked" ? 1 : 0;
+    const disliked = kind === "disliked" ? 1 : 0;
+    const calls = answered + busy + failed;
     const totalMs = answered ? Math.round(ms) : 0;
     await database.execute(
-      sql`INSERT INTO ai_usage_daily (day, calls, answered, busy, failed, totalMs, cacheHits)
-          VALUES (${day}, ${calls}, ${answered}, ${busy}, ${failed}, ${totalMs}, ${cacheHits})
+      sql`INSERT INTO ai_usage_daily (day, calls, answered, busy, failed, totalMs, cacheHits, liked, disliked)
+          VALUES (${day}, ${calls}, ${answered}, ${busy}, ${failed}, ${totalMs}, ${cacheHits}, ${liked}, ${disliked})
           ON DUPLICATE KEY UPDATE calls = calls + ${calls}, answered = answered + ${answered}, busy = busy + ${busy},
-            failed = failed + ${failed}, totalMs = totalMs + ${totalMs}, cacheHits = cacheHits + ${cacheHits}`
+            failed = failed + ${failed}, totalMs = totalMs + ${totalMs}, cacheHits = cacheHits + ${cacheHits},
+            liked = liked + ${liked}, disliked = disliked + ${disliked}`
     );
   } catch {
     /* counting must never break the chat */
@@ -135,7 +142,7 @@ export async function aiUsage(days = 7) {
     const database = await db();
     if (!database) return [];
     const rows = rowsOf(
-      await database.execute(sql`SELECT day, calls, answered, busy, failed, totalMs, cacheHits FROM ai_usage_daily ORDER BY day DESC LIMIT ${days}`)
+      await database.execute(sql`SELECT day, calls, answered, busy, failed, totalMs, cacheHits, liked, disliked FROM ai_usage_daily ORDER BY day DESC LIMIT ${days}`)
     );
     return rows.map((r) => ({
       day: String(r.day),
@@ -144,6 +151,8 @@ export async function aiUsage(days = 7) {
       busy: Number(r.busy),
       failed: Number(r.failed),
       cacheHits: Number(r.cacheHits),
+      liked: Number(r.liked ?? 0),
+      disliked: Number(r.disliked ?? 0),
       avgMs: Number(r.answered) ? Math.round(Number(r.totalMs) / Number(r.answered)) : 0,
     }));
   } catch {

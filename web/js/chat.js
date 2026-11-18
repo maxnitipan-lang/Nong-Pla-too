@@ -272,7 +272,8 @@ export class PlatooChat {
         controller.signal,
       );
       if (session !== this.session) return;
-      this.set({ messages: [...this.s.messages, { role: "assistant", content: reply, action: CHAT_ACTIONS[action] ? action : undefined }] });
+      // question: kept for the 👍 / 👎 buttons (what was asked, to tell the admin which answer was wrong).
+      this.set({ messages: [...this.s.messages, { role: "assistant", content: reply, action: CHAT_ACTIONS[action] ? action : undefined, question: q }] });
       if (routeToBuildingId && this.onShowRoute) {
         // Say it, then hand over to the map (the panel closes so the route is visible).
         void this.speakReply(reply, session);
@@ -453,6 +454,15 @@ export class PlatooChat {
         unlockAudio();
         void this.ask(el.dataset.question, false);
         break;
+      case "rate": {
+        const index = Number(el.dataset.index);
+        const message = s.messages[index];
+        if (!message?.question || message.rated) break;
+        const good = el.dataset.good === "1";
+        this.set({ messages: s.messages.map((m, i) => (i === index ? { ...m, rated: good ? "good" : "bad" } : m)) });
+        void apiPost("chat/feedback", { question: message.question, answer: message.content.slice(0, 4000), good }).catch(() => undefined);
+        break;
+      }
       case "listen-again": {
         const message = s.messages[Number(el.dataset.index)];
         const session = this.session;
@@ -543,8 +553,15 @@ export class PlatooChat {
       // An English answer gets English buttons, so the whole reply is in one language.
       const en = isEnglishText(m.content);
       const again = index > 0 && this.canSpeakOut ? raw(html`<button type="button" class="listen-again" data-chat="listen-again" data-index="${index}">${raw(icon("volume-on"))} ${en ? "Play again" : "ฟังอีกครั้ง"}</button>`) : "";
+      // 👍 / 👎 under real answers (not the greeting or an error): 👎 shows the question to the admin.
+      const rate = !m.question
+        ? ""
+        : m.rated
+          ? raw(html`<span class="rate-thanks">${en ? (m.rated === "good" ? "Thanks! 😊" : "Thanks — a teacher will check this answer") : this.say(m.rated === "good" ? "ขอบคุณครับ 😊" : "ขอบคุณครับ ครูจะตรวจคำตอบนี้ให้")}</span>`)
+          : raw(html`<button type="button" class="rate-btn" data-chat="rate" data-good="1" data-index="${index}" aria-label="${en ? "Helpful" : "คำตอบนี้มีประโยชน์"}">👍</button><button type="button" class="rate-btn" data-chat="rate" data-good="0" data-index="${index}" aria-label="${en ? "Not right" : "คำตอบนี้ไม่ถูก"}">👎</button>`);
+      const tools = again || rate ? raw(html`<div class="message-tools">${again}${rate}</div>`) : "";
       return html`<div class="message-row bot"><img class="message-mascot" src="/mascots/greeting.webp" alt="" aria-hidden="true" />
-        <div class="message bot" lang="${en ? "en" : "th"}">${raw(renderMarkdown(this.say(m.content)))}${m.action ? raw(html`<button type="button" class="chat-action" data-chat="action" data-name="${m.action}">${(en ? CHAT_ACTIONS_EN : CHAT_ACTIONS)[m.action]} ${raw(icon("arrow"))}</button>`) : ""}${again}</div></div>`;
+        <div class="message bot" lang="${en ? "en" : "th"}">${raw(renderMarkdown(this.say(m.content)))}${m.action ? raw(html`<button type="button" class="chat-action" data-chat="action" data-name="${m.action}">${(en ? CHAT_ACTIONS_EN : CHAT_ACTIONS)[m.action]} ${raw(icon("arrow"))}</button>`) : ""}${tools}</div></div>`;
     });
     const interim = s.phase === "listening" && s.interim ? html`<div class="message-row user"><div class="message user interim">${s.interim}…</div></div>` : "";
     return `<p class="chat-date">วันนี้</p>${rows.join("")}${interim}`;

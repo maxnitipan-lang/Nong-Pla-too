@@ -3,6 +3,8 @@ import { z } from "zod";
 import { COOKIE_NAME } from "../shared/const.js";
 import { adminRouter } from "./adminRouter.js";
 import { askCampusChat, isChatConfigured } from "./chat.js";
+import { markDisputed } from "./chatLearning.js";
+import { countAiUse } from "./aiStore.js";
 import {
   getCampusBuildings,
   getCampusNews,
@@ -167,6 +169,14 @@ export const appRouter = router({
 
   chat: router({
     configured: publicProcedure.query(() => isChatConfigured()),
+    /** 👍 / 👎 under an answer: 👎 puts the question in /admin/learned as "ถูกโต้แย้ง" for a teacher to check. */
+    feedback: publicProcedure
+      .input(z.object({ question: z.string().trim().min(1).max(500), answer: z.string().max(4000).default(""), good: z.boolean() }))
+      .mutation(async ({ input }) => {
+        void countAiUse(input.good ? "liked" : "disliked");
+        if (!input.good) await markDisputed(input.question, /[฀-๿]/.test(input.question) ? "th" : "en", "ผู้ใช้กด 👎 ว่าคำตอบไม่ถูก");
+        return { success: true };
+      }),
     ask: publicProcedure
       .input(
         z.object({
