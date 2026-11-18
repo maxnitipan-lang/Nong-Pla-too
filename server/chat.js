@@ -20,6 +20,7 @@ import { withDepartmentInfo } from "../shared/departmentInfo.js";
 import { placeEn } from "../shared/placeNamesEn.js";
 import { admissionLines } from "../shared/data/admission2570.js";
 import { staffLines } from "../shared/staffDirectory.js";
+import { clearStoredAnswers, countAiUse, getStoredAnswer, storeAnswer } from "./aiStore.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
 
 const CHAT_BASE_URL = process.env.CHAT_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
@@ -36,16 +37,33 @@ const FALLBACK_MODELS = (process.env.CHAT_FALLBACK_MODELS ?? (process.env.CHAT_B
   .map(s => s.trim())
   .filter(Boolean);
 
-/** Models resting after a 429/503 (model → time it may be tried again). */
+/**
+ * API keys, tried in turn when one is out of quota. GEMINI_API_KEY alone works as before;
+ * more keys (each from a different Google account) go in GEMINI_API_KEYS="key2,key3".
+ */
+export function apiKeysFrom(env = process.env) {
+  return [...new Set([env.CHAT_API_KEY, env.GEMINI_API_KEY, ...String(env.GEMINI_API_KEYS ?? "").split(",")].map(k => k?.trim()).filter(Boolean))];
+}
+const CHAT_API_KEYS = apiKeysFrom();
+const CHAT_API_KEY = CHAT_API_KEYS[0] ?? "";
+
+/** Key + model pairs resting after a 429/503 ("keyIndex|model" → time it may be tried again). */
 const resting = new Map();
-const restModel = (model, ms) => resting.set(model, Date.now() + ms);
-/** Main model first, then the backups — skipping resting ones (unless every model is resting). */
-export function modelsToTry(now = Date.now()) {
-  const all = [...new Set([CHAT_MODEL, ...FALLBACK_MODELS])];
-  const awake = all.filter(m => (resting.get(m) ?? 0) <= now);
+const restAttempt = (attempt, ms) => resting.set(`${attempt.keyIndex}|${attempt.model}`, Date.now() + ms);
+/**
+ * What to try, in order: the main model with each key, then each backup model with each key —
+ * skipping resting pairs (unless every pair is resting). Google counts quota per key AND per model.
+ */
+export function attemptsToTry(now = Date.now(), keyCount = CHAT_API_KEYS.length) {
+  const models = [...new Set([CHAT_MODEL, ...FALLBACK_MODELS])];
+  const all = models.flatMap(model => Array.from({ length: Math.max(1, keyCount) }, (_, keyIndex) => ({ model, keyIndex })));
+  const awake = all.filter(a => (resting.get(`${a.keyIndex}|${a.model}`) ?? 0) <= now);
   return awake.length ? awake : all;
 }
-const CHAT_API_KEY = process.env.CHAT_API_KEY || process.env.GEMINI_API_KEY || "";
+/** Models that still have an awake key, main model first. */
+export function modelsToTry(now = Date.now()) {
+  return [...new Set(attemptsToTry(now).map(a => a.model))];
+}
 
 const ROUTE_TOOL = "show_walking_route";
 
@@ -284,6 +302,7 @@ function cachedAnswer(slot) {
 
 function rememberAnswer(slot, answer) {
   if (!slot || answer.source !== "ai") return;
+  void storeAnswer(slot.key, slot.question, answer);
   if (aiCache.size >= AI_CACHE_MAX) aiCache.delete(aiCache.keys().next().value);
   aiCache.set(slot.key, { question: slot.question, digits: slot.digits, answer, at: Date.now() });
 }
@@ -291,6 +310,16 @@ function rememberAnswer(slot, answer) {
 /** Forget remembered AI answers (e.g. after the buildings or news change in admin). */
 export function clearAiAnswerCache() {
   aiCache.clear();
+  void clearStoredAnswers();
+}
+
+/** The answer kept in the database (after a restart the memory cache is empty). */
+async function storedAnswer(slot) {
+  if (!slot) return null;
+  const stored = await getStoredAnswer(slot.key);
+  if (!stored) return null;
+  aiCache.set(slot.key, { question: slot.question, digits: slot.digits, answer: stored.answer, at: stored.at });
+  return { ...stored.answer, source: "ai-cache" };
 }
 
 /** "where is the library": English letters, no Thai — and not Thai typed on an English keyboard. */
@@ -345,8 +374,9 @@ export async function askCampusChat(history, options = {}) {
   }
   try {
     const slot = options.correcting ? null : cacheSlot(history, options);
-    const remembered = cachedAnswer(slot);
+    const remembered = cachedAnswer(slot) ?? (await storedAnswer(slot));
     if (remembered) {
+      void countAiUse("cache");
       // Asked again: count it (the memory cache is gone after a restart; the database is not).
       void recordQuestion(lastQuestion, { ...remembered, source: "ai" }, lang);
       if (options.aiVoice) prepareSpeech(cleanForSpeech(remembered.reply));
@@ -473,10 +503,13 @@ ${answer.reply}` };
   let lastNetworkError = "";
   // Google's free tier counts each model separately, and one model can be overloaded (503)
   // while others answer fine — so a busy / out-of-quota model hands over to the next one.
-  const models = modelsToTry();
-  for (let i = 0; i < models.length; i++) {
-    const model = models[i];
-    const isLast = i === models.length - 1;
+  // With several keys, an out-of-quota key hands over to the next key for the same model.
+  const attempts = attemptsToTry();
+  for (let i = 0; i < attempts.length; i++) {
+    const attempt = attempts[i];
+    const { model } = attempt;
+    const isLast = i === attempts.length - 1;
+    const startedAt = Date.now();
 
     let res;
     // Gemini can hold the connection open without ever responding; without a
@@ -488,7 +521,7 @@ ${answer.reply}` };
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${CHAT_API_KEY}`,
+          Authorization: `Bearer ${CHAT_API_KEYS[attempt.keyIndex] ?? CHAT_API_KEY}`,
         },
         body: JSON.stringify({ ...payload, model }),
         signal,
@@ -499,7 +532,8 @@ ${answer.reply}` };
         : error instanceof Error
           ? error.message
           : "unknown network error";
-      restModel(model, 2 * 60_000);
+      restAttempt(attempt, 2 * 60_000);
+      void countAiUse("failed");
       continue;
     }
 
@@ -513,8 +547,10 @@ ${answer.reply}` };
           : error instanceof Error
             ? error.message
             : "unknown parse error";
+        void countAiUse("failed");
         continue;
       }
+      void countAiUse("answered", Date.now() - startedAt);
       const choice = data?.choices?.[0];
       const message = choice?.message;
 
@@ -551,10 +587,12 @@ ${answer.reply}` };
     lastStatus = res.status;
     // Busy (503), out of quota (429) or a hiccup (500): rest this model and try the next one.
     if (res.status === 429 || res.status === 503 || res.status === 500 || (res.status === 404 && !isLast)) {
-      restModel(model, res.status === 404 ? 60 * 60_000 : res.status === 429 ? 10 * 60_000 : 2 * 60_000);
-      console.warn(`[Chat] ${model} answered ${res.status}${isLast ? "" : " — trying the next model"}`);
+      restAttempt(attempt, res.status === 404 ? 60 * 60_000 : res.status === 429 ? 10 * 60_000 : 2 * 60_000);
+      void countAiUse(res.status === 429 || res.status === 503 ? "busy" : "failed");
+      console.warn(`[Chat] ${model}${CHAT_API_KEYS.length > 1 ? ` (key ${attempt.keyIndex + 1})` : ""} answered ${res.status}${isLast ? "" : " — trying the next one"}`);
       continue;
     }
+    void countAiUse("failed");
     {
       const detail = await res.text().catch(() => "");
       let apiMessage = "";

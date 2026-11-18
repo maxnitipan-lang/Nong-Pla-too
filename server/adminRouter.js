@@ -1,4 +1,5 @@
 import { TRPCError } from "@trpc/server";
+import { aiUsage } from "./aiStore.js";
 import { z } from "zod";
 import {
   buildingInputSchema,
@@ -55,13 +56,15 @@ async function run(fn) {
 
 export const adminRouter = router({
   overview: staffProcedure.query(async () => {
-    const [buildings, news, allUsers, settings] = await Promise.all([
+    const [buildings, news, allUsers, settings, aiUsageDays] = await Promise.all([
       getCampusBuildings(),
       listCampusNewsAdmin(),
       listUsers(),
       getCampusSettings(),
+      aiUsage(7),
     ]);
     return {
+      aiUsage: aiUsageDays,
       databaseConfigured: isDatabaseConfigured(),
       buildingCount: buildings.length,
       newsCount: news.length,

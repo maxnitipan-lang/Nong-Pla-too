@@ -237,3 +237,11 @@ svg { flex: 0 0 auto; }
 .lq-reset { padding: 0; color: var(--accent); font: inherit; font-weight: 700; background: none; border: 0; cursor: pointer; text-decoration: underline; }
 .lq-answer b { color: var(--ink); }
 @media (max-width: 560px) { .lq-select { min-width: 0; flex: 1 1 140px; } .lq-fgroups fieldset { width: 100%; } }
+
+/* Overview: AI use per day */
+.ai-usage { width: 100%; border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+.ai-usage th, .ai-usage td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--line, #e5e7eb); white-space: nowrap; }
+.ai-usage th:first-child, .ai-usage td:first-child { text-align: left; }
+.ai-usage th { font-weight: 600; color: var(--muted); }
+.ai-usage-title { display: flex; align-items: center; gap: 8px; font-size: 16px; margin: 0 0 4px; }
+.ai-usage-title svg { width: 18px; height: 18px; flex: none; }
