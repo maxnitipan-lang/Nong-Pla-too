@@ -14,6 +14,7 @@ const NAV = [
   { section: "buildings", label: "อาคาร", path: "/admin/buildings", icon: "building", title: "จัดการอาคาร" },
   { section: "walkways", label: "ทางเดิน (นำทาง)", path: "/admin/walkways", icon: "footprints", title: "ทางเดินสำหรับนำทาง" },
   { section: "news", label: "ข่าวสาร", path: "/admin/news", icon: "news", title: "จัดการข่าวสาร" },
+  { section: "knowledge", label: "ความรู้ของ AI", path: "/admin/knowledge", icon: "file", title: "ความรู้ของ AI · ข้อมูลให้น้องปลาทูใช้ตอบ" },
   { section: "learned", label: "คำถามจาก AI", path: "/admin/learned", icon: "wand", title: "คำถามจาก AI · วิเคราะห์และสอนน้องปลาทู" },
   { section: "users", label: "ผู้ใช้และสิทธิ์", path: "/admin/users", icon: "users", title: "ผู้ใช้และสิทธิ์", adminOnly: true },
   { section: "settings", label: "ตั้งค่าเว็บ", path: "/admin/settings", icon: "settings", title: "ตั้งค่าเว็บ" },
@@ -119,6 +120,7 @@ const PAGES = {
   walkways: () => import("./walkways.js"),
   news: () => import("./news.js"),
   learned: () => import("./learned.js"),
+  knowledge: () => import("./knowledge.js"),
   users: () => import("./users.js"),
   settings: () => import("./settings.js"),
 };

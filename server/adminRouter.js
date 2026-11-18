@@ -1,5 +1,6 @@
 import { TRPCError } from "@trpc/server";
 import { aiUsage } from "./aiStore.js";
+import { KNOWLEDGE_CATEGORIES, MAX_CONTENT, deleteKnowledge, listKnowledge, readPdf, saveKnowledge } from "./aiKnowledge.js";
 import { z } from "zod";
 import {
   buildingInputSchema,
@@ -53,6 +54,17 @@ async function run(fn) {
     });
   }
 }
+
+const DAY = z.string().regex(/^(\d{4}-\d{2}-\d{2})?$/, "วันที่ไม่ถูกต้อง");
+const knowledgeInputSchema = z.object({
+  id: z.string().max(40).regex(/^[a-z0-9-]*$/).default(""),
+  title: z.string().trim().min(1, "กรอกหัวข้อ").max(255),
+  content: z.string().trim().min(1, "กรอกเนื้อหา").max(MAX_CONTENT, `เนื้อหายาวเกิน ${MAX_CONTENT.toLocaleString()} ตัวอักษร`),
+  category: z.enum(KNOWLEDGE_CATEGORIES),
+  validFrom: DAY.default(""),
+  validUntil: DAY.default(""),
+  enabled: z.boolean().default(true),
+});
 
 export const adminRouter = router({
   overview: staffProcedure.query(async () => {
@@ -108,6 +120,29 @@ export const adminRouter = router({
         });
       }
     }),
+  }),
+
+  /** "ความรู้ของ AI": facts for the AI only (see aiKnowledge.js). */
+  knowledge: router({
+    list: staffProcedure.query(() => listKnowledge()),
+    save: editorProcedure.input(knowledgeInputSchema).mutation(async ({ input, ctx }) => {
+      let saved;
+      await run(async () => {
+        saved = await saveKnowledge(input, ctx.user?.name ?? "");
+      });
+      return saved;
+    }),
+    delete: editorProcedure.input(idInput).mutation(({ input }) => run(() => deleteKnowledge(input.id))),
+    /** A PDF read by the AI: returns a draft for the admin to check — nothing is saved. */
+    readPdf: editorProcedure
+      .input(z.object({ base64: z.string().min(100).max(27_000_000, "ไฟล์ใหญ่เกิน 20 MB") }))
+      .mutation(async ({ input }) => {
+        try {
+          return await readPdf(input.base64.replace(/^data:[^,]*,/, ""));
+        } catch (error) {
+          throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: error instanceof Error ? error.message : "อ่าน PDF ไม่สำเร็จ" });
+        }
+      }),
   }),
 
   users: router({

@@ -19,6 +19,7 @@ import { prepareSpeech } from "./voice.js";
 import { withDepartmentInfo } from "../shared/departmentInfo.js";
 import { placeEn } from "../shared/placeNamesEn.js";
 import { admissionLines } from "../shared/data/admission2570.js";
+import { knowledgeLines } from "./aiKnowledge.js";
 import { staffLines } from "../shared/staffDirectory.js";
 import { clearStoredAnswers, countAiUse, getStoredAnswer, storeAnswer } from "./aiStore.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
@@ -101,7 +102,7 @@ function departmentLines(buildings) {
 /** Questions about people (teachers, who to contact): only then is the long staff list sent. */
 const ABOUT_PEOPLE = /ครู|อาจารย์|ใคร|หัวหน้า|ติดต่อ|ชื่อ|ทุน|ผู้อำนวยการ|ผอ|รอง|ดูแล|รับผิดชอบ|พบ|คุยกับ/;
 
-function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = null, aboutPeople = false) {
+function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = null, aboutPeople = false, knowledge = null) {
   const buildingLines = buildings
     .map(b => {
       // Rooms per floor + kiosk departments, so "สาขา X อยู่ไหน" can be answered.
@@ -152,7 +153,8 @@ function buildSystemPrompt(buildings, news, settings, spoken = false, kiosk = nu
     `== หลักสูตรที่เปิดสอนอย่างเป็นทางการ (ข้อมูล ณ ${PROGRAMMES_AS_OF}) — ใช้ชื่อตามนี้เมื่อถามว่าเปิดสอนอะไร ==`,
     ...programmeLines(),
     "",
-    ...admissionLines(),
+    // Facts from /admin/knowledge ("ความรู้ของ AI"); without a database, the built-in announcement.
+    ...(knowledge ?? admissionLines()),
     `วันนี้คือ ${new Date().toLocaleDateString("th-TH", { timeZone: "Asia/Bangkok", dateStyle: "long" })} — ใช้เทียบกับกำหนดการ (บอกว่าขั้นไหนผ่านไปแล้ว ขั้นไหนกำลังจะมา)`,
     "",
     "== ข่าวสารล่าสุด ==",
@@ -468,12 +470,12 @@ ${answer.reply}` };
   // fresh so the model always has current building/news data.
   const turns = history.filter(m => m.role === "user" || m.role === "assistant").slice(-10);
   // Answers an admin checked and approved: trusted knowledge for similar questions.
-  const notes = await adminNotes(options.lang === "en" ? "en" : "th").catch(() => "");
+  const [notes, knowledge] = await Promise.all([adminNotes(options.lang === "en" ? "en" : "th").catch(() => ""), knowledgeLines()]);
   const notesText = notes ? `\n\nความรู้ที่แอดมินวิทยาลัยตรวจและยืนยันแล้ว (เชื่อถือได้ ใช้ตอบคำถามที่คล้ายกัน):\n${notes}` : "";
 
   const payload = {
     messages: [
-      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk, turns.some(m => m.role === "user" && ABOUT_PEOPLE.test(m.content))) + notesText + (options.correcting && !options.drafting ? CORRECTION_RULE : "") + (options.lang === "en" ? ENGLISH_RULE : "") },
+      { role: "system", content: buildSystemPrompt(buildings, news, settings, options.spoken, kiosk, turns.some(m => m.role === "user" && ABOUT_PEOPLE.test(m.content)), knowledge) + notesText + (options.correcting && !options.drafting ? CORRECTION_RULE : "") + (options.lang === "en" ? ENGLISH_RULE : "") },
       ...turns,
     ],
     temperature: 0.3,
