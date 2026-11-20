@@ -30,11 +30,13 @@ function nodeIcon(node, selected, chain) {
   const size = node.buildingId || node.gate ? 16 : 12;
   const bg = node.gate ? "#16a34a" : node.buildingId ? "#e8563f" : chain ? "#f59e0b" : "#1a73e8";
   const ring = selected ? "box-shadow:0 0 0 4px rgba(245,158,11,.6);" : "";
+  // The dot stays small, but the area you can grab is 28 × 28 px (easier on a tablet or touch screen).
+  const hit = 28;
   return L.divIcon({
     className: "",
-    html: `<span style="display:block;width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:2px solid #fff;${ring}"></span>`,
-    iconSize: [size, size],
-    iconAnchor: [size / 2, size / 2],
+    html: `<span style="display:grid;place-items:center;width:${hit}px;height:${hit}px"><span style="display:block;width:${size}px;height:${size}px;border-radius:50%;background:${bg};border:2px solid #fff;${ring}"></span></span>`,
+    iconSize: [hit, hit],
+    iconAnchor: [hit / 2, hit / 2],
   });
 }
 
@@ -66,7 +68,7 @@ export async function render(page, { canEdit }) {
   };
 
   page.innerHTML = html`<p class="help" style="margin-bottom:16px">วาดทางเดินจริงของวิทยาลัยลงบนแผนที่ (แนะนำโหมดดาวเทียม) ระบบนำทางจะพาเดินตามเส้นเหล่านี้เท่านั้น พร้อมบอกทางเลี้ยวทีละขั้น
-      จุด<b style="color:#e8563f">สีส้มแดง</b> = ทางเข้าอาคาร · จุด<b style="color:#16a34a">สีเขียว</b> = ประตูวิทยาลัย
+      <span class="legend-dot" style="background:#e8563f"></span><b>จุดสีส้มแดง</b> = ทางเข้าอาคาร · <span class="legend-dot" style="background:#16a34a"></span><b>จุดสีเขียว</b> = ประตูวิทยาลัย
       (คนที่อยู่นอกวิทยาลัยจะถูกพามาที่ประตูก่อน) · ตั้งชื่อจุดสำคัญ เช่น "โรงอาหาร" เพื่อให้คำบอกทางเป็น "เลี้ยวซ้าย ที่โรงอาหาร"</p>
     <div class="toolbar" style="justify-content:flex-start" data-part="tools"></div>
     <p data-part="hint" style="margin:0 0 12px;color:var(--blue);font-size:13px;font-weight:700"></p>
@@ -239,7 +241,9 @@ export async function render(page, { canEdit }) {
     if (s.testStart) L.circleMarker([s.testStart.lat, s.testStart.lng], { radius: 8, color: "#fff", weight: 3, fillColor: "#16a34a", fillOpacity: 1 }).addTo(layer);
     for (const node of net.nodes) {
       const selected = s.selection?.kind === "node" && s.selection.id === node.id;
-      const marker = L.marker([node.lat, node.lng], { icon: nodeIcon(node, selected, s.chainFrom === node.id), draggable: canEdit && s.mode === "select", zIndexOffset: selected ? 1000 : 0 });
+      // title: a name for screen readers and a hover hint ("ทางเข้าอาคาร", "ประตูวิทยาลัย", or the point's name).
+      const title = node.name?.trim() || (node.gate ? "ประตูวิทยาลัย" : node.buildingId ? "ทางเข้าอาคาร" : "จุดทางเดิน");
+      const marker = L.marker([node.lat, node.lng], { title, alt: title, icon: nodeIcon(node, selected, s.chainFrom === node.id), draggable: canEdit && s.mode === "select", zIndexOffset: selected ? 1000 : 0 });
       marker.on("click", (ev) => {
         L.DomEvent.stopPropagation(ev);
         edit.clickNode(node.id);

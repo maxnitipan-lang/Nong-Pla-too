@@ -204,7 +204,7 @@ function headerHtml() {
   const v = state.view;
   return html`<header class="app-header ${v === "home" ? "kiosk-header" : ""}">
     <button class="brand" data-action="go" data-view="home" aria-label="กลับหน้าหลัก">
-      <img class="header-platoo" src="/mascots/greeting.webp" alt="น้องปลาทู" />
+      <img class="header-platoo" src="/mascots/greeting-small.webp" alt="น้องปลาทู" />
       <span class="header-brand-text">Nong Pla Too <em>Ontour</em></span>
     </button>
     ${v !== "home"

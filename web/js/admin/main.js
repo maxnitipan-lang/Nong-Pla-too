@@ -91,7 +91,7 @@ function frameHtml(current) {
   const nav = NAV.filter((n) => !n.adminOnly || canManageUsers(user.role));
   return html`<div class="adm">
     <aside class="adm-side">
-      <div class="adm-brand"><img src="/mascots/greeting.webp" alt="" /><div><strong>ผู้ดูแลระบบ</strong><small>น้องปลาทู</small></div></div>
+      <div class="adm-brand"><img src="/mascots/greeting-small.webp" alt="" /><div><strong>ผู้ดูแลระบบ</strong><small>น้องปลาทู</small></div></div>
       <nav class="adm-nav">${nav.map((n) =>
         raw(html`<a href="${n.path}" data-link class="${n.section === current.section ? "active" : ""}">${raw(icon(n.icon))} ${n.label}</a>`))}</nav>
       <div class="adm-side-foot">

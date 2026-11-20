@@ -741,3 +741,25 @@
   .platoo-chat .assistant-header small,
   .platoo-chat .assistant-header small span { font-size: 12px; }
 }
+
+/* Dark mode: readable colours (WCAG 4.5 : 1 or more on the dark cards). */
+/* "เปิดแผนที่วิทยาลัย" in the chat: --navy turns light blue in dark mode, so the words go dark. */
+.platoo-ui[data-theme='dark'] .assistant-map-action { color: #062033; }
+/* Career chips and "ดูข้อมูล" on the programme cards: a lighter tint of the programme colour. */
+.platoo-ui[data-theme='dark'] .dept-careers span,
+.platoo-ui[data-theme='dark'] .dept-foot .dept-link { color: color-mix(in srgb, var(--dept) 60%, white); }
+/* Dates in the announcement list. */
+.platoo-ui[data-theme='dark'] .notice-date { color: #f08a72; }
+/* ปวช. / ปวส. badges (both themes): a deeper orange so the white letters pass 4.5 : 1. */
+.platoo-ui .dept-levels > span:not(.level-bachelor) { background: #a9531a; }
+
+/* Portrait kiosk screens (e.g. 1080 × 1920): the menu cards are tall, so the words get the same
+   size as on a landscape kiosk instead of the small-laptop size. */
+@media (min-width: 900px) and (min-height: 1400px) and (orientation: portrait) {
+  .platoo-ui .kiosk-card-copy strong { font-size: 34px; white-space: normal; }
+  .platoo-ui .kiosk-card-copy small { font-size: 20px; line-height: 1.5; }
+  .platoo-ui .kiosk-greeting strong { font-size: 26px; }
+  .platoo-ui .kiosk-greeting span { font-size: 18px; }
+  .platoo-ui .kiosk-assistant .assistant-label { font-size: 16px; }
+  .platoo-ui .kiosk-map-button span { font-size: 20px; }
+}

@@ -377,7 +377,7 @@ export class PlatooChat {
       <button type="button" class="ai-backdrop" data-chat="close" aria-label="ปิดผู้ช่วย" tabindex="-1"></button>
       <aside role="dialog" aria-label="ผู้ช่วยน้องปลาทู" class="assistant" aria-hidden="true" inert>
         <div class="assistant-header">
-          <div class="assistant-avatar"><img src="/mascots/greeting.webp" alt="" aria-hidden="true" /></div>
+          <div class="assistant-avatar"><img src="/mascots/greeting-small.webp" alt="" aria-hidden="true" /></div>
           <div><strong>น้องปลาทู</strong><small><i></i> <span data-part="status"></span></small></div>
           <button type="button" data-chat="toggle-speak" data-part="speak-button"></button>
           <button type="button" data-chat="toggle-settings" data-part="settings-button" aria-label="ตั้งค่าเสียง" title="ตั้งค่าเสียง">${raw(icon("gear"))}</button>
@@ -560,7 +560,7 @@ export class PlatooChat {
           ? raw(html`<span class="rate-thanks">${en ? (m.rated === "good" ? "Thanks! 😊" : "Thanks — a teacher will check this answer") : this.say(m.rated === "good" ? "ขอบคุณครับ 😊" : "ขอบคุณครับ ครูจะตรวจคำตอบนี้ให้")}</span>`)
           : raw(html`<button type="button" class="rate-btn" data-chat="rate" data-good="1" data-index="${index}" aria-label="${en ? "Helpful" : "คำตอบนี้มีประโยชน์"}">👍</button><button type="button" class="rate-btn" data-chat="rate" data-good="0" data-index="${index}" aria-label="${en ? "Not right" : "คำตอบนี้ไม่ถูก"}">👎</button>`);
       const tools = again || rate ? raw(html`<div class="message-tools">${again}${rate}</div>`) : "";
-      return html`<div class="message-row bot"><img class="message-mascot" src="/mascots/greeting.webp" alt="" aria-hidden="true" />
+      return html`<div class="message-row bot"><img class="message-mascot" src="/mascots/greeting-small.webp" alt="" aria-hidden="true" />
         <div class="message bot" lang="${en ? "en" : "th"}">${raw(renderMarkdown(this.say(m.content)))}${m.action ? raw(html`<button type="button" class="chat-action" data-chat="action" data-name="${m.action}">${(en ? CHAT_ACTIONS_EN : CHAT_ACTIONS)[m.action]} ${raw(icon("arrow"))}</button>`) : ""}${tools}</div></div>`;
     });
     const interim = s.phase === "listening" && s.interim ? html`<div class="message-row user"><div class="message user interim">${s.interim}…</div></div>` : "";
