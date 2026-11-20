@@ -260,7 +260,7 @@ export class PlatooChat {
     const controller = new AbortController();
     this.abort = controller;
     try {
-      const { reply, routeToBuildingId, action } = await apiPost(
+      const { reply, routeToBuildingId, action, feedback } = await apiPost(
         "chat/ask",
         {
           messages: history,
@@ -272,8 +272,8 @@ export class PlatooChat {
         controller.signal,
       );
       if (session !== this.session) return;
-      // question: kept for the 👍 / 👎 buttons (what was asked, to tell the admin which answer was wrong).
-      this.set({ messages: [...this.s.messages, { role: "assistant", content: reply, action: CHAT_ACTIONS[action] ? action : undefined, question: q }] });
+      // feedback: the server's token for the 👍 / 👎 buttons (only answers a teacher can check have one).
+      this.set({ messages: [...this.s.messages, { role: "assistant", content: reply, action: CHAT_ACTIONS[action] ? action : undefined, feedback: feedback || undefined }] });
       if (routeToBuildingId && this.onShowRoute) {
         // Say it, then hand over to the map (the panel closes so the route is visible).
         void this.speakReply(reply, session);
@@ -457,10 +457,10 @@ export class PlatooChat {
       case "rate": {
         const index = Number(el.dataset.index);
         const message = s.messages[index];
-        if (!message?.question || message.rated) break;
+        if (!message?.feedback || message.rated) break;
         const good = el.dataset.good === "1";
         this.set({ messages: s.messages.map((m, i) => (i === index ? { ...m, rated: good ? "good" : "bad" } : m)) });
-        void apiPost("chat/feedback", { question: message.question, answer: message.content.slice(0, 4000), good }).catch(() => undefined);
+        void apiPost("chat/feedback", { token: message.feedback, good }).catch(() => undefined);
         break;
       }
       case "listen-again": {
@@ -553,8 +553,8 @@ export class PlatooChat {
       // An English answer gets English buttons, so the whole reply is in one language.
       const en = isEnglishText(m.content);
       const again = index > 0 && this.canSpeakOut ? raw(html`<button type="button" class="listen-again" data-chat="listen-again" data-index="${index}">${raw(icon("volume-on"))} ${en ? "Play again" : "ฟังอีกครั้ง"}</button>`) : "";
-      // 👍 / 👎 under real answers (not the greeting or an error): 👎 shows the question to the admin.
-      const rate = !m.question
+      // 👍 / 👎 only under answers the server recorded (it sent a token): 👎 shows the question to the admin.
+      const rate = !m.feedback
         ? ""
         : m.rated
           ? raw(html`<span class="rate-thanks">${en ? (m.rated === "good" ? "Thanks! 😊" : "Thanks — a teacher will check this answer") : this.say(m.rated === "good" ? "ขอบคุณครับ 😊" : "ขอบคุณครับ ครูจะตรวจคำตอบนี้ให้")}</span>`)

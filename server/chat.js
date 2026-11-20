@@ -12,7 +12,8 @@
 import { describeLocation, locateBuilding } from "./buildingLocation.js";
 import { COLLEGE_FACTS, PROGRAMMES_AS_OF, collegeFactLines, peopleLines, programmeLines } from "../shared/collegeFacts.js";
 import { answerFromFaq, faqCategory, normalizeQuestion, similarity } from "./chatFaq.js";
-import { CORRECTION, adminNotes, learnedAnswer, markDisputed, recordQuestion } from "./chatLearning.js";
+import { CORRECTION, adminNotes, isRecordable, learnedAnswer, markDisputed, recordQuestion } from "./chatLearning.js";
+import { feedbackToken } from "./chatFeedback.js";
 import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
 import { cleanForSpeech } from "../shared/speechText.js";
 import { prepareSpeech } from "./voice.js";
@@ -363,6 +364,15 @@ export function isUndecided(text) {
   );
 }
 
+/**
+ * Add the 👍 / 👎 token to an answer whose question went into /admin/learned (only those can be
+ * checked by a teacher). Follow-ups, corrections, failures and unrecordable questions get none.
+ */
+function withFeedback(answer, question, lang, source) {
+  if (!isRecordable(question)) return answer;
+  return { ...answer, feedback: feedbackToken({ question, lang, source, answer: answer.reply }) };
+}
+
 export async function askCampusChat(history, options = {}) {
   // Asked in English → answered in English (ready English answers first, then the AI).
   if (!options.lang && isEnglishQuestion(history.filter(m => m.role === "user").at(-1)?.content)) options = { ...options, lang: "en" };
@@ -382,7 +392,7 @@ export async function askCampusChat(history, options = {}) {
       // Asked again: count it (the memory cache is gone after a restart; the database is not).
       void recordQuestion(lastQuestion, { ...remembered, source: "ai" }, lang);
       if (options.aiVoice) prepareSpeech(cleanForSpeech(remembered.reply));
-      return remembered;
+      return withFeedback(remembered, lastQuestion, lang, "ai");
     }
     let answer = await answerChat(history, options);
     // Asked in English → the whole answer in English (drop any Thai name the AI still added).
@@ -400,8 +410,11 @@ export async function askCampusChat(history, options = {}) {
         // A new AI answer: ask once more, on its own, to check it before an admin sees it.
         ? () => answerChat([{ role: "user", content: lastQuestion }], { lang: options.lang, atKiosk: options.atKiosk })
         : null);
+      // The browser will read this aloud with the AI voice: start making that voice now.
+      if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
+      // Recorded → the visitor can rate it, and a 👎 shows up for the admin.
+      return withFeedback(answer, lastQuestion, lang, answer.source);
     }
-    // The browser will read this aloud with the AI voice: start making that voice now.
     if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
     return answer;
   } catch (error) {

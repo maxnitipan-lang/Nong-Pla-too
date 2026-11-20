@@ -33,9 +33,13 @@ async function db() {
           "`cacheHits` int NOT NULL DEFAULT 0, CONSTRAINT `ai_usage_daily_day` PRIMARY KEY(`day`))"
       )
     );
-    // 👍 / 👎 counts (added later: an error = the column is already there).
-    for (const column of ["`liked` int NOT NULL DEFAULT 0", "`disliked` int NOT NULL DEFAULT 0"])
-      await database.execute(sql.raw(`ALTER TABLE \`ai_usage_daily\` ADD COLUMN ${column}`)).catch(() => undefined);
+    // 👍 / 👎 counts, added after the table first went live: add the columns only when missing.
+    // A failure here is a real error (it makes `ready` fail and is logged), not "already there".
+    const have = new Set(
+      rowsOf(await database.execute(sql.raw("SHOW COLUMNS FROM `ai_usage_daily`"))).map((r) => String(r.Field ?? r.field ?? r.COLUMN_NAME ?? ""))
+    );
+    for (const name of ["liked", "disliked"])
+      if (!have.has(name)) await database.execute(sql.raw(`ALTER TABLE \`ai_usage_daily\` ADD COLUMN \`${name}\` int NOT NULL DEFAULT 0`));
   })().catch((error) => {
     ready = null;
     throw error;

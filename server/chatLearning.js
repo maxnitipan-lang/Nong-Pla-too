@@ -240,13 +240,15 @@ export async function recordQuestion(question, answer, lang = "th", askAgain = n
 export const rememberQuestion = recordQuestion;
 
 /** Someone said the answer to `question` was wrong: flag it for the admin, with what they said. */
-export async function markDisputed(question, lang = "th", note = "") {
+export async function markDisputed(question, lang = "th", note = "", { noteFromServer = false } = {}) {
   try {
     if (!isRecordable(question)) return;
     const key = normalizeQuestion(question).slice(0, 250);
     const db = await ensureTable();
     if (!db || !key) return;
-    const text = isRecordable(note) ? String(note).trim().slice(0, 300) : "";
+    // A note the visitor typed is checked like a question (no phone numbers, IDs…); a note the server
+    // wrote (the start of its own answer, which may hold the college's phone number) is kept as it is.
+    const text = noteFromServer || isRecordable(note) ? String(note).trim().slice(0, 300) : "";
     // An answer the AI approved itself goes back to "waiting" when someone disputes it;
     // an answer an admin approved stays (the admin sees the dispute and decides).
     await db.execute(sql`UPDATE chat_learned SET disputes = disputes + 1, unsure = 1, disputeNote = ${text},

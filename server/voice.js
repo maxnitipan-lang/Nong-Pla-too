@@ -24,6 +24,7 @@
 //   STT_MODEL   default = CHAT_MODEL or "gemini-3.5-flash-lite"
 
 import express from "express";
+import { allow } from "./rateLimit.js";
 
 const API_KEY = process.env.GEMINI_API_KEY || process.env.CHAT_API_KEY || "";
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
@@ -43,25 +44,6 @@ const MAX_STT_BYTES = 6 * 1024 * 1024; // ~3 min of 16 kHz mono WAV
 
 /** Some AI voice exists (Azure or Gemini). Speech-to-text still needs the Gemini key. */
 export const isVoiceConfigured = () => isAzureConfigured() || GEMINI_TTS;
-
-// ---------------------------------------------------------------------------
-// Rate limiting (per IP, sliding minute)
-// ---------------------------------------------------------------------------
-
-const hits = new Map();
-function allow(req, bucket, perMinute) {
-  const forwarded = req.headers["x-forwarded-for"];
-  const ip =
-    (Array.isArray(forwarded) ? forwarded[0] : forwarded)?.split(",")[0]?.trim() || req.socket.remoteAddress || "?";
-  const key = `${bucket}:${ip}`;
-  const now = Date.now();
-  const recent = (hits.get(key) ?? []).filter(t => now - t < 60_000);
-  if (recent.length >= perMinute) return false;
-  recent.push(now);
-  hits.set(key, recent);
-  if (hits.size > 10_000) hits.clear();
-  return true;
-}
 
 // ---------------------------------------------------------------------------
 // WAV helpers

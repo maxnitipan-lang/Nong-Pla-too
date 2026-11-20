@@ -5,6 +5,8 @@ import { adminRouter } from "./adminRouter.js";
 import { askCampusChat, isChatConfigured } from "./chat.js";
 import { markDisputed } from "./chatLearning.js";
 import { countAiUse } from "./aiStore.js";
+import { isAiSource, readFeedbackToken } from "./chatFeedback.js";
+import { allow } from "./rateLimit.js";
 import {
   getCampusBuildings,
   getCampusNews,
@@ -169,12 +171,20 @@ export const appRouter = router({
 
   chat: router({
     configured: publicProcedure.query(() => isChatConfigured()),
-    /** 👍 / 👎 under an answer: 👎 puts the question in /admin/learned as "ถูกโต้แย้ง" for a teacher to check. */
+    /**
+     * 👍 / 👎 under an answer. `token` is the `feedback` the answer came with (signed by the server,
+     * so only questions it really answered and recorded can be rated). 👎 puts the question in
+     * /admin/learned as "ถูกโต้แย้ง", with the start of the answer the visitor saw.
+     */
     feedback: publicProcedure
-      .input(z.object({ question: z.string().trim().min(1).max(500), answer: z.string().max(4000).default(""), good: z.boolean() }))
-      .mutation(async ({ input }) => {
-        void countAiUse(input.good ? "liked" : "disliked");
-        if (!input.good) await markDisputed(input.question, /[฀-๿]/.test(input.question) ? "th" : "en", "ผู้ใช้กด 👎 ว่าคำตอบไม่ถูก");
+      .input(z.object({ token: z.string().min(1).max(4000), good: z.boolean() }))
+      .mutation(async ({ input, ctx }) => {
+        if (!allow(ctx.req, "chat-feedback", 20)) throw new TRPCError({ code: "TOO_MANY_REQUESTS", message: "ให้คะแนนบ่อยเกินไป" });
+        const rated = readFeedbackToken(input.token);
+        if (!rated) throw new TRPCError({ code: "BAD_REQUEST", message: "คำตอบนี้ให้คะแนนไม่ได้แล้ว" });
+        // Only answers the AI made count in the "การใช้งาน AI" numbers.
+        if (isAiSource(rated.source)) void countAiUse(input.good ? "liked" : "disliked");
+        if (!input.good) await markDisputed(rated.question, rated.lang, `ผู้ใช้กด 👎 คำตอบ: ${rated.answer}`, { noteFromServer: true });
         return { success: true };
       }),
     ask: publicProcedure
