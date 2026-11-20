@@ -677,3 +677,67 @@
 @media (min-width: 1280px) {
   .platoo-ui .kiosk-map-button { margin-right: 240px; white-space: nowrap; } /* the floating button is wider here */
 }
+
+/* Phones: the "ถามน้องปลาทู" button is a round icon, so it covers less of the cards, news pictures and
+   the "ดูรายชื่อสถานที่" bar. Its words show for 4 seconds when a page opens (.fab-intro), at the top. */
+@media (max-width: 640px) {
+  .platoo-ui .floating-ai { transition: width .2s ease, padding .2s ease, transform .18s, box-shadow .18s; }
+  .platoo-ui:not(.fab-intro) .floating-ai,
+  .platoo-ui.scrolled .floating-ai,
+  .platoo-ui[data-view='map'] .floating-ai { width: 58px; height: 58px; padding: 0; justify-content: center; }
+  .platoo-ui:not(.fab-intro) .floating-ai-copy,
+  .platoo-ui.scrolled .floating-ai-copy,
+  .platoo-ui[data-view='map'] .floating-ai-copy { display: none; }
+  .platoo-ui:not(.fab-intro) .floating-platoo,
+  .platoo-ui.scrolled .floating-platoo,
+  .platoo-ui[data-view='map'] .floating-platoo { height: 67px; left: -9px; bottom: 1px; }
+  /* Map: a little higher, so the OpenStreetMap credit in the corner stays readable. */
+  .platoo-ui[data-view='map'] .floating-ai { bottom: 94px; }
+}
+@media (max-width: 640px) and (prefers-reduced-motion: reduce) {
+  .platoo-ui .floating-ai { transition: none; }
+}
+
+/* Chat header: 44 × 44 px buttons (easy to tap); the icons keep their size. */
+.platoo-ui .assistant-header { gap: 6px; }
+.platoo-ui .assistant-header > button { width: 44px; height: 44px; flex: none; }
+/* "วิธีเปิดไมโครโฟน": a 44 px tall tap area. */
+.platoo-chat .mic-help > button { min-height: 44px; padding: 0 4px; }
+
+/* Phones: Thai text needs room for its vowels and tone marks. (.platoo-ui twice: beats older phone rules.) Descriptions and body text are at
+   least 14 px; short labels (menu, badges, dates, kickers) at least 12 px. Kept last so it wins. */
+@media (max-width: 640px) {
+  .platoo-ui.platoo-ui :is(
+    .kiosk-card-copy > small,
+    .kiosk-greeting > span,
+    .floating-ai-copy > small,
+    .page-intro,
+    .official-programmes > p,
+    .dept-summary,
+    .quiz-cta-text > small,
+    .news-excerpt,
+    .news-more,
+    .place-list small,
+    .panel-heading small
+  ) { font-size: 14px; line-height: 1.55; }
+  .platoo-ui.platoo-ui .floating-ai-copy > small { line-height: 1.3; }
+  .platoo-chat .assistant-map-action { font-size: 14px; }
+  .platoo-chat .voice-stop { font-size: 13px; }
+  .platoo-ui.platoo-ui :is(
+    .mobile-nav span,
+    .kiosk-assistant .assistant-label,
+    .kiosk-menu-heading > span,
+    .map-kicker,
+    .page-title > div > span,
+    .dept-levels > span,
+    .dept-link,
+    .map-search > button,
+    .place-list > p,
+    .leaflet-pin > small,
+    .show-places-button small
+  ) { font-size: 12px; }
+  .platoo-ui.platoo-ui :is(.page-title > div > span, .kiosk-assistant .assistant-label, .kiosk-menu-heading > span) { letter-spacing: 0; }
+  .platoo-chat .chat-date,
+  .platoo-chat .assistant-header small,
+  .platoo-chat .assistant-header small span { font-size: 12px; }
+}

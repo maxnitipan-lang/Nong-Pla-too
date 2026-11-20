@@ -40,8 +40,10 @@ async function showLogin() {
     <h1>เข้าสู่ระบบผู้ดูแล</h1>
     ${passwordEnabled
       ? raw(html`<form id="login-form">
-          <input class="input" name="username" placeholder="ชื่อผู้ใช้" required autocomplete="username" autocapitalize="none" autofocus />
-          <input class="input" name="password" type="password" placeholder="รหัสผ่าน" required autocomplete="current-password" />
+          <label class="login-field" for="login-username">ชื่อผู้ใช้</label>
+          <input class="input" id="login-username" name="username" required autocomplete="username" autocapitalize="none" autofocus />
+          <label class="login-field" for="login-password">รหัสผ่าน</label>
+          <input class="input" id="login-password" name="password" type="password" required autocomplete="current-password" />
           <button class="btn" type="submit">เข้าสู่ระบบ</button>
         </form>`)
       : raw(html`<p>ยังไม่ได้ตั้งรหัสผู้ดูแล — ใส่ <code>ADMIN_USERNAME</code> และ <code>ADMIN_PASSWORD</code> ในการตั้งค่าเซิร์ฟเวอร์ (.env / Render) แล้วรีเฟรชหน้านี้</p>`)}

@@ -878,6 +878,8 @@ function attractHtml() {
 function render() {
   const root = $("#root");
   root.dataset.theme = state.theme;
+  // The page being shown (CSS uses it, e.g. the round "ถามน้องปลาทู" button on the map).
+  root.dataset.view = state.view;
   const views = { home: homeHtml, news: newsHtml, departments: departmentsHtml };
   if (state.view !== "map") {
     map?.destroy();
@@ -906,6 +908,7 @@ function go(view) {
   state.openDepartment = null;
   render();
   window.scrollTo({ top: 0 });
+  introduceFloatingButton();
 }
 
 function selectBuilding(id) {
@@ -1133,6 +1136,17 @@ const actions = {
   "map-mode": (el) => el.dataset.mode !== mapMode && setMapMode(el.dataset.mode),
 };
 
+// Phones: the "ถามน้องปลาทู" button shows its words for a few seconds when a page opens, then (or as soon
+// as the page scrolls) shrinks to a round icon, so it does not sit on top of the cards.
+window.addEventListener("scroll", () => $("#root")?.classList.toggle("scrolled", window.scrollY > 24), { passive: true });
+let fabIntroTimer = 0;
+function introduceFloatingButton() {
+  const root = $("#root");
+  root.classList.add("fab-intro");
+  clearTimeout(fabIntroTimer);
+  fabIntroTimer = setTimeout(() => root.classList.remove("fab-intro"), 4000);
+}
+
 document.addEventListener("click", (event) => {
   const el = event.target.closest("[data-action]");
   if (!el || !actions[el.dataset.action]) return;
@@ -1261,6 +1275,7 @@ async function reloadData() {
 
 async function start() {
   render();
+  introduceFloatingButton();
   // The chat panel lives outside #app, so re-drawing the screens never resets the conversation.
   createChat({ atKiosk: KIOSK, onShowRoute: (id, lang) => startNavigation(id, lang), onOpenMap: () => go("map"), onAction: runChatAction });
   armIdle();

@@ -79,6 +79,9 @@ svg { flex: 0 0 auto; }
 .adm-card-center h1 { margin: 8px 0 0; color: var(--ink); font-size: 18px; }
 .adm-card-center p { color: var(--muted); font-size: 14px; }
 .adm-card-center form { display: grid; gap: 12px; margin-top: 24px; text-align: left; }
+/* Login: a visible name above each box (it stays while typing, and screen readers read it). */
+.adm-card-center .login-field { margin-bottom: -6px; color: var(--ink); font-size: 14px; font-weight: 700; }
+.adm-card-center .login-field ~ .btn { margin-top: 4px; }
 .adm-card-center .big-icon { width: 40px; height: 40px; color: var(--muted); }
 
 /* ---------------- building blocks */
