@@ -75,6 +75,9 @@ export class CampusMap {
     const map = L.map(container.querySelector(".campus-map-canvas"), {
       center: [options.center.lat, options.center.lng],
       zoom: 17,
+      // Quarter steps: "show the whole campus" can fill the screen instead of jumping a whole
+      // level further out (on a phone that left the pins in a small crowded patch).
+      zoomSnap: 0.25,
       zoomControl: false,
       maxBounds: this.bounds,
       maxBoundsViscosity: 1, // hard stop at the edge
@@ -86,9 +89,18 @@ export class CampusMap {
     if (this.options.zoomControl) L.control.zoom({ position: "topright" }).addTo(map);
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: "&copy; OpenStreetMap" }).addTo(map);
     this.map = map;
+    // Zoomed out (the whole campus on a phone): 27 names and logos pile on top of each other.
+    // Then hide the names and shrink the pins; zooming in brings the names back. A wide screen
+    // (kiosk, computer) has room for the names one level further out.
+    const updateDensity = () => {
+      const wide = container.clientWidth >= 700;
+      container.classList.toggle("pins-far", map.getZoom() < (wide ? 17 : 18));
+    };
+    map.on("zoomend resize", updateDensity);
     setTimeout(() => {
       map.invalidateSize();
       fitMinZoom();
+      updateDensity();
     }, 200);
 
     container.querySelector(".map-locate-button").addEventListener("click", () => this.locateMe());

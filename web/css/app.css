@@ -785,3 +785,12 @@
 .platoo-ui[data-theme='dark'] .dept-detail .career-chips span { color: color-mix(in srgb, var(--dept) 60%, white); background: color-mix(in srgb, var(--dept) 22%, transparent); }
 /* Skills in the programme detail: a soft grey label (the line above removed their border). */
 .platoo-ui .dept-detail .room-chips:not(.career-chips) span { background: var(--soft); color: var(--ink); }
+
+/* 2D map zoomed out (.pins-far, set in map.js): no names, smaller pins, so the campus does not turn
+   into one pile of labels. The chosen building keeps its name. Zoom in to see every name. */
+.platoo-ui .pins-far .leaflet-pin:not(.active) > small { display: none; }
+.platoo-ui .pins-far .leaflet-pin:not(.active) > b,
+.platoo-ui .pins-far .leaflet-pin:not(.active) > b.has-logo,
+.platoo-ui .pins-far .leaflet-pin:not(.active) > b.has-icon { width: 28px; height: 28px; border-width: 2px; font-size: 11px; }
+.platoo-ui .pins-far .leaflet-pin:not(.active) > b.has-icon > i { font-size: 14px; }
+.platoo-ui .pins-far .leaflet-pin:not(.active) > b > em { top: -7px; left: -7px; min-width: 16px; height: 16px; font-size: 10px; border-width: 1px; }
