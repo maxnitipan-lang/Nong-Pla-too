@@ -23,7 +23,6 @@ import {
   isLoginBlocked,
   mintUserToken,
   recordLoginFailure,
-  normalizeUsername,
   usernameToOpenId,
   verifyPassword,
 } from "./_core/localAccounts.js";
@@ -41,7 +40,7 @@ import { systemRouter } from "./_core/systemRouter.js";
 import { publicProcedure, router } from "./_core/trpc.js";
 
 /** Username of the built-in owner account (password = ADMIN_PASSWORD). */
-const ADMIN_USERNAME = normalizeUsername(process.env.ADMIN_USERNAME || "admin");
+const ADMIN_USERNAME = (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase();
 
 /** Personal accounts need a DB and a signing secret. */
 const isLocalLoginConfigured = () => Boolean(process.env.DATABASE_URL) && isLocalLoginAvailable();
@@ -90,7 +89,7 @@ export const appRouter = router({
 
         // The owner account from .env (ADMIN_USERNAME + ADMIN_PASSWORD) — always an admin,
         // so there is a way in even before any account exists in the database.
-        const isOwner = normalizeUsername(input.username) === ADMIN_USERNAME;
+        const isOwner = input.username.trim().toLowerCase() === ADMIN_USERNAME;
         if (!isOwner) {
           const row = await getUserRowByOpenId(usernameToOpenId(input.username)).catch(() => undefined);
           if (!row || !isStaff(row.role) || !verifyPassword(input.password, row.passwordHash)) {

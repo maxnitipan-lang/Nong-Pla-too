@@ -23,9 +23,8 @@ services:
       # --- บัญชีหลักเข้า /admin: ชื่อผู้ใช้ ADMIN_USERNAME (ค่าเริ่มต้น admin) + ADMIN_PASSWORD ---
       - key: ADMIN_PASSWORD
         sync: false
-      # ตั้งชื่อผู้ใช้ในหน้า Environment ของ Render (ไม่เก็บไว้ใน GitHub) — ถ้าเว้นว่าง ใช้ admin
       - key: ADMIN_USERNAME
-        sync: false
+        value: admin
       # --- กุญแจเซ็น cookie ล็อกอิน (สุ่มให้อัตโนมัติ) ---
       - key: JWT_SECRET
         generateValue: true
