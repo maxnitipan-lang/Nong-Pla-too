@@ -13,6 +13,7 @@ import { TRPCError } from "@trpc/server";
 import { getHTTPStatusCodeFromError } from "@trpc/server/http";
 import { appRouter } from "./routers.js";
 import { createContext } from "./_core/context.js";
+import { describeDbError } from "./dbErrorMessage.js";
 
 const procedures = appRouter._def.procedures;
 
@@ -64,7 +65,13 @@ export function registerRestApi(app) {
       // Hide only crashes nobody planned for; errors our own code throws (e.g. "ดึงข่าวไม่สำเร็จ: …")
       // tell the admin what went wrong, so keep their message.
       if (err.code === "INTERNAL_SERVER_ERROR") {
-        if (error instanceof TRPCError) console.error(`[api] ${path}: ${message}`);
+        // A database failure: say the real reason ("Access denied", "timed out", …) in Thai instead
+        // of "Failed query: select …", which hides it.
+        const dbReason = describeDbError(error);
+        if (dbReason) {
+          console.error(`[api] ${path}: ${dbReason}`);
+          message = dbReason;
+        } else if (error instanceof TRPCError) console.error(`[api] ${path}: ${message}`);
         else if (process.env.NODE_ENV === "production") message = "เกิดข้อผิดพลาดในเซิร์ฟเวอร์";
       }
       res.status(getHTTPStatusCodeFromError(err)).json({ ok: false, error: { code: err.code, message } });
