@@ -10,7 +10,13 @@ export const LOCAL_PREFIX = "local:";
 export const USER_COOKIE_NAME = "npt_user";
 export const USER_COOKIE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-export const usernameToOpenId = username => `${LOCAL_PREFIX}${username.trim().toLowerCase()}`;
+/**
+ * A username as compared and stored: trimmed, lower case, and in Unicode NFC form, so Thai marks typed
+ * in a different order ("รถตู้" with ู then ้, or ้ then ู) still count as the same name.
+ */
+export const normalizeUsername = username => String(username ?? "").normalize("NFC").trim().toLowerCase();
+
+export const usernameToOpenId = username => `${LOCAL_PREFIX}${normalizeUsername(username)}`;
 export const isLocalAccount = openId => openId.startsWith(LOCAL_PREFIX);
 
 // ---------------------------------------------------------------------------

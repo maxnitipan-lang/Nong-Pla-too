@@ -4,7 +4,7 @@ import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_SETTINGS_DEFAULTS } from "../shar
 import { campusBuildings, campusNews, siteSettings, users, walkNetworks } from "../drizzle/schema.js";
 import DEFAULT_WALK_NETWORK from "../shared/data/campusWalkNetwork.json" with { type: "json" };
 import { ENV } from "./_core/env.js";
-import { LOCAL_PREFIX, hashPassword, isLocalAccount, usernameToOpenId } from "./_core/localAccounts.js";
+import { LOCAL_PREFIX, hashPassword, isLocalAccount, normalizeUsername, usernameToOpenId } from "./_core/localAccounts.js";
 
 let _db = null;
 
@@ -109,7 +109,7 @@ export async function listUsers() {
 export async function createLocalAdmin(input) {
   const db = await requireDb();
   const openId = usernameToOpenId(input.username);
-  if (input.username.trim().toLowerCase() === (process.env.ADMIN_USERNAME || "admin").trim().toLowerCase()) {
+  if (normalizeUsername(input.username) === normalizeUsername(process.env.ADMIN_USERNAME || "admin")) {
     throw new Error("ชื่อผู้ใช้นี้สงวนไว้สำหรับบัญชีหลักใน .env — เลือกชื่ออื่น");
   }
   if (await getUserRowByOpenId(openId)) throw new Error("ชื่อผู้ใช้นี้มีอยู่แล้ว — เลือกชื่ออื่น");
