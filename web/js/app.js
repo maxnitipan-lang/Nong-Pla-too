@@ -695,6 +695,7 @@ function newsHtml() {
       <div><span>อัปเดตจากวิทยาลัย</span><h1>ข่าวสารและกิจกรรม</h1></div>
     </div>
     ${latest ? raw(html`<p class="page-intro">ข่าวล่าสุดเมื่อ ${latest.getDate()} ${THAI_MONTHS[latest.getMonth()]} ${String(latest.getFullYear() + 543).slice(-2)}</p>`) : ""}
+    ${state.news.length ? "" : raw(html`<p class="page-intro">ตอนนี้ยังไม่มีข่าวในระบบ — ดูข่าวและประกาศล่าสุดได้บนเว็บวิทยาลัย</p>`)}
     ${filterBar}
     ${raw(noticeList)}
     ${raw(featuredHtml)}

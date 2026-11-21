@@ -308,9 +308,13 @@ async function liveCollegeNews() {
   return liveNews.items;
 }
 
-/** No usable news in the database → live news from sstc.ac.th → the sample cards. */
+/**
+ * No usable news in the database → live news from sstc.ac.th → (only while developing) the sample
+ * cards. On the real site an empty list is shown instead: the sample cards are made-up examples
+ * (e.g. a quota round "วันนี้ – 30 ก.ย.") and must never reach visitors, the news page or the AI.
+ */
 async function fallbackNews() {
-  return (await liveCollegeNews()) ?? CAMPUS_NEWS;
+  return (await liveCollegeNews()) ?? (process.env.NODE_ENV === "production" ? [] : CAMPUS_NEWS);
 }
 
 export async function getCampusNews() {

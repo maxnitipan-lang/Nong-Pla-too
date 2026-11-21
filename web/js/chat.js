@@ -375,7 +375,7 @@ export class PlatooChat {
   mount() {
     this.el.innerHTML = html`
       <button type="button" class="ai-backdrop" data-chat="close" aria-label="ปิดผู้ช่วย" tabindex="-1"></button>
-      <aside role="dialog" aria-label="ผู้ช่วยน้องปลาทู" class="assistant" aria-hidden="true" inert>
+      <aside role="dialog" aria-modal="true" aria-label="ผู้ช่วยน้องปลาทู" class="assistant" aria-hidden="true" inert tabindex="-1">
         <div class="assistant-header">
           <div class="assistant-avatar"><img src="/mascots/greeting-small.webp" alt="" aria-hidden="true" /></div>
           <div><strong>น้องปลาทู</strong><small><i></i> <span data-part="status"></span></small></div>
@@ -409,6 +409,29 @@ export class PlatooChat {
     });
     this.el.addEventListener("click", (event) => this.onClick(event));
     this.el.addEventListener("change", (event) => this.onChange(event));
+    // Keyboard: Esc closes the chat; Tab / Shift+Tab stay inside it while it is open.
+    this.el.addEventListener("keydown", (event) => {
+      if (!this.s.open) return;
+      if (event.key === "Escape") {
+        event.preventDefault();
+        this.close();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const panel = this.el.querySelector(".assistant");
+      const stops = [...panel.querySelectorAll("button, input, select, textarea, a[href], [tabindex]:not([tabindex='-1'])")]
+        .filter((e) => !e.disabled && e.getClientRects().length);
+      if (!stops.length) return;
+      const first = stops[0];
+      const last = stops[stops.length - 1];
+      if (event.shiftKey && (document.activeElement === first || document.activeElement === panel)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    });
     this.el.addEventListener("input", (event) => {
       if (event.target.dataset.setting === "rate") this.set({ settings: { ...this.s.settings, rate: Number(event.target.value) } });
     });
@@ -498,8 +521,24 @@ export class PlatooChat {
       this.el.querySelector(".ai-backdrop").tabIndex = s.open ? 0 : -1;
       const panel = this.el.querySelector(".assistant");
       panel.classList.toggle("open", s.open);
+      // Was focus in the chat (or on its backdrop, or nowhere) just before it closes? Checked before
+      // `inert` is set, because making the panel inert drops its focus.
+      const focusWasInChat = this.el.contains(document.activeElement) || document.activeElement === document.body;
       panel.setAttribute("aria-hidden", String(!s.open));
       panel.inert = !s.open;
+      // Focus goes into the chat when it opens and back to where it was when it closes. With a mouse
+      // or keyboard the text box gets it (ready to type); on touch screens the panel itself does, so
+      // the phone keyboard does not pop up over the answer.
+      if (s.open) {
+        this.returnFocus = document.activeElement;
+        const target = matchMedia("(pointer: fine)").matches ? this.input : panel;
+        requestAnimationFrame(() => target.focus({ preventScroll: true }));
+      } else if (before && focusWasInChat) {
+        // Opened by a tap (nothing had focus) or the button was redrawn → back to "ถามน้องปลาทู".
+        const usable = this.returnFocus?.isConnected && this.returnFocus !== document.body;
+        const back = usable ? this.returnFocus : document.querySelector(".floating-ai");
+        back?.focus({ preventScroll: true });
+      }
     }
     if (changed("phase")) part("status").textContent = s.phase === "idle" ? "พร้อมช่วยเหลือ · คุยด้วยเสียงได้" : PHASE_TEXT[s.phase];
     if (changed("settings")) {

@@ -6,7 +6,7 @@
   --gold: #ffb936;
   --mint: #12aaa5;
   --ink: #15364e;
-  --muted: #6b8292;
+  --muted: #566b7a; /* was #6b8292 (about 4 : 1); now at least 4.5 : 1 on every light panel */
   --surface: #ffffff;
   --soft: #f4f8fa;
   --border: #dce8ee;

@@ -763,3 +763,7 @@
   .platoo-ui .kiosk-assistant .assistant-label { font-size: 16px; }
   .platoo-ui .kiosk-map-button span { font-size: 20px; }
 }
+
+/* The chat panel takes focus when it opens on touch screens; no outline around the whole panel
+   (its buttons and text box keep their own focus ring). */
+.platoo-ui .assistant:focus { outline: none; }
