@@ -267,7 +267,7 @@ export async function render(page, { canEdit }) {
     const rows = list.map((b) =>
       raw(html`<div class="row" data-id="${b.id}">
         <span class="avatar" style="border-radius:12px;color:#fff;background:${b.accent}">${raw(icon("building"))}</span>
-        <div class="grow"><strong>${b.name}</strong><small>${b.category} · ${b.floors} ชั้น · <code>${b.id}</code></small></div>
+        <div class="grow"><strong>${b.name}</strong><small>${b.category} · ${b.floors} ชั้น</small></div>
         ${canEdit
           ? raw(html`<button type="button" class="icon-btn" data-act="edit" aria-label="แก้ไข">${raw(icon("pencil"))}</button>
               <button type="button" class="icon-btn danger" data-act="delete" aria-label="ลบ">${raw(icon("trash"))}</button>`)

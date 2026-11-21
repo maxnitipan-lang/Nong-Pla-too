@@ -1,4 +1,4 @@
-// /admin/learned — "คำถามจาก AI": what people ask Nong Platoo (server/chatLearning.js).
+// /admin/learned — "คำถามที่คนถาม" (was "คำถามจาก AI"): what people ask Nong Platoo (server/chatLearning.js).
 //
 // Made to be read at a glance:
 //   - three cards: what needs the admin (no answer yet, disputed, waiting for a check),

@@ -4,7 +4,7 @@
 //   building  ตึกและสถานที่   news  ข่าวสาร   program  สาขาและการเรียน   offtopic  นอกเรื่อง   other  อื่น ๆ
 // with how often it was asked, how it was answered (ready answer, AI, learned, news, failed),
 // whether that answer was unsure, and whether someone said it was wrong ("ไม่ใช่", "ผิด").
-// Admins see it all in /admin/learned ("คำถามจาก AI") and write the answer for a question.
+// Admins see it all in /admin/learned ("คำถามที่คนถาม") and write the answer for a question.
 //
 // Approved answers are used two ways:
 //   - the same question again → the approved answer, instantly, with no AI tokens,

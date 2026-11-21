@@ -767,3 +767,21 @@
 /* The chat panel takes focus when it opens on touch screens; no outline around the whole panel
    (its buttons and text box keep their own focus ring). */
 .platoo-ui .assistant:focus { outline: none; }
+
+/* Phones: one line under the map title says how to use the map ("แตะหมุดหรือชื่ออาคาร…"); the
+   bigger "แตะหมุดบนแผนที่" card is hidden there to keep the map large. */
+@media (max-width: 640px) {
+  .platoo-ui.platoo-ui .map-page-heading p { display: block; margin-top: 2px; font-size: 13px; line-height: 1.45; max-width: calc(100% - 70px); }
+}
+
+/* Programme detail: "จบแล้วทำงานอะไรได้" and "ทักษะที่ได้" are information, not buttons — tinted
+   labels with no border or solid fill, so nobody tries to tap them. */
+.platoo-ui .dept-detail .room-chips span { border-color: transparent; border-radius: 8px; }
+.platoo-ui .dept-detail .career-chips span {
+  color: color-mix(in srgb, var(--dept) 78%, black);
+  background: color-mix(in srgb, var(--dept) 12%, transparent);
+  border-color: transparent;
+}
+.platoo-ui[data-theme='dark'] .dept-detail .career-chips span { color: color-mix(in srgb, var(--dept) 60%, white); background: color-mix(in srgb, var(--dept) 22%, transparent); }
+/* Skills in the programme detail: a soft grey label (the line above removed their border). */
+.platoo-ui .dept-detail .room-chips:not(.career-chips) span { background: var(--soft); color: var(--ink); }

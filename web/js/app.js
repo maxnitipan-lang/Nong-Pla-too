@@ -307,7 +307,7 @@ function mapShellHtml() {
       <div>
         <span class="map-kicker"><i></i> แผนที่วิทยาลัย</span>
         <h1>วันนี้คุณอยากไปที่ไหน?</h1>
-        <p>ค้นหาอาคาร ห้องเรียน หรือจุดบริการ แล้วกดนำทางได้ทันที</p>
+        <p>แตะหมุดหรือชื่ออาคารบนแผนที่ เพื่อดูข้อมูลและเส้นทาง</p>
       </div>
       <img class="section-mascot map-heading-mascot" src="/mascots/map.webp" alt="" aria-hidden="true" />
       <div class="map-heading-actions">
@@ -341,7 +341,7 @@ function mapShellHtml() {
           <label class="map-search">
             ${raw(icon("search"))}
             <input id="map-search" value="${state.query}" placeholder="ค้นหาสถานที่..." />
-            <button type="button" data-action="list-open">ดูทั้งหมด</button>
+            <button type="button" data-action="list-open" aria-label="ดูรายชื่อสถานที่ทั้งหมด">รายชื่อ</button>
           </label>
           <div class="map-filter-row">${filterButtons}</div>
         </div>
@@ -620,6 +620,12 @@ function newsHtml() {
   const featuredCount = list.length >= 6 ? 3 : list.length ? 1 : 0;
   const featuredItems = list.slice(0, featuredCount);
   const rest = list.slice(featuredCount);
+  // Every announcement starts "ประกาศวิทยาลัยเทคนิคสมุทรสงคราม เรื่อง …" and was cut off before the
+  // subject, so they all looked the same: under the "ประกาศจากวิทยาลัย" heading show only the subject.
+  const noticeSubject = (title) => {
+    const subject = String(title ?? "").replace(/^ประกาศ\s*วิทยาลัยเทคนิคสมุทรสงคราม\s*(เรื่อง\s*)?/, "").trim();
+    return subject || title;
+  };
   const noticeList = notices.length
     ? html`<section class="notice-list" aria-label="ประกาศจากวิทยาลัย">
         <h2>📢 ประกาศจากวิทยาลัย</h2>
@@ -627,7 +633,7 @@ function newsHtml() {
           raw(link(
             item,
             "notice-row",
-            html`<span class="notice-date">${item.date || ""}</span><strong>${item.title}</strong>${isFreshNews(item) ? raw('<span class="news-new">ใหม่</span>') : ""}${raw(icon("arrow"))}`,
+            html`<span class="notice-date">${item.date || ""}</span><strong>${noticeSubject(item.title)}</strong>${isFreshNews(item) ? raw('<span class="news-new">ใหม่</span>') : ""}${raw(icon("arrow"))}`,
           )))}
       </section>`
     : "";

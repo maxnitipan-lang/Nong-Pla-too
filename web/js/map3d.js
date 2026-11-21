@@ -21,7 +21,6 @@ function loadFootprints() {
 }
 
 const COMPASS_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>';
-const RESET_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>';
 const TOP_SVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect width="16" height="16" x="4" y="4" rx="2"/></svg>';
 
 /**
@@ -65,11 +64,10 @@ export class CampusMap3D {
       <div class="map3d-labels"></div>
       <div class="map3d-user" hidden>${this.options.userLabel ? `<span>${esc(this.options.userLabel)}</span>` : ""}</div>
       <div class="map3d-controls" style="top:${this.options.controlsTop}px">
-        <button type="button" data-3d="north" title="ทิศเหนือ / มุมมองเริ่มต้น" aria-label="มุมมองเริ่มต้น"><span class="map3d-needle">${COMPASS_SVG}<b>N</b></span></button>
+        <button type="button" data-3d="north" title="หันทิศเหนือขึ้น และกลับมุมมองเริ่มต้น" aria-label="หันทิศเหนือขึ้น และกลับมุมมองเริ่มต้น"><span class="map3d-needle">${COMPASS_SVG}<b>N</b></span></button>
         <button type="button" data-3d="in" aria-label="ซูมเข้า">+</button>
         <button type="button" data-3d="out" aria-label="ซูมออก">−</button>
         <button type="button" data-3d="top" title="มองจากด้านบน" aria-label="มองจากด้านบน">${TOP_SVG}</button>
-        <button type="button" data-3d="reset" title="มุมมองเริ่มต้น" aria-label="กลับมุมมองเริ่มต้น">${RESET_SVG}</button>
       </div>
       <div class="map3d-credit">© OpenStreetMap contributors</div>`;
     this.canvas = container.querySelector(".map3d-canvas");

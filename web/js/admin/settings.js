@@ -14,16 +14,16 @@ export async function render(page, { canEdit }) {
     ${raw(field({ label: "ที่อยู่", name: "address", value: data.address, rows: 2, disabled: !canEdit }))}
     ${raw(field({ label: "อีเมลติดต่อ", name: "contactEmail", value: data.contactEmail, placeholder: "samutsongkhram.sstc@gmail.com", disabled: !canEdit }))}
     ${raw(field({
-      label: "ลิงก์ฝัง Google My Maps",
+      label: "ลิงก์ฝัง Google My Maps (ไม่บังคับ)",
       name: "mapEmbedUrl",
       value: data.mapEmbedUrl,
       rows: 2,
-      hint: "Share → Embed → คัดลอกเฉพาะ src ของ <iframe> (ขึ้นต้นด้วย https://www.google.com/maps/d/embed?mid=) — เว้นว่างเพื่อใช้แผนที่วาด",
+      hint: "เว้นว่างไว้ได้ — เว็บใช้แผนที่ 2D/3D ของตัวเองอยู่แล้ว · ใส่เฉพาะเมื่ออยากใช้แผนที่ Google แทน: Share → Embed → คัดลอกเฉพาะ src ของ <iframe> (ขึ้นต้นด้วย https://www.google.com/maps/d/embed?mid=)",
       disabled: !canEdit,
     }))}
     <div class="grid2">
-      ${raw(field({ label: "ละติจูดจุดกึ่งกลาง", name: "mapCenterLat", type: "number", value: data.mapCenter.lat, attrs: 'step="any"', disabled: !canEdit }))}
-      ${raw(field({ label: "ลองจิจูดจุดกึ่งกลาง", name: "mapCenterLng", type: "number", value: data.mapCenter.lng, attrs: 'step="any"', disabled: !canEdit }))}
+      ${raw(field({ label: "จุดกึ่งกลางแผนที่: ละติจูด", name: "mapCenterLat", type: "number", value: data.mapCenter.lat, attrs: 'step="any"', hint: "ไม่ต้องแก้ ถ้าแผนที่เปิดมาตรงวิทยาลัยอยู่แล้ว", disabled: !canEdit }))}
+      ${raw(field({ label: "จุดกึ่งกลางแผนที่: ลองจิจูด", name: "mapCenterLng", type: "number", value: data.mapCenter.lng, attrs: 'step="any"', hint: "ตัวเลขจาก Google Maps (คลิกขวาที่จุด แล้วคัดลอกตัวเลข)", disabled: !canEdit }))}
     </div>
     <div class="subcard">
       <h3>ตำแหน่งตู้ประชาสัมพันธ์ (Kiosk)</h3>
