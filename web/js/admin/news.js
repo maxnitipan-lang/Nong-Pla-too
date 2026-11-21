@@ -11,8 +11,8 @@ export async function render(page, { canEdit }) {
 
   const draw = async () => {
     list = await apiGet("admin/news/list");
-    const rows = list.map((n) =>
-      raw(html`<div class="row" data-id="${n.id}">
+    const row = (n) =>
+      raw(html`<div class="row${n.published ? "" : " draft"}" data-id="${n.id}">
         <span class="swatch" style="background:${n.accent}"></span>
         <div class="grow">
           <strong>${n.title}</strong>
@@ -24,13 +24,25 @@ export async function render(page, { canEdit }) {
           ? raw(html`<button type="button" class="icon-btn" data-act="edit" aria-label="แก้ไข">${raw(icon("pencil"))}</button>
               <button type="button" class="icon-btn danger" data-act="delete" aria-label="ลบ">${raw(icon("trash"))}</button>`)
           : ""}
-      </div>`));
+      </div>`);
+    // Published news first (what visitors see), drafts in their own group underneath.
+    const live = list.filter((n) => n.published);
+    const drafts = list.filter((n) => !n.published);
+    const group = (title, items, note) =>
+      items.length
+        ? raw(html`<h2 class="rows-head">${title} <span>${items.length} ข่าว</span></h2>
+            ${note ? raw(html`<p class="help">${note}</p>`) : ""}
+            <div class="rows">${items.map(row)}</div>`)
+        : "";
     page.innerHTML = html`${canEdit
         ? raw(html`<div class="toolbar">
             <button type="button" class="btn outline" data-act="sync">${raw(icon("refresh"))} ดึงข่าวจากเว็บวิทยาลัย</button>
             <button type="button" class="btn" data-act="create">${raw(icon("plus"))} เพิ่มข่าว</button></div>`)
         : ""}
-      ${rows.length ? raw(html`<div class="rows">${rows}</div>`) : raw('<p class="empty">ยังไม่มีข่าว</p>')}`;
+      ${list.length
+        ? raw(html`${group("เผยแพร่แล้ว", live)}
+            ${group("ฉบับร่าง", drafts, "ไม่แสดงบนหน้าเว็บ — กดแก้ไขแล้วติ๊ก “เผยแพร่บนหน้าเว็บ” เพื่อให้คนเห็น หรือกดลบถ้าไม่ใช้แล้ว")}`)
+        : raw('<p class="empty">ยังไม่มีข่าว</p>')}`;
   };
 
   const editNews = (n, isNew) =>
@@ -44,7 +56,7 @@ export async function render(page, { canEdit }) {
         ${raw(field({ label: "หัวข้อ", name: "title", value: n.title }))}
         ${raw(field({ label: "เนื้อหาย่อ", name: "excerpt", value: n.excerpt, rows: 3 }))}
         <div class="grid2">
-          ${raw(field({ label: "วันที่ (ข้อความ)", name: "dateLabel", value: n.date, placeholder: "18 ก.ย. 2569" }))}
+          ${raw(field({ label: "วันที่ (ข้อความ)", name: "dateLabel", value: n.date, placeholder: "19 ต.ค. 69", hint: "วัน เดือนย่อ ปี 2 หลัก แบบเว็บวิทยาลัย" }))}
           ${raw(field({ label: "เวลา / สถานะ", name: "timeLabel", value: n.time, placeholder: "09:00–15:30 น." }))}
         </div>
         ${raw(field({ label: "ลิงก์ข่าว (ไม่บังคับ)", name: "link", value: n.link, hint: "คลิกการ์ดข่าวแล้วเปิดหน้านี้", placeholder: "https://www.sstc.ac.th/news-detail_325_..." }))}

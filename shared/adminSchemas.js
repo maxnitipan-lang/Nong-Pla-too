@@ -2,6 +2,14 @@
 import { z } from "zod";
 import { STAFF_ROLES, USER_ROLES } from "./roles.js";
 
+/**
+ * News dates use one style, the one the college website uses: "18 ก.ย. 2569" → "18 ก.ย. 69".
+ * Only "<day> <Thai month> 25xx" changes; other text is left as it is.
+ */
+export function shortThaiYear(label) {
+  return String(label ?? "").replace(/(\d{1,2}\s*[ก-๙]+\.(?:[ก-๙]+\.)?)\s*25(\d{2})(?!\d)/g, "$1 $2");
+}
+
 export const CAMPUS_CATEGORIES = ["สายอุตสาหกรรม", "พาณิชยกรรม/คหกรรม/สามัญ", "บริหาร-สนับสนุน", "ส่วนกลาง-กิจกรรม"];
 
 const idSchema = z
@@ -86,7 +94,7 @@ export const newsInputSchema = z.object({
   tag: z.string().trim().min(1, "ระบุป้ายกำกับ").max(80),
   title: z.string().trim().min(1, "ระบุหัวข้อ").max(255),
   excerpt: z.string().trim().max(2000).default(""),
-  dateLabel: z.string().trim().min(1, "ระบุวันที่").max(80),
+  dateLabel: z.string().trim().min(1, "ระบุวันที่").max(80).transform(shortThaiYear),
   timeLabel: z.string().trim().max(120).default(""),
   accent: hexColorSchema.default("#3c8f8d"),
   link: z

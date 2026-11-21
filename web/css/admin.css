@@ -102,7 +102,7 @@ svg { flex: 0 0 auto; }
 .banner > svg { width: 18px; height: 18px; margin-top: 3px; }
 
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 40px; padding: 0 16px; color: #fff; background: var(--ink); border: 1px solid transparent; border-radius: 12px; font-size: 14px; font-weight: 700; white-space: nowrap; }
-:root[data-theme="dark"] .btn { color: #0f1a1f; }
+:root[data-theme="dark"] .btn:not(.outline, .danger) { color: #0f1a1f; }
 .btn:disabled { opacity: .5; cursor: default; }
 .btn.outline { color: var(--ink); background: var(--card); border-color: var(--line); }
 .btn.danger { color: #fff; background: var(--danger); }
@@ -141,6 +141,11 @@ svg { flex: 0 0 auto; }
 .row strong { color: var(--ink); }
 .row small { display: block; color: var(--muted); font-size: 12px; }
 .row .swatch { width: 6px; height: 40px; border-radius: 99px; }
+.rows-head { display: flex; align-items: baseline; gap: 8px; margin: 24px 0 10px; color: var(--ink); font-size: 16px; }
+.rows-head:first-of-type { margin-top: 0; }
+.rows-head span { color: var(--muted); font-size: 13px; font-weight: 400; }
+.rows-head + .help { margin: -4px 0 10px; }
+.row.draft { background: transparent; border-style: dashed; }
 .avatar { width: 40px; height: 40px; display: grid; place-items: center; color: var(--accent); background: var(--accent-soft); border-radius: 50%; font-weight: 700; }
 .thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 10px; background: var(--soft); }
 

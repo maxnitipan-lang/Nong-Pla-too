@@ -3,6 +3,7 @@ import { drizzle } from "drizzle-orm/mysql2";
 import { CAMPUS_BUILDINGS, CAMPUS_NEWS, CAMPUS_SETTINGS_DEFAULTS } from "../shared/campus.js";
 import { campusBuildings, campusNews, siteSettings, users, walkNetworks } from "../drizzle/schema.js";
 import DEFAULT_WALK_NETWORK from "../shared/data/campusWalkNetwork.json" with { type: "json" };
+import { shortThaiYear } from "../shared/adminSchemas.js";
 import { ENV } from "./_core/env.js";
 import { LOCAL_PREFIX, hashPassword, isLocalAccount, usernameToOpenId } from "./_core/localAccounts.js";
 
@@ -278,7 +279,7 @@ function rowToNews(row) {
     tag: row.tag,
     title: row.title,
     excerpt: row.excerpt,
-    date: row.dateLabel,
+    date: shortThaiYear(row.dateLabel),
     time: row.timeLabel,
     accent: row.accent,
     link: row.link ?? "",
