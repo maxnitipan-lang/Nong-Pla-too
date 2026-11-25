@@ -11,7 +11,6 @@
 //   "nongplatoo:reset" kiosk idle: forget the conversation and close
 
 import { apiPost } from "./api.js";
-import { forVoice } from "/shared/politeness.js";
 import { voiceSummary } from "/shared/speechText.js";
 import { icon } from "./icons.js";
 import { renderMarkdown } from "./markdown.js";
@@ -25,7 +24,6 @@ import {
   hasBrowserRecognition,
   hasMicrophone,
   inAppBrowser,
-  isFemaleVoice,
   isEnglishText,
   isSecureForMic,
   listen,
@@ -173,13 +171,13 @@ export class PlatooChat {
     this.update(before);
   }
 
-  /** A female voice is speaking: Nong Platoo says ค่ะ / คะ / หนู (on screen and aloud). */
-  get female() {
-    return this.engine === "device" && isFemaleVoice(thaiDeviceVoices()[0]);
-  }
-  /** A reply in the words of the voice that speaks it. */
+  /**
+   * On screen Nong Platoo always writes ครับ / ผม, like the home page and the mascot. Most phones and
+   * Windows PCs only have a female Thai voice; that voice still says ค่ะ / หนู aloud (voice.js
+   * changes the words just before speaking), but the written chat no longer switches.
+   */
   say(text) {
-    return forVoice(text, this.female);
+    return String(text ?? "");
   }
 
   get engine() {

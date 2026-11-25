@@ -72,8 +72,28 @@ export function getBestPosition() {
   });
 }
 
-/** Lower-cased text a building is searchable by: names, category, rooms and departments. */
+/** Words people type for a place that its own name doesn't contain ("สมัครเรียน" → งานทะเบียน). */
+const SEARCH_ALIASES = [
+  [/งานทะเบียน/, "สมัครเรียน รับสมัคร มอบตัว ใบรับรอง ใบเกรด"],
+  [/ห้องสมุด/, "อ่านหนังสือ ยืมหนังสือ"],
+  [/โรงอาหาร/, "กินข้าว ข้าวเที่ยง"],
+];
+
+/**
+ * Does the building itself house `pattern` (its name or a room in it)? The description is left out:
+ * "ร้านกาแฟ (ใกล้งานทะเบียน)" is not the registration office.
+ */
+export function buildingHouses(building, pattern) {
+  return pattern.test([building.name, building.shortName, ...(building.floorsDetail ?? []).flatMap((floor) => floor.rooms)].join(" "));
+}
+
+/** Lower-cased text a building is searchable by: names, category, rooms, departments and the aliases above. */
 export function buildingSearchText(building) {
+  const aliases = SEARCH_ALIASES.filter(([pattern]) => buildingHouses(building, pattern)).map(([, words]) => words);
+  return [ownSearchText(building), ...aliases].join(" ");
+}
+
+function ownSearchText(building) {
   return [
     building.name,
     building.shortName,

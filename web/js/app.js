@@ -5,12 +5,12 @@
 // Same screens for both: home, map, news, departments (the Figma design).
 
 import { CAMPUS_BUILDINGS, CAMPUS_CATEGORIES, CAMPUS_OVERVIEW, DEFAULT_DEPARTMENTS } from "/shared/campus.js";
-import { BACHELOR_PROGRAMMES, PROGRAMMES, PROGRAMMES_AS_OF } from "/shared/collegeFacts.js";
+import { BACHELOR_PROGRAMMES, COLLEGE_FACTS, PROGRAMMES, PROGRAMMES_AS_OF } from "/shared/collegeFacts.js";
 import { DEPARTMENT_GROUPS, DEPARTMENT_QUIZ, suggestDepartments, withDepartmentInfo } from "/shared/departmentInfo.js";
 import { englishKeysToThai } from "/shared/thaiKeyboard.js";
 import { distanceM, planCampusRoute } from "/shared/walkNetwork.js";
 import { loadBuildings, loadNews, loadSettings, loadWalkNetwork, savedBuildings, savedNews } from "./api.js";
-import { buildingLatLng, buildingSearchText, formatDistance, hasCoords, phoneRouteUrl, walkMinutes, walkingDeepLink } from "./directions.js";
+import { buildingHouses, buildingLatLng, buildingSearchText, formatDistance, hasCoords, phoneRouteUrl, walkMinutes, walkingDeepLink } from "./directions.js";
 import { icon } from "./icons.js";
 import { createChat } from "./chat.js";
 import { CampusMap } from "./map.js";
@@ -672,7 +672,6 @@ function newsHtml() {
       <span class="news-card-body">${raw(badges(item))}<h3>${item.title}</h3>${item.excerpt ? raw(html`<p class="news-excerpt">${item.excerpt}</p>`) : ""}${newsWhen(item) ? raw(html`<small class="news-when">${newsWhen(item)}</small>`) : ""}</span>`,
     )));
 
-  const latest = state.news.map((n) => parseThaiDate(n.date)).filter(Boolean).sort((a, b) => b - a)[0];
   const filterBar = kindsPresent.length > 1
     ? raw(html`<div class="dept-filters news-filters">
         <button class="${state.newsKind ? "" : "active"}" data-action="news-kind" data-kind="">ทั้งหมด <b>${state.news.length}</b></button>
@@ -700,7 +699,7 @@ function newsHtml() {
       <span class="title-icon yellow">${raw(icon("news"))}</span>
       <div><span>อัปเดตจากวิทยาลัย</span><h1>ข่าวสารและกิจกรรม</h1></div>
     </div>
-    ${latest ? raw(html`<p class="page-intro">ข่าวล่าสุดเมื่อ ${latest.getDate()} ${THAI_MONTHS[latest.getMonth()]} ${String(latest.getFullYear() + 543).slice(-2)}</p>`) : ""}
+    ${state.news.length ? raw(html`<p class="page-intro">ข่าวและประกาศจากเว็บไซต์วิทยาลัย เรียงจากใหม่ไปเก่า</p>`) : ""}
     ${state.news.length ? "" : raw(html`<p class="page-intro">ตอนนี้ยังไม่มีข่าวในระบบ — ดูข่าวและประกาศล่าสุดได้บนเว็บวิทยาลัย</p>`)}
     ${filterBar}
     ${raw(noticeList)}
@@ -824,6 +823,17 @@ function departmentsHtml() {
   const quizBox = quizHtml(entries, logoBox);
 
   const open = state.openDepartment !== null ? entries[state.openDepartment] : null;
+  // Most people opening a department want to know how to apply: say who to ask and where they are.
+  const registration = state.buildings.find((b) => buildingHouses(b, /งานทะเบียน/));
+  const applyBlock = () => html`<div class="dept-apply">
+      <h3 class="dept-section"><span aria-hidden="true">📝</span>สนใจเรียนสาขานี้</h3>
+      <p>สอบถามการสมัครเรียน วันรับสมัคร และเอกสารที่ต้องใช้ ได้ที่งานทะเบียน · เวลาทำการ ${COLLEGE_FACTS.officeHours}</p>
+      <div class="dept-apply-actions">
+        <a class="apply-action" href="tel:${COLLEGE_FACTS.phone.replace(/\D/g, "")}">${raw(icon("phone"))} โทร ${COLLEGE_FACTS.phone}</a>
+        ${registration ? raw(html`<button class="apply-action" data-action="department-show" data-id="${registration.id}">${raw(icon("pin"))} ไปที่งานทะเบียน</button>`) : ""}
+        <a class="apply-action" href="https://${COLLEGE_FACTS.website}" target="_blank" rel="noopener">${raw(icon("news"))} ดูประกาศรับสมัครบนเว็บวิทยาลัย</a>
+      </div>
+    </div>`;
   // Each section: an icon + a heading bigger than its content, so the eye knows what to read first.
   const chips = (emoji, title, list, cls = "") =>
     list?.length
@@ -844,6 +854,7 @@ function departmentsHtml() {
         ${open.building
           ? raw(html`<button class="route-button" data-action="department-show" data-id="${open.building.id}">${raw(icon("pin"))} ดูที่ตั้ง ${open.building.shortName || open.building.name}${floorKnown(open.department, open.building) ? ` ชั้น ${open.department.floor}` : ""}</button>`)
           : ""}
+        ${raw(applyBlock())}
       </section>`)
     : "";
 
