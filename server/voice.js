@@ -20,16 +20,20 @@
 //
 //   GEMINI_API_KEY / CHAT_API_KEY   same key as the chatbot
 //   TTS_MODEL   default "gemini-3.8-flash-tts"     (Thai-capable; the -lite TTS is not)
-//   TTS_VOICE   default "Puck" (upbeat)  — see https://ai.google.dev/gemini-api/docs/speech-generation
+//   TTS_VOICE   default "Aoede" (female, Nong Platoo's voice) — e.g. "Leda", "Zephyr", "Kore" (female),
+//               "Puck", "Charon" (male) — see https://ai.google.dev/gemini-api/docs/speech-generation
+//
+// Answers are written with "ครับ / ผม"; a female voice gets "ค่ะ / หนู" just before it speaks.
 //   STT_MODEL   default = CHAT_MODEL or "gemini-3.5-flash-lite"
 
 import express from "express";
 import { allow } from "./rateLimit.js";
+import { forVoice } from "../shared/politeness.js";
 
 const API_KEY = process.env.GEMINI_API_KEY || process.env.CHAT_API_KEY || "";
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
 const TTS_MODEL = process.env.TTS_MODEL || "gemini-3.8-flash-tts";
-const TTS_VOICE = process.env.TTS_VOICE || "Puck";
+const TTS_VOICE = process.env.TTS_VOICE || "Aoede";
 const STT_MODEL = process.env.STT_MODEL || process.env.CHAT_MODEL || "gemini-3.5-flash-lite";
 
 const AZURE_KEY = process.env.AZURE_SPEECH_KEY || "";
@@ -38,6 +42,10 @@ const AZURE_VOICE = process.env.AZURE_TTS_VOICE || "th-TH-NiwatNeural";
 const AZURE_RATE = process.env.AZURE_TTS_RATE || "+0%";
 export const isAzureConfigured = () => AZURE_KEY.length > 0 && AZURE_REGION.length > 0;
 const GEMINI_TTS = process.env.GEMINI_TTS === "1" && API_KEY.length > 0;
+
+/** Gemini's female voices (the rest are male). Azure: Premwadee and Achara are female, Niwat male. */
+const GEMINI_FEMALE = /^(zephyr|kore|leda|aoede|callirrhoe|autonoe|despina|erinome|laomedeia|achernar|gacrux|pulcherrima|vindemiatrix|sulafat)$/i;
+export const isFemaleAiVoice = (name) => GEMINI_FEMALE.test(name) || /premwadee|achara/i.test(name);
 
 const MAX_TTS_CHARS = 1200;
 const MAX_STT_BYTES = 6 * 1024 * 1024; // ~3 min of 16 kHz mono WAV
@@ -152,7 +160,7 @@ async function makeSpeech(text) {
   let azureError;
   if (isAzureConfigured()) {
     try {
-      return await azureSpeech(text);
+      return await azureSpeech(forVoice(text, isFemaleAiVoice(AZURE_VOICE)));
     } catch (error) {
       azureError = error;
       console.warn("[Voice] Azure TTS failed:", error instanceof Error ? error.message : error);
@@ -161,7 +169,7 @@ async function makeSpeech(text) {
   if (!GEMINI_TTS) throw azureError ?? new Error("ยังไม่ได้ตั้งค่าเสียง AI");
   if (geminiPaused()) throw new Error("AI voice paused: quota used up (HTTP 429)");
   try {
-    return await geminiSpeech(text);
+    return await geminiSpeech(forVoice(text, isFemaleAiVoice(TTS_VOICE)));
   } catch (error) {
     if (/HTTP 429/.test(error instanceof Error ? error.message : "")) {
       quotaPausedUntil = Date.now() + QUOTA_PAUSE_MS;

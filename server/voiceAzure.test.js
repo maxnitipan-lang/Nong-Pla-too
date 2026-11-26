@@ -45,6 +45,27 @@ describe("Azure voice", () => {
     expect(fetchMock.mock.calls.some(([u]) => String(u).includes("generativelanguage"))).toBe(true);
   });
 
+  it("says ค่ะ / หนู with a female voice and ครับ / ผม with a male one", async () => {
+    const geminiOk = () => new Response(JSON.stringify({ outputs: [{ data: Buffer.alloc(300).toString("base64"), mime_type: "audio/l16;rate=24000" }] }), { status: 200 });
+    let fetchMock = vi.fn(async () => geminiOk());
+    vi.stubGlobal("fetch", fetchMock);
+    let voice = await loadVoice({ AZURE_SPEECH_KEY: "", GEMINI_API_KEY: "g", GEMINI_TTS: "1", TTS_VOICE: "" });
+    await voice.synthesizeSpeech("ผมพาไปห้องสมุดครับ");
+    expect(fetchMock.mock.calls[0][1].body).toContain("หนูพาไปห้องสมุดค่ะ"); // default Aoede is female
+
+    fetchMock = vi.fn(async () => geminiOk());
+    vi.stubGlobal("fetch", fetchMock);
+    voice = await loadVoice({ AZURE_SPEECH_KEY: "", GEMINI_API_KEY: "g", GEMINI_TTS: "1", TTS_VOICE: "Puck" });
+    await voice.synthesizeSpeech("ผมพาไปห้องสมุดครับ");
+    expect(fetchMock.mock.calls[0][1].body).toContain("ผมพาไปห้องสมุดครับ");
+
+    fetchMock = vi.fn(async () => new Response(WAV, { status: 200 }));
+    vi.stubGlobal("fetch", fetchMock);
+    voice = await loadVoice({ AZURE_SPEECH_KEY: "k", AZURE_SPEECH_REGION: "southeastasia", AZURE_TTS_VOICE: "th-TH-PremwadeeNeural" });
+    await voice.synthesizeSpeech("ผมพาไปห้องสมุดครับ");
+    expect(fetchMock.mock.calls[0][1].body).toContain("หนูพาไปห้องสมุดค่ะ");
+  });
+
   it("is never paused by a Gemini quota error while Azure is set up", async () => {
     vi.stubGlobal("fetch", vi.fn(async () => new Response(WAV, { status: 200 })));
     const voice = await loadVoice({ AZURE_SPEECH_KEY: "k", AZURE_SPEECH_REGION: "eastasia" });
