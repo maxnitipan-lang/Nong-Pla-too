@@ -15,6 +15,7 @@ import { icon } from "./icons.js";
 import { createChat } from "./chat.js";
 import { CampusMap } from "./map.js";
 import { CampusNavigation } from "./navigation.js";
+import { unlockAudio } from "./voice.js";
 import { fillQrCodes } from "./qr.js";
 import { navBannerHtml, navSummary, routePanelHtml } from "./routePanel.js";
 import { $, esc, html, raw, readStore, writeStore } from "./util.js";
@@ -992,6 +993,7 @@ function enableGps() {
 let pendingLive = false;
 /** lang "en": the route was asked for in English → English route panel and spoken directions. */
 function startNavigation(id, lang = "th") {
+  unlockAudio(); // spoken directions (AI voice) need sound allowed during this tap on phones
   state.selectedId = id;
   if (state.view !== "map") go("map");
   if (KIOSK) {
@@ -1081,9 +1083,9 @@ const actions = {
   },
   "nav-retry": () => nav.state.targetId && void nav.routeTo(nav.state.targetId, nav.state.lang),
   "nav-from-gate": () => nav.state.targetId && void nav.routeFromGate(nav.state.targetId),
-  "nav-start": () => nav.startLive(),
+  "nav-start": () => (unlockAudio(), nav.startLive()),
   "nav-stop": () => nav.stopLive(),
-  "nav-voice": () => nav.setVoice(!nav.voice),
+  "nav-voice": () => (unlockAudio(), nav.setVoice(!nav.voice)),
   department: (el) => {
     state.openDepartment = Number(el.dataset.index);
     render();

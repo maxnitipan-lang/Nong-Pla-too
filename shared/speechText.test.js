@@ -57,3 +57,11 @@ describe("chunk: where the voice pauses", async () => {
     expect(v).toMatch(/ครับ รายละเอียดเพิ่มเติมดูบนจอได้เลยครับ$/);
   });
 });
+
+describe("spokenText (words sent to the AI voice)", () => {
+  it("keeps English answers in English and Thai answers with Thai reading rules", async () => {
+    const { spokenText } = await import("./speechText.js");
+    expect(spokenText("Accounting is in **Building 4 (อาคาร 4)** on floor 3, next to the library 📚")).toBe("Accounting is in Building 4 on floor 3, next to the library");
+    expect(spokenText("**อาคาร 4** อยู่ทางซ้ายครับ 👇")).toBe("อาคาร 4 อยู่ทางซ้ายครับ");
+  });
+});

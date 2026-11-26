@@ -1,4 +1,4 @@
-import { chunk, cleanForSpeech, speechPieces } from "../../shared/speechText.js";
+import { chunk, cleanForSpeech, isEnglishText, speakableEnglish, spokenText, speechPieces } from "../../shared/speechText.js";
 import { forVoice } from "../../shared/politeness.js";
 // (Converted from client/src/lib/voice.ts — same behaviour.)
 // Voice in / voice out for the น้องปลาทู assistant.
@@ -203,31 +203,6 @@ function voicesReady() {
   });
 }
 
-/** English answer → text for an English voice: no markdown, emoji or Thai words. */
-export function speakableEnglish(raw) {
-  return String(raw)
-    .replace(/\s*\([^()]*[฀-๿][^()]*\)/g, "") // "(อาคาร 85 ปี)"
-    .replace(/[฀-๿]+/g, "")
-    .replace(/\p{Extended_Pictographic}/gu, "")
-    .replace(/[*#_`>⋮]/g, "")
-    .replace(/\s*\n\s*[-•]\s*/g, ". ")
-    .replace(/\s*[·•]\s*/g, ", ") // "Phone … · Website …" → a pause
-    .replace(/\s+\/\s+/g, " or ") // "2D / 3D" → "2D or 3D"
-    .replace(/(\d)\s*%/g, "$1 percent")
-    // Phone numbers digit by digit ("034-711440" is not "34 minus 711440").
-    .replace(/\b0\d{1,2}-\d{3}-?\d{3,4}\b/g, (n) => n.split("-").map((p) => p.split("").join(" ")).join(", "))
-    .replace(/\s+([,.!?])/g, "$1")
-    .replace(/\s+/g, " ")
-    .trim();
-}
-
-/** Mostly English letters, almost no Thai (Thai names in brackets are fine). */
-export function isEnglishText(text) {
-  const thai = (String(text).match(/[฀-๿]/g) ?? []).length;
-  const latin = (String(text).match(/[a-z]/gi) ?? []).length;
-  return latin > 8 && thai < latin / 4;
-}
-
 /**
  * A clear English voice for English answers (a Thai voice reading English is hard to understand).
  * Natural voices first, male ones next ("Nong Platoo" is a boy), US/UK accents before others.
@@ -313,7 +288,7 @@ function withTimeout(promise, ms) {
   ]).finally(() => clearTimeout(timer));
 }
 
-export { cleanForSpeech, speechPieces };
+export { cleanForSpeech, isEnglishText, speakableEnglish, spokenText, speechPieces };
 
 async function fetchAiAudio(text, signal) {
   const res = await fetch("/api/voice/tts", {
@@ -326,14 +301,27 @@ async function fetchAiAudio(text, signal) {
   return res.blob();
 }
 
+// Audio made ahead of time (e.g. every step of a walking route), so it plays the moment it is needed.
+const madeAhead = new Map();
+const MADE_AHEAD_MAX = 40;
+let aheadQueue = Promise.resolve();
+
+/** Make the AI voice for `rawText` now, one at a time, and keep it for speak(). */
+export function prepareSpeech(rawText) {
+  const text = spokenText(rawText);
+  if (!text || madeAhead.has(text)) return;
+  const made = (aheadQueue = aheadQueue.catch(() => undefined).then(() => fetchAiAudio(text)));
+  made.catch(() => madeAhead.delete(text));
+  madeAhead.set(text, made);
+  while (madeAhead.size > MADE_AHEAD_MAX) madeAhead.delete(madeAhead.keys().next().value);
+}
+
 /** Speak `text`. AI voice falls back to the device voice if it fails. */
 export function speak(rawText, options) {
   stopSpeaking();
   // English answers skip the Thai reading rules ("IT" would become Thai sounds), and the Thai
-  // names in brackets ("Building 85 (อาคาร 85 ปี)") are left out: an English voice can't read them.
-  const english = isEnglishText(rawText);
-  const text = english ? speakableEnglish(rawText) : cleanForSpeech(rawText);
-  if (english) options = { ...options, engine: "device" };
+  // names in brackets ("Building 85 (อาคาร 85 ปี)") are left out. The AI voice speaks both languages.
+  const text = spokenText(rawText);
   if (!text) return { done: Promise.resolve(), stop: () => undefined };
   const rate = Math.min(1.3, Math.max(0.7, options.rate ?? 1));
 
@@ -374,15 +362,17 @@ export function speak(rawText, options) {
       // voice, so speaking sentence by sentence made the voice change mid-answer.
       let started = false;
       try {
-        const blob = await withTimeout(fetchAiAudio(text, controller.signal), options.firstWaitMs ?? FIRST_AUDIO_WAIT_MS);
+        const ready = madeAhead.get(text);
+        const blob = await withTimeout(ready ?? fetchAiAudio(text, controller.signal), options.firstWaitMs ?? FIRST_AUDIO_WAIT_MS);
         if (controller.signal.aborted) return;
         started = true;
         await playBlob(blob, true);
         return;
       } catch (error) {
         if (controller.signal.aborted) return;
-        // Once the AI voice has started, never switch to another voice part-way through.
-        if (started) return;
+        // Once the AI voice has started, never switch to another voice part-way through
+        // (unless the phone blocked the sound before it began: then the device voice tries).
+        if (started && error?.name !== "NotAllowedError") return;
         console.warn("[voice] AI voice slow or unavailable, using the device voice:", error);
       }
     }

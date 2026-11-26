@@ -11,8 +11,7 @@
 
 import { OFF_CAMPUS_M, currentStepIndex, distanceM, locateOnPath, planCampusRoute, snapToNetwork } from "/shared/walkNetwork.js";
 import { apiPost } from "./api.js";
-import { englishDeviceVoice, thaiDeviceVoices } from "./voice.js";
-import { cleanForSpeech } from "/shared/speechText.js";
+import { aiVoiceAvailable, prepareSpeech, speak as speakVoice, stopSpeaking } from "./voice.js";
 import { buildingLatLng, getBestPosition } from "./directions.js";
 
 /** Farther than this from the route while navigating → plan again from here. */
@@ -21,17 +20,20 @@ const REPLAN_EVERY_MS = 5000;
 /** Within this of the destination = arrived. */
 const ARRIVED_M = 12;
 
-function speak(text, lang = "th") {
-  if (!("speechSynthesis" in window)) return;
-  window.speechSynthesis.cancel();
-  // Same voice as Nong Platoo's answers (the browser's default Thai voice can be a different one),
-  // and the same reading rules ("200 ม." = "200 เมตร").
-  const u = new SpeechSynthesisUtterance(lang === "en" ? text : cleanForSpeech(text));
-  const voice = lang === "en" ? englishDeviceVoice() : thaiDeviceVoices()[0];
-  u.lang = voice?.lang ?? (lang === "en" ? "en-US" : "th-TH");
-  if (voice) u.voice = voice;
-  u.rate = 0.95;
-  window.speechSynthesis.speak(u);
+// Nong Platoo's own voice (the AI voice, like the chat), in Thai and English. Each step's words
+// are made as soon as the route is known, so they play right away at the turn. Without the AI
+// voice (or if it is slow) the device voice speaks instead.
+let aiVoice = false;
+void aiVoiceAvailable().then((ok) => (aiVoice = ok));
+
+/** What is said for a step: "เลี้ยวซ้าย แล้วเดินต่อ 40 เมตร". */
+function stepWords(step, lang) {
+  if (lang === "en") return step.maneuver === "arrive" ? step.instructionEn : `${step.instructionEn}, then continue for ${Math.round(step.distance)} metres`;
+  return step.maneuver === "arrive" ? step.instruction : `${step.instruction} แล้วเดินต่อ ${Math.round(step.distance)} เมตร`;
+}
+
+function speak(text) {
+  speakVoice(text, { engine: aiVoice ? "ai" : "device", rate: 0.95, firstWaitMs: 3000 });
 }
 
 const IDLE = {
@@ -92,8 +94,16 @@ export class CampusNavigation {
 
   setVoice(on) {
     this.voice = on;
-    if (!on) window.speechSynthesis?.cancel();
+    if (!on) stopSpeaking();
+    else this.prepareVoice();
     this.set({});
+  }
+
+  /** Make every step's spoken words now (AI voice), so each plays instantly at its turn. */
+  prepareVoice() {
+    const { route, lang } = this.state;
+    if (!this.voice || !aiVoice || !route?.steps) return;
+    for (const step of route.steps) prepareSpeech(stepWords(step, lang));
   }
 
   stopWatch() {
@@ -133,6 +143,7 @@ export class CampusNavigation {
       this.set({ route: planned, progress, approachPath: null, approachDistance: 0 });
     }
     this.set({ status: "ready", message: null });
+    if (this.state.live) this.prepareVoice();
     return planned;
   }
 
@@ -172,7 +183,7 @@ export class CampusNavigation {
   clear() {
     this.request++;
     this.stopWatch();
-    window.speechSynthesis?.cancel();
+    stopSpeaking();
     this.set({ ...IDLE });
   }
 
@@ -204,10 +215,7 @@ export class CampusNavigation {
 
     if (this.voice && stepIndex !== this.spokenStep) {
       this.spokenStep = stepIndex;
-      const step = route.steps[stepIndex];
-      if (this.state.lang === "en")
-        speak(step.maneuver === "arrive" ? step.instructionEn : `${step.instructionEn}, then continue for ${Math.round(step.distance)} metres`, "en");
-      else speak(step.maneuver === "arrive" ? step.instruction : `${step.instruction} แล้วเดินต่อ ${Math.round(step.distance)} เมตร`);
+      speak(stepWords(route.steps[stepIndex], this.state.lang));
     }
     if (arrived) {
       this.stopWatch();
@@ -220,6 +228,7 @@ export class CampusNavigation {
     this.stopWatch();
     this.spokenStep = -1;
     this.set({ live: true });
+    this.prepareVoice();
     this.watchId = navigator.geolocation.watchPosition(
       ({ coords }) => this.onLiveFix({ lat: coords.latitude, lng: coords.longitude, accuracy: coords.accuracy }),
       (error) => {
@@ -234,7 +243,7 @@ export class CampusNavigation {
 
   stopLive() {
     this.stopWatch();
-    window.speechSynthesis?.cancel();
+    stopSpeaking();
     this.set({ live: false });
   }
 }

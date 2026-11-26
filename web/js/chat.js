@@ -18,7 +18,6 @@ import { $, html, raw, readStore, writeStore } from "./util.js";
 import {
   aiVoiceAvailable,
   serverSttAvailable,
-  naturalDeviceVoice,
   checkMicrophone,
   devicePlatform,
   hasBrowserRecognition,
@@ -183,7 +182,6 @@ export class PlatooChat {
   get engine() {
     const chosen = this.s.settings.engine;
     if (chosen === "device") return "device";
-    if (chosen === "auto" && naturalDeviceVoice()) return "device"; // natural and instant
     return this.s.aiVoice ? "ai" : "device";
   }
   get canSpeakOut() {
@@ -569,7 +567,7 @@ export class PlatooChat {
         <input type="checkbox" data-setting="handsFree" ${st.handsFree ? "checked" : ""} /></label>
       <div><p>เสียงพูด</p><div class="voice-engines">
         <button type="button" data-chat="engine" data-engine="auto" class="${st.engine === "auto" ? "is-on" : ""}">
-          <strong>อัตโนมัติ (แนะนำ)</strong><small>${naturalDeviceVoice() ? `ใช้ ${naturalDeviceVoice().name} — พูดได้ทันที` : this.s.aiVoice ? "เสียง AI ธรรมชาติ" : "เสียงของเครื่อง"}</small></button>
+          <strong>อัตโนมัติ (แนะนำ)</strong><small>${this.s.aiVoice ? "เสียงน้องปลาทู (AI)" : "เสียงของเครื่อง"}</small></button>
         <button type="button" data-chat="engine" data-engine="ai" class="${st.engine === "ai" ? "is-on" : ""}" ${this.s.aiVoice ? "" : "disabled"}>
           <strong>เสียง AI (ธรรมชาติ)</strong><small>${this.s.aiVoice ? "จากเซิร์ฟเวอร์ · ต้องต่ออินเทอร์เน็ต" : "ยังไม่พร้อมใช้"}</small></button>
         <button type="button" data-chat="engine" data-engine="device" class="${st.engine === "device" ? "is-on" : ""}">

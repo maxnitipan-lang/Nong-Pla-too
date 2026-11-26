@@ -15,7 +15,7 @@ import { answerFromFaq, faqCategory, normalizeQuestion, similarity } from "./cha
 import { CORRECTION, adminNotes, isRecordable, learnedAnswer, markDisputed, recordQuestion } from "./chatLearning.js";
 import { feedbackToken } from "./chatFeedback.js";
 import { fixWrongKeyboard } from "../shared/thaiKeyboard.js";
-import { cleanForSpeech } from "../shared/speechText.js";
+import { isEnglishText, spokenText, voiceSummary } from "../shared/speechText.js";
 import { prepareSpeech } from "./voice.js";
 import { withDepartmentInfo } from "../shared/departmentInfo.js";
 import { placeEn } from "../shared/placeNamesEn.js";
@@ -24,6 +24,9 @@ import { knowledgeLines } from "./aiKnowledge.js";
 import { staffLines } from "../shared/staffDirectory.js";
 import { clearStoredAnswers, countAiUse, getStoredAnswer, storeAnswer } from "./aiStore.js";
 import { getCampusBuildings, getCampusNews, getCampusSettings } from "./db.js";
+
+/** The words the browser will ask the AI voice for (chat.js speakReply → voice.js speak), made in advance. */
+const replySpeech = (reply) => spokenText(voiceSummary(reply, 450, isEnglishText(reply)));
 
 const CHAT_BASE_URL = process.env.CHAT_BASE_URL || "https://generativelanguage.googleapis.com/v1beta/openai";
 // A pinned flash-lite model: generous free-tier quota AND consistently fast
@@ -391,7 +394,7 @@ export async function askCampusChat(history, options = {}) {
       void countAiUse("cache");
       // Asked again: count it (the memory cache is gone after a restart; the database is not).
       void recordQuestion(lastQuestion, { ...remembered, source: "ai" }, lang);
-      if (options.aiVoice) prepareSpeech(cleanForSpeech(remembered.reply));
+      if (options.aiVoice) prepareSpeech(replySpeech(remembered.reply));
       return withFeedback(remembered, lastQuestion, lang, "ai");
     }
     let answer = await answerChat(history, options);
@@ -411,11 +414,11 @@ export async function askCampusChat(history, options = {}) {
         ? () => answerChat([{ role: "user", content: lastQuestion }], { lang: options.lang, atKiosk: options.atKiosk })
         : null);
       // The browser will read this aloud with the AI voice: start making that voice now.
-      if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
+      if (options.aiVoice) prepareSpeech(replySpeech(answer.reply));
       // Recorded → the visitor can rate it, and a 👎 shows up for the admin.
       return withFeedback(answer, lastQuestion, lang, answer.source);
     }
-    if (options.aiVoice) prepareSpeech(cleanForSpeech(answer.reply));
+    if (options.aiVoice) prepareSpeech(replySpeech(answer.reply));
     return answer;
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
