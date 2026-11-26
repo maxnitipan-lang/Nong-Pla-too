@@ -11,7 +11,7 @@
 //   "nongplatoo:reset" kiosk idle: forget the conversation and close
 
 import { apiPost } from "./api.js";
-import { voiceSummary } from "/shared/speechText.js";
+import { GREETING_PHRASE, voiceSummary } from "/shared/speechText.js";
 import { toFemaleSpeech } from "/shared/politeness.js";
 import { icon } from "./icons.js";
 import { renderMarkdown } from "./markdown.js";
@@ -454,7 +454,7 @@ export class PlatooChat {
         break;
       case "try-voice":
         unlockAudio();
-        speak("สวัสดีค่ะ หนูน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามค่ะ", { engine: this.engine, rate: s.settings.rate });
+        speak(GREETING_PHRASE, { engine: this.engine, rate: s.settings.rate });
         break;
       case "mic":
         this.onMic();

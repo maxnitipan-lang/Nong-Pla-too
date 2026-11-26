@@ -29,6 +29,7 @@
 import express from "express";
 import { allow } from "./rateLimit.js";
 import { forVoice } from "../shared/politeness.js";
+import { loadSpeech, saveSpeech } from "./ttsStore.js";
 
 const API_KEY = process.env.GEMINI_API_KEY || process.env.CHAT_API_KEY || "";
 const API_BASE = "https://generativelanguage.googleapis.com/v1beta";
@@ -130,12 +131,26 @@ const geminiPaused = () => Date.now() < quotaPausedUntil;
 /** No AI voice right now: Azure isn't set up and Gemini's quota is used up. */
 export const aiVoicePaused = () => !isAzureConfigured() && geminiPaused();
 
+/** The voice that speaks first (Azure if set up, else Gemini): stored clips are kept per voice. */
+const AZURE_ID = () => `azure:${AZURE_VOICE}:${AZURE_RATE}`;
+const GEMINI_ID = () => `gemini:${TTS_MODEL}:${TTS_VOICE}`;
+const primaryVoice = () => (isAzureConfigured() ? AZURE_ID() : GEMINI_ID());
+
 export function synthesizeSpeech(text) {
   const cached = ttsCache.get(text);
   if (cached) return Promise.resolve(cached);
-  if (aiVoicePaused()) return Promise.reject(new Error("AI voice paused: quota used up (HTTP 429)"));
   if (ttsInFlight.has(text)) return ttsInFlight.get(text);
-  const job = makeSpeech(text)
+  const job = (async () => {
+    // Made before (also before a restart): play it from the database, no new cost.
+    const voice = primaryVoice();
+    const stored = await loadSpeech(voice, text);
+    if (stored) return stored;
+    if (aiVoicePaused()) throw new Error("AI voice paused: quota used up (HTTP 429)");
+    const made = await makeSpeech(text);
+    // Only keep clips from the main voice (a backup voice's clip would be filed under the wrong one).
+    if (made.voice === voice) void saveSpeech(voice, text, made.wav);
+    return made.wav;
+  })()
     .then(wav => {
       if (ttsCache.size >= TTS_CACHE_MAX) ttsCache.delete(ttsCache.keys().next().value);
       ttsCache.set(text, wav);
@@ -155,12 +170,12 @@ export function prepareSpeech(text) {
   synthesizeSpeech(text.slice(0, MAX_TTS_CHARS)).catch(() => undefined);
 }
 
-/** Azure first, then Gemini. */
+/** Azure first, then Gemini. Returns the WAV and which voice made it. */
 async function makeSpeech(text) {
   let azureError;
   if (isAzureConfigured()) {
     try {
-      return await azureSpeech(forVoice(text, isFemaleAiVoice(AZURE_VOICE)));
+      return { wav: await azureSpeech(forVoice(text, isFemaleAiVoice(AZURE_VOICE))), voice: AZURE_ID() };
     } catch (error) {
       azureError = error;
       console.warn("[Voice] Azure TTS failed:", error instanceof Error ? error.message : error);
@@ -169,7 +184,7 @@ async function makeSpeech(text) {
   if (!GEMINI_TTS) throw azureError ?? new Error("ยังไม่ได้ตั้งค่าเสียง AI");
   if (geminiPaused()) throw new Error("AI voice paused: quota used up (HTTP 429)");
   try {
-    return await geminiSpeech(forVoice(text, isFemaleAiVoice(TTS_VOICE)));
+    return { wav: await geminiSpeech(forVoice(text, isFemaleAiVoice(TTS_VOICE))), voice: GEMINI_ID() };
   } catch (error) {
     if (/HTTP 429/.test(error instanceof Error ? error.message : "")) {
       quotaPausedUntil = Date.now() + QUOTA_PAUSE_MS;
@@ -365,21 +380,24 @@ export function registerVoiceRoutes(app) {
 /**
  * Google takes ~6 s to make any sentence, however short. Make the voice for the
  * greeting and the most-asked ready-made answers once at start-up, so those
- * play instantly. The text must match what the browser sends (shared/speechText.js cleanForSpeech),
- * otherwise the cache would never match. One request every 2 s; stops on quota errors.
+ * play instantly. The text must match what the browser sends (chat.js speakReply → voiceSummary →
+ * spokenText), otherwise the cache would never match. One request every 2 s; stops on quota errors.
+ * With a database, each phrase is paid for once and comes from the database after a restart.
  */
 export async function warmVoiceCache({
   gapMs = isAzureConfigured() ? 300 : 2000,
-  // Azure is fast and has a large free tier: pre-make the common answers too. Gemini: greeting only.
-  limit = Number(process.env.VOICE_PREWARM_LIMIT ?? (isAzureConfigured() ? 40 : 1)),
+  // Azure (fast, large free tier) or a database to keep the clips: pre-make the common answers too.
+  // Gemini without a database: greeting only (it would be paid again after every restart).
+  limit = Number(process.env.VOICE_PREWARM_LIMIT ?? (isAzureConfigured() || process.env.DATABASE_URL ? 40 : 1)),
 } = {}) {
   if (!isVoiceConfigured()) return { made: 0 };
-  const [{ cleanForSpeech, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
+  const [{ isEnglishText, spokenText, voiceSummary, GREETING_PHRASE }, { readyAnswerTexts }, { getCampusSettings }] =
     await Promise.all([import("../shared/speechText.js"), import("./chatFaq.js"), import("./db.js")]);
   const settings = await getCampusSettings().catch(() => null);
   const texts = [GREETING_PHRASE, ...(settings ? readyAnswerTexts(settings) : [])];
-  // Whole answers, cleaned exactly as the browser cleans them before asking for the voice.
-  const pieces = [...new Set(texts.map(t => cleanForSpeech(t)))].filter(Boolean).slice(0, limit);
+  // Whole answers, shortened and cleaned exactly as the browser does before asking for the voice.
+  const asSpoken = t => spokenText(voiceSummary(t, 450, isEnglishText(t)));
+  const pieces = [...new Set(texts.map(asSpoken))].filter(Boolean).slice(0, limit);
   let made = 0;
   for (const piece of pieces) {
     if (ttsCache.has(piece)) continue;
