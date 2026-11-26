@@ -381,11 +381,12 @@ export function registerVoiceRoutes(app) {
  * Google takes ~6 s to make any sentence, however short. Make the voice for the
  * greeting and the most-asked ready-made answers once at start-up, so those
  * play instantly. The text must match what the browser sends (chat.js speakReply → voiceSummary →
- * spokenText), otherwise the cache would never match. One request every 2 s; stops on quota errors.
+ * spokenText), otherwise the cache would never match. Gemini: one new clip every 10 s (its voice model
+ * allows only a few requests a minute — every 2 s used the quota up at start-up); stops on quota errors.
  * With a database, each phrase is paid for once and comes from the database after a restart.
  */
 export async function warmVoiceCache({
-  gapMs = isAzureConfigured() ? 300 : 2000,
+  gapMs = isAzureConfigured() ? 300 : Number(process.env.VOICE_PREWARM_GAP_MS) || 10_000,
   // Azure (fast, large free tier) or a database to keep the clips: pre-make the common answers too.
   // Gemini without a database: greeting only (it would be paid again after every restart).
   limit = Number(process.env.VOICE_PREWARM_LIMIT ?? (isAzureConfigured() || process.env.DATABASE_URL ? 40 : 1)),
@@ -401,9 +402,12 @@ export async function warmVoiceCache({
   let made = 0;
   for (const piece of pieces) {
     if (ttsCache.has(piece)) continue;
+    const started = Date.now();
     try {
       await synthesizeSpeech(piece);
       made++;
+      // Back within a moment = it came from the database, not Google: no need to wait.
+      if (Date.now() - started < 1500) continue;
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       console.warn(`[Voice] pre-made voice stopped after ${made}: ${message.slice(0, 120)}`);
