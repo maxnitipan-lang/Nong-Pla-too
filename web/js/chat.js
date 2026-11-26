@@ -12,6 +12,7 @@
 
 import { apiPost } from "./api.js";
 import { voiceSummary } from "/shared/speechText.js";
+import { toFemaleSpeech } from "/shared/politeness.js";
 import { icon } from "./icons.js";
 import { renderMarkdown } from "./markdown.js";
 import { $, html, raw, readStore, writeStore } from "./util.js";
@@ -34,7 +35,7 @@ import {
   unlockAudio,
 } from "./voice.js";
 
-const GREETING = "สวัสดีครับ ผมน้องปลาทู 🐟\n\nแตะปุ่มไมค์แล้วพูดได้เลย หรือพิมพ์ถามเรื่องอาคาร สาขา ข่าวสาร และขอเส้นทางได้ครับ";
+const GREETING = "สวัสดีค่ะ หนูน้องปลาทู 🐟\n\nแตะปุ่มไมค์แล้วพูดได้เลย หรือพิมพ์ถามเรื่องอาคาร สาขา ข่าวสาร และขอเส้นทางได้ค่ะ";
 const QUICK_QUESTIONS = [
   { icon: "navigate", label: "ขอเส้นทางไปสาขาช่างยนต์" },
   { icon: "pin", label: "สาขาการบัญชีอยู่อาคารไหน" },
@@ -42,7 +43,7 @@ const QUICK_QUESTIONS = [
 ];
 const PHASE_TEXT = {
   idle: "แตะไมค์แล้วพูดได้เลย",
-  listening: "กำลังฟัง… พูดได้เลยครับ",
+  listening: "กำลังฟัง… พูดได้เลยค่ะ",
   transcribing: "กำลังฟังคำถาม…",
   thinking: "น้องปลาทูกำลังคิด…",
   speaking: "กำลังพูด — แตะปุ่มเพื่อหยุด",
@@ -171,12 +172,12 @@ export class PlatooChat {
   }
 
   /**
-   * On screen Nong Platoo always writes ครับ / ผม, like the home page and the mascot. Most phones and
-   * Windows PCs only have a female Thai voice; that voice still says ค่ะ / หนู aloud (voice.js
-   * changes the words just before speaking), but the written chat no longer switches.
+   * Nong Platoo is a girl: on screen she writes ค่ะ / หนู, like her voice. Answers are stored and
+   * written by the AI in the ครับ / ผม form (one consistent form for the AI, the FAQ and remembered
+   * answers); this turns them into her form just before they are shown.
    */
   say(text) {
-    return String(text ?? "");
+    return toFemaleSpeech(text);
   }
 
   get engine() {
@@ -283,8 +284,8 @@ export class PlatooChat {
     } catch (error) {
       if (session !== this.session) return;
       const content = controller.signal.aborted
-        ? "หยุดแล้วครับ — ถามใหม่ได้เลย"
-        : `ขออภัยครับ ระบบยังตอบไม่ได้ตอนนี้\n(${error instanceof Error ? error.message : "ไม่ทราบสาเหตุ"})`;
+        ? "หยุดแล้วค่ะ — ถามใหม่ได้เลย"
+        : `ขออภัยค่ะ ระบบยังตอบไม่ได้ตอนนี้\n(${error instanceof Error ? error.message : "ไม่ทราบสาเหตุ"})`;
       this.set({ messages: [...this.s.messages, { role: "assistant", content }], phase: "idle" });
     } finally {
       if (this.abort === controller) this.abort = null;
@@ -319,7 +320,7 @@ export class PlatooChat {
         this.misses++;
         this.set({ phase: "idle" });
         if (this.s.settings.handsFree && this.misses < 2) {
-          this.set({ notice: "ไม่ได้ยินเสียง — ลองพูดอีกครั้งครับ" });
+          this.set({ notice: "ไม่ได้ยินเสียง — ลองพูดอีกครั้งค่ะ" });
           this.startListening();
         } else {
           this.misses = 0;
@@ -342,7 +343,7 @@ export class PlatooChat {
           this.startListening("browser");
           return;
         }
-        this.set({ notice: error.message.startsWith("recognizer:") ? "ระบบฟังเสียงของเบราว์เซอร์ใช้ไม่ได้ — พิมพ์คำถามแทนได้ครับ" : error.message });
+        this.set({ notice: error.message.startsWith("recognizer:") ? "ระบบฟังเสียงของเบราว์เซอร์ใช้ไม่ได้ — พิมพ์คำถามแทนได้ค่ะ" : error.message });
         void checkMicrophone().then((micState) => this.set({ micState }));
       });
   }
@@ -453,7 +454,7 @@ export class PlatooChat {
         break;
       case "try-voice":
         unlockAudio();
-        speak("สวัสดีครับ ผมน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามครับ", { engine: this.engine, rate: s.settings.rate });
+        speak("สวัสดีค่ะ หนูน้องปลาทู ยินดีต้อนรับสู่วิทยาลัยเทคนิคสมุทรสงครามค่ะ", { engine: this.engine, rate: s.settings.rate });
         break;
       case "mic":
         this.onMic();
@@ -592,7 +593,7 @@ export class PlatooChat {
       const rate = !m.feedback
         ? ""
         : m.rated
-          ? raw(html`<span class="rate-thanks">${en ? (m.rated === "good" ? "Thanks! 😊" : "Thanks — a teacher will check this answer") : this.say(m.rated === "good" ? "ขอบคุณครับ 😊" : "ขอบคุณครับ ครูจะตรวจคำตอบนี้ให้")}</span>`)
+          ? raw(html`<span class="rate-thanks">${en ? (m.rated === "good" ? "Thanks! 😊" : "Thanks — a teacher will check this answer") : this.say(m.rated === "good" ? "ขอบคุณค่ะ 😊" : "ขอบคุณค่ะ ครูจะตรวจคำตอบนี้ให้")}</span>`)
           : raw(html`<button type="button" class="rate-btn" data-chat="rate" data-good="1" data-index="${index}" aria-label="${en ? "Helpful" : "คำตอบนี้มีประโยชน์"}">👍</button><button type="button" class="rate-btn" data-chat="rate" data-good="0" data-index="${index}" aria-label="${en ? "Not right" : "คำตอบนี้ไม่ถูก"}">👎</button>`);
       const tools = again || rate ? raw(html`<div class="message-tools">${again}${rate}</div>`) : "";
       return html`<div class="message-row bot"><img class="message-mascot" src="/mascots/greeting-small.webp" alt="" aria-hidden="true" />
@@ -614,13 +615,13 @@ export class PlatooChat {
       : "";
     const help = (state) =>
       raw(html`<div class="mic-help"><button type="button" data-chat="mic-help">${s.showMicHelp ? "ซ่อนวิธีเปิดไมค์" : "วิธีเปิดไมโครโฟน"}</button>
-        ${s.showMicHelp ? raw(html`<ol>${micHelpSteps(state).map((step) => raw(html`<li>${step}</li>`))}<li class="mic-help-note">ระหว่างนี้พิมพ์ หรือแตะคำถามด้านล่างแทนได้เลยครับ</li></ol>`) : ""}</div>`);
+        ${s.showMicHelp ? raw(html`<ol>${micHelpSteps(state).map((step) => raw(html`<li>${step}</li>`))}<li class="mic-help-note">ระหว่างนี้พิมพ์ หรือแตะคำถามด้านล่างแทนได้เลยค่ะ</li></ol>`) : ""}</div>`);
 
     if (!this.canListen) {
       const text = !isSecureForMic()
-        ? "ใช้ไมโครโฟนได้เฉพาะเว็บ https (หรือ localhost) — พิมพ์คำถามแทนได้ครับ"
+        ? "ใช้ไมโครโฟนได้เฉพาะเว็บ https (หรือ localhost) — พิมพ์คำถามแทนได้ค่ะ"
         : s.micState === "none" || !hasMicrophone()
-          ? "เครื่องนี้ยังไม่มีไมโครโฟนที่ใช้ได้ — พิมพ์ หรือแตะคำถามด้านล่างได้เลยครับ"
+          ? "เครื่องนี้ยังไม่มีไมโครโฟนที่ใช้ได้ — พิมพ์ หรือแตะคำถามด้านล่างได้เลยค่ะ"
           : "เบราว์เซอร์นี้ฟังเสียงไม่ได้ — ใช้ Chrome/Edge หรือพิมพ์คำถามแทน";
       return inApp + html`<div class="chat-warning">${text}${isSecureForMic() && s.micState === "none" ? help("none") : ""}</div>`;
     }

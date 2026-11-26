@@ -258,8 +258,8 @@ function homeHtml() {
         <button class="kiosk-mic" data-action="voice" aria-label="ถามน้องปลาทูด้วยเสียง">${raw(icon("mic"))}</button>
       </div>
       <div class="kiosk-greeting">
-        <strong>สวัสดีครับ ผมน้องปลาทู</strong>
-        <span>เลือกเมนูที่ต้องการ หรือกดไมค์เพื่อพูดกับผมได้เลยครับ</span>
+        <strong>สวัสดีค่ะ หนูน้องปลาทู</strong>
+        <span>เลือกเมนูที่ต้องการ หรือกดไมค์เพื่อพูดกับหนูได้เลยค่ะ</span>
       </div>
       <div class="kiosk-stats">
         <div><strong>${state.buildings.length}</strong><span>สถานที่ในวิทยาลัย</span></div>
@@ -269,7 +269,7 @@ function homeHtml() {
     <section class="kiosk-menu">
       <div class="kiosk-menu-heading">
         <span>ยินดีต้อนรับสู่ Nong Platoo Ontour</span>
-        <h1>เลือกสิ่งที่ต้องการได้เลยครับ</h1>
+        <h1>เลือกสิ่งที่ต้องการได้เลยค่ะ</h1>
       </div>
       <div class="kiosk-menu-grid">${menu.map((m) =>
         raw(html`<button class="kiosk-menu-card ${m.cls}" data-action="${m.action}" data-view="${m.view}">
@@ -661,7 +661,7 @@ function newsHtml() {
       </div>`
     : notices.length
       ? ""
-      : html`<div class="empty-state">ยังไม่มีข่าวในตอนนี้ — ลองเปิดหน้านี้ใหม่อีกครั้งภายหลังครับ</div>`;
+      : html`<div class="empty-state">ยังไม่มีข่าวในตอนนี้ — ลองเปิดหน้านี้ใหม่อีกครั้งภายหลังค่ะ</div>`;
 
   const cards = rest.map((item) =>
     raw(link(
@@ -731,7 +731,7 @@ function quizHtml(entries, logoBox) {
         ? raw(html`<div class="quiz-results">${picks.map((e) => raw(html`<button class="quiz-result" data-action="quiz-pick" data-index="${e.index}">
             <span class="quiz-medal" aria-hidden="true">${["🥇", "🥈", "🥉"][picks.indexOf(e)] ?? "⭐"}</span>${raw(logoBox(e.department))}<span><strong>${e.department.name}</strong><span class="quiz-match"><i style="width:${e.match}%"></i></span><small>เข้ากับคุณ ${e.match}% · ${(e.department.careers ?? []).slice(0, 2).join(" · ")}</small></span>${raw(icon("arrow"))}
           </button>`))}</div>`)
-        : raw(html`<p>ยังไม่มีสาขาที่ตรงกับคำตอบ ลองดูสาขาทั้งหมด หรือถามน้องปลาทูได้เลยครับ</p>`)}
+        : raw(html`<p>ยังไม่มีสาขาที่ตรงกับคำตอบ ลองดูสาขาทั้งหมด หรือถามน้องปลาทูได้เลยค่ะ</p>`)}
       <div class="quiz-actions"><button class="route-retry alt" data-action="quiz-restart">ทำใหม่</button><button class="route-retry" data-action="quiz-close">ดูสาขาทั้งหมด</button></div>`
     : html`<span class="quiz-step">ข้อ ${quiz.step + 1} / ${DEPARTMENT_QUIZ.length}</span>
       <div class="quiz-progress" role="progressbar" aria-valuemin="0" aria-valuemax="${DEPARTMENT_QUIZ.length}" aria-valuenow="${quiz.step}"><i style="width:${(100 * quiz.step) / DEPARTMENT_QUIZ.length}%"></i></div>
@@ -885,7 +885,7 @@ function departmentsHtml() {
 function attractHtml() {
   return html`<button type="button" class="attract" data-action="wake" aria-label="แตะหน้าจอเพื่อเริ่มใช้งาน">
     <img class="attract-mascot" src="/mascots/greeting.webp" alt="" />
-    <div><h2>สวัสดีครับ ผมน้องปลาทู</h2><p>ผู้ช่วยนำทางและประชาสัมพันธ์ ${CAMPUS_OVERVIEW.name}</p></div>
+    <div><h2>สวัสดีค่ะ หนูน้องปลาทู</h2><p>ผู้ช่วยนำทางและประชาสัมพันธ์ ${CAMPUS_OVERVIEW.name}</p></div>
     <span class="attract-tap">👆 แตะหน้าจอเพื่อเริ่มใช้งาน</span>
     <span class="attract-qr"><span class="qr qr-medium" data-qr="${phoneRouteUrl()}" role="img" aria-label="QR เปิดแอปน้องปลาทูบนมือถือ"></span>
       <span><strong>ใช้บนมือถือก็ได้</strong>สแกนเพื่อเปิดแอปน้องปลาทู นำทางด้วย GPS ได้ทั้งวิทยาลัย</span></span>
